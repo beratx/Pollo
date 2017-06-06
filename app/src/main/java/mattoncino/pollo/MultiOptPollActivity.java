@@ -4,22 +4,21 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.databinding.DataBindingUtil;
-import android.icu.text.SimpleDateFormat;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
-import java.sql.Date;
-import java.util.Calendar;
 
 import mattoncino.pollo.databinding.ActivityMultiOptPollBinding;
 
 public class MultiOptPollActivity extends AppCompatActivity {
     private static final String TAG = "MultiOptPollActivity";
     private ActivityMultiOptPollBinding binding;
+
+    //SharedPreferences pref;
 
     /*Recycler View for options?*/
 
@@ -29,6 +28,8 @@ public class MultiOptPollActivity extends AppCompatActivity {
         //setContentView(R.layout.activity_multi_opt_poll);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_multi_opt_poll);
 
+        //pref = PreferenceManager.getDefaultSharedPreferences(this);
+        //SharedPreferences.Editor editor = pref.edit();
 
 
         binding.saveButton.setOnClickListener(new View.OnClickListener() {
@@ -38,8 +39,8 @@ public class MultiOptPollActivity extends AppCompatActivity {
 
                 if(poll == null)  return;
 
-                Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.CurrentPollActivity.class)
-                     .putExtra("poll", poll);
+                Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
+                     .putExtra("poll", (Parcelable) poll);
                 startActivity(intent);
 
             }

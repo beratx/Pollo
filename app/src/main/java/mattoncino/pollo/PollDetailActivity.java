@@ -1,9 +1,7 @@
 package mattoncino.pollo;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-
-import mattoncino.pollo.databinding.ActivityPollDetailBinding;
+import android.support.v7.app.AppCompatActivity;
 
 public class PollDetailActivity extends AppCompatActivity {
 

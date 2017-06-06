@@ -3,12 +3,13 @@ package mattoncino.pollo;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 
-public class Poll implements Parcelable {
+public class Poll implements Parcelable, Serializable {
     private String name;
     private String question;
     private String first_opt;
@@ -76,4 +77,26 @@ public class Poll implements Parcelable {
         parcel.readList(votes, null);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Poll poll = (Poll) o;
+
+        if (!getName().equals(poll.getName())) return false;
+        if (!getQuestion().equals(poll.getQuestion())) return false;
+        if (!first_opt.equals(poll.first_opt)) return false;
+        return second_opt.equals(poll.second_opt);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName().hashCode();
+        result = 31 * result + getQuestion().hashCode();
+        result = 31 * result + first_opt.hashCode();
+        result = 31 * result + second_opt.hashCode();
+        return result;
+    }
 }

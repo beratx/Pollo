@@ -2,18 +2,14 @@ package mattoncino.pollo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v7.app.AppCompatActivity;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import mattoncino.pollo.databinding.ActivityMainBinding;
 
@@ -55,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(wifiConnected())
-                    startActivity(new Intent(MainActivity.this, mattoncino.pollo.CreatePollActivity.class));
+                    startActivity(new Intent(MainActivity.this, mattoncino.pollo.MultiOptPollActivity.class));
             }
         });
 
