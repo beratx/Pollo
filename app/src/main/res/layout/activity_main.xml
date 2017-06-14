@@ -36,6 +36,12 @@
                 android:layout_height="wrap_content"
                 android:text="Old Polls"
                 android:visibility="invisible"/>
+
+            <Button
+                android:id="@+id/showDeviceListButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Show Device list"/>
         </LinearLayout>
 
     </RelativeLayout>

@@ -39,6 +39,8 @@ public class MultiOptPollActivity extends AppCompatActivity {
 
                 if(poll == null)  return;
 
+
+
                 Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
                      .putExtra("poll", (Parcelable) poll);
                 startActivity(intent);

@@ -9,6 +9,7 @@ import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -21,6 +22,8 @@ import java.util.List;
 import mattoncino.pollo.databinding.ActivityActivePollsBinding;
 
 public class ActivePollsActivity extends AppCompatActivity {
+    private static final String TAG = "ActivePollsActivity";
+
     private static final String SP_POLL_LIST = "pollList1";
     private static final String B_POLL_LIST = "pollList2";
     private static final String SHARED_PREFS_FILE = "polloSharedPrefs";
@@ -35,10 +38,14 @@ public class ActivePollsActivity extends AppCompatActivity {
     private SharedPreferences.Editor editor;
     private Gson gson;
 
+    private ServiceConnectionManager connectionManager;
+    private static final String POLL_REQUEST = "poll_request";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Toast.makeText(this, "called onCreate", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onCreate", Toast.LENGTH_LONG).show();
         setTitle("Active Polls");
         binding = DataBindingUtil.setContentView(
                 this, R.layout.activity_active_polls);
@@ -51,7 +58,8 @@ public class ActivePollsActivity extends AppCompatActivity {
 
 
         //pollManager = new PollManager();
-        active_polls = new ArrayList<Poll>();
+        //if(active_polls == null)
+            active_polls = new ArrayList<Poll>();
 
         if(savedInstanceState != null){
             if(active_polls == null)
@@ -65,14 +73,16 @@ public class ActivePollsActivity extends AppCompatActivity {
 
 
         Bundle data = getIntent().getExtras();
-        if(data != null)
+        if(data != null) {
             poll = (Poll) data.getParcelable("poll");
-        active_polls.add(poll);
+            active_polls.add(poll);
+            //launchNewPoll = true;
+        }
 
         /*if(active_polls.size() != 0) {
             adapter = new PollsRecyclerViewListAdapter(active_polls);
             binding.recyclerView.setAdapter(adapter);
-        }
+        }*/
 
 
         //change adapter to SimpleAdapter -> ArrayList<Map>
@@ -81,26 +91,41 @@ public class ActivePollsActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
         super.onResume();
 
-            if(pref == null)
-                pref = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
+        if(pref == null)
+            pref = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
 
             /*List<Poll> polls = (ArrayList<Poll>) ObjectSerializer.deserialize(
                     pref.getString(SP_POLL_LIST, ObjectSerializer.serialize(new ArrayList<Poll>())));*/
 
             //if(active_polls.size() == 0){
         ArrayList<Poll> backup = new Gson().fromJson(pref.getString(MY_LIST, null), LIST_TYPE);
-        if(backup != null || backup.size() != 0)
+        if(backup != null && backup.size() != 0) {
             active_polls.addAll(backup);
+        }
 
         adapter = new PollsRecyclerViewListAdapter(active_polls);
         binding.recyclerView.setAdapter(adapter);
+        //adapter.notifyDataSetChanged();
+
+        connectionManager = ((MyApplication)getApplication()).getConnectionManager();
+        if (connectionManager == null) {
+            Log.d(TAG, "connectionManager is null!!!");
+            return;
+        }
+        connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, POLL_REQUEST);
+        /*if(request_accepted){
+            connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, poll.getName());
+            connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, poll.getQuestion());
+            connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, poll.getFirstOpt());
+            connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, poll.getSecondOpt());
+        }*/
 
 
 
-            //}
+        //}
 
             /*if(polls == null)
                 Toast.makeText(this, "poll list from sharedpref is null", Toast.LENGTH_LONG).show();
@@ -112,15 +137,11 @@ public class ActivePollsActivity extends AppCompatActivity {
 
         //pollManager.addPoll(poll);
         //active_polls.add(poll);
-
-
-
-
     }
 
     @Override
     protected void onRestart() {
-        Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
 
         super.onRestart();
 
