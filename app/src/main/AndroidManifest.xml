@@ -25,10 +25,17 @@
         </activity>
         <activity android:name=".CreatePollActivity" />
         <activity android:name=".MultiOptPollActivity" />
-        <activity android:name=".ActivePollsActivity" />
+        <activity
+            android:name=".ActivePollsActivity"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"/>
+        </activity>
         <activity android:name=".OldPollsActivity" />
         <activity android:name=".PollDetailActivity" />
         <activity android:name=".CurrentPollActivity"></activity>
+
     </application>
 
 </manifest>

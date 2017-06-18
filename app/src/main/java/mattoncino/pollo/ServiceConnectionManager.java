@@ -32,7 +32,8 @@ public class ServiceConnectionManager {
     private ServiceInfo serviceInfo;
     private WifiManager.MulticastLock multiCastLock;
     private boolean registered;
-    private ServerThreadProcessor serverThreadProcessor = new ServerThreadProcessor();
+    private ServerThreadProcessor serverThreadProcessor ;
+
 
     public void initializeService(final Context context) {
 
@@ -67,7 +68,8 @@ public class ServiceConnectionManager {
                 //serviceInfo = javax.jmdns.ServiceInfo.create(SERVICE_INFO_TYPE, SERVICE_INFO_NAME, SERVICE_INFO_PORT, 0, 0, "POLLO SERVICE");
                 jmdns.registerService(serviceInfo);
                 Log.d(TAG, "JmDNS Service is registered");
-                serverThreadProcessor.startServerProcessorThread(context);
+                serverThreadProcessor = new ServerThreadProcessor(context);
+                serverThreadProcessor.start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -129,7 +131,7 @@ public class ServiceConnectionManager {
     }
 
 
-    public void sendMessageToAllDevicesInNetwork(final Context context, String message) {
+    public void sendMessageToAllDevicesInNetwork(final Context context, String[] messages) {
         if (jmdns != null) {
 
             Set<String> ipAddressesSet = getNeighborDevicesIpAddressesSet(context);
@@ -137,7 +139,7 @@ public class ServiceConnectionManager {
             for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
                 String serverIpAddress = (String) iterator.next();
                 //it's NOT a thread!!!
-                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, message);
+                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, messages);
                 Thread t = new Thread(clientProcessor);
                 t.start();
                 //clientProcessor.sendSimpleMessageToOtherDevice(message);
@@ -145,6 +147,9 @@ public class ServiceConnectionManager {
         }
     }
 
+    /*public void sendMessageToOtherDevice(final Context context, String message) {
+
+    }*/
 
     private Set<String> getNeighborDevicesIpAddressesSet(Context context) {
 

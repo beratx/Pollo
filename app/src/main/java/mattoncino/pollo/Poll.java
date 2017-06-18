@@ -14,13 +14,15 @@ public class Poll implements Parcelable, Serializable {
     private String question;
     private String first_opt;
     private String second_opt;
+    private int owner;
     private List votes;
 
-    public Poll(String name, String question, String first_opt, String second_opt) {
+    public Poll(String name, String question, String first_opt, String second_opt, int owner) {
         this.name = name;
         this.question = question;
         this.first_opt = first_opt;
         this.second_opt = second_opt;
+        this.owner = owner;
         this.votes = Collections.synchronizedList(new ArrayList());
     }
 
@@ -38,6 +40,14 @@ public class Poll implements Parcelable, Serializable {
 
     public String getSecondOpt() {
         return second_opt;
+    }
+
+    public int getOwner() {
+        return owner;
+    }
+
+    public void setOwner(int owner){
+        this.owner = owner;
     }
 
 

@@ -12,6 +12,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class ServerSocketHandler implements  Runnable {
@@ -23,24 +25,23 @@ public class ServerSocketHandler implements  Runnable {
     private Context context;
     private BufferedReader inputBufferedReader;
     private PrintWriter outputPrintWriter;
+    private Set<String> acceptedAddressList;
 
 
 
     public ServerSocketHandler(ServerSocket serverSocket, Context context) {
         this.serverSocket = serverSocket;
         this.context = context;
+        this.acceptedAddressList = new HashSet<String>();
     }
 
     public void run() {
         Socket socket = null;
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
         try {
             while (!Thread.currentThread().isInterrupted()) {
@@ -48,6 +49,9 @@ public class ServerSocketHandler implements  Runnable {
                 //Log.v(TAG, "before socket ACCEPT");
                 socket = serverSocket.accept();
                 Log.v(TAG, "socket ACCEPTED");
+
+                //ClientHandler chandler = new ClientHandler(socket, ....)
+                //chandler.start()
 
                 /*InputStream inputStream = socket.getInputStream();
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
@@ -68,6 +72,7 @@ public class ServerSocketHandler implements  Runnable {
                 //process here input & output
                 final String inputLine = inputBufferedReader.readLine(); //arrived messaged
                 if (inputLine.equals(POLL_REQUEST)){
+                    //socket.getInetAddress();
                     //Toast.makeText(context, inputLine, Toast.LENGTH_LONG).show();
                     outputPrintWriter.println(ACCEPT);
                     Log.v(TAG, "SENT ACCEPT MESSAGE");
@@ -82,8 +87,6 @@ public class ServerSocketHandler implements  Runnable {
                 }
                 //outputPrintWriter.println("YOU TEXT ARRIVED. THANKS"); //send message*/
             }
-
-
 
             inputBufferedReader.close();
             outputPrintWriter.close();

@@ -21,13 +21,15 @@
                 android:id="@+id/createPollActivityButton"
                 android:layout_width="282dp"
                 android:layout_height="wrap_content"
-                android:text="Create Poll" />
+                android:text="Create Poll"
+                android:enabled="false"/>
 
             <Button
                 android:id="@+id/activePollsActivityButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Active Polls"
+                android:enabled="false"
                 android:visibility="invisible"/>
 
             <Button
@@ -35,13 +37,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Old Polls"
+                android:enabled="false"
                 android:visibility="invisible"/>
 
             <Button
                 android:id="@+id/showDeviceListButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Show Device list"/>
+                android:text="Show Device list"
+                android:enabled="false"/>
         </LinearLayout>
 
     </RelativeLayout>

@@ -24,14 +24,12 @@ import mattoncino.pollo.databinding.ActivityActivePollsBinding;
 public class ActivePollsActivity extends AppCompatActivity {
     private static final String TAG = "ActivePollsActivity";
 
-    private static final String SP_POLL_LIST = "pollList1";
+    //private static final String SP_POLL_LIST = "pollList1";
     private static final String B_POLL_LIST = "pollList2";
     private static final String SHARED_PREFS_FILE = "polloSharedPrefs";
-    public static final String MY_LIST = "my_list";
     private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
     private ActivityActivePollsBinding binding;
     private RecyclerView.Adapter adapter;
-    //private PollManager pollManager;
     private ArrayList<Poll> active_polls;
     private Poll poll;
     private SharedPreferences pref;
@@ -39,7 +37,8 @@ public class ActivePollsActivity extends AppCompatActivity {
     private Gson gson;
 
     private ServiceConnectionManager connectionManager;
-    private static final String POLL_REQUEST = "poll_request";
+    private boolean recovered = false;
+    private boolean myPollRequest = false;
 
 
     @Override
@@ -58,25 +57,36 @@ public class ActivePollsActivity extends AppCompatActivity {
 
 
         //pollManager = new PollManager();
-        //if(active_polls == null)
+        if(active_polls == null)
             active_polls = new ArrayList<Poll>();
 
-        if(savedInstanceState != null){
-            if(active_polls == null)
-                active_polls = new ArrayList<Poll>();
+        /*if(savedInstanceState != null){
+            /*if(active_polls == null)
+                active_polls = new ArrayList<Poll>();*/
             //ConcurrentHashMap<String, Poll> backup = (ConcurrentHashMap<String, Poll>) savedInstanceState.getSerializable("pollMap");
             //pollManager.addAll(backup);
             //pollManager.addAll((ArrayList<Poll>) savedInstanceState.getSerializable(POLL_LIST));
-            active_polls.addAll((ArrayList<Poll>) savedInstanceState.getSerializable(B_POLL_LIST));
-            Toast.makeText(this, "Backuped Polls are added back", Toast.LENGTH_LONG).show();
-        }
+
+         /*   try {
+                active_polls.addAll((ArrayList<Poll>) savedInstanceState.getSerializable(B_POLL_LIST));
+                Log.d(TAG, "Backuped polls recovered from savedInstanceState");
+                //Toast.makeText(this, "Backuped Polls are added back", Toast.LENGTH_LONG).show();
+            }catch(NullPointerException e){
+                //Toast.makeText(this, "Saved Instance is null", Toast.LENGTH_LONG).show();
+                Log.d(TAG, "returned null pointer from savedInstanceState");
+            }
+
+        }*/
 
 
         Bundle data = getIntent().getExtras();
         if(data != null) {
-            poll = (Poll) data.getParcelable("poll");
+            poll = (Poll) data.getParcelable(Consts.POLL_MINE);
+            if(poll == null)
+                poll = (Poll) data.getParcelable(Consts.POLL_OTHER);
+            else myPollRequest = true;
+
             active_polls.add(poll);
-            //launchNewPoll = true;
         }
 
         /*if(active_polls.size() != 0) {
@@ -94,36 +104,43 @@ public class ActivePollsActivity extends AppCompatActivity {
         //Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
         super.onResume();
 
-        if(pref == null)
-            pref = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-
-            /*List<Poll> polls = (ArrayList<Poll>) ObjectSerializer.deserialize(
-                    pref.getString(SP_POLL_LIST, ObjectSerializer.serialize(new ArrayList<Poll>())));*/
+        if(!recovered) {
+            if (pref == null)
+                pref = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
 
             //if(active_polls.size() == 0){
-        ArrayList<Poll> backup = new Gson().fromJson(pref.getString(MY_LIST, null), LIST_TYPE);
-        if(backup != null && backup.size() != 0) {
-            active_polls.addAll(backup);
+            ArrayList<Poll> backup = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
+            if (backup != null && backup.size() != 0) {
+                active_polls.addAll(backup);
+            }
+            editor.clear();
+            editor.commit();
+
+            adapter = new PollsRecyclerViewListAdapter(active_polls);
+            binding.recyclerView.setAdapter(adapter);
+            //adapter.notifyDataSetChanged();
         }
 
-        adapter = new PollsRecyclerViewListAdapter(active_polls);
-        binding.recyclerView.setAdapter(adapter);
-        //adapter.notifyDataSetChanged();
+        if(myPollRequest) {
 
-        connectionManager = ((MyApplication)getApplication()).getConnectionManager();
-        if (connectionManager == null) {
-            Log.d(TAG, "connectionManager is null!!!");
-            return;
+            connectionManager = ((MyApplication) getApplication()).getConnectionManager();
+            if (connectionManager == null) {
+                Log.d(TAG, "connectionManager is null!!!");
+                return;
+            }
+
+            String[] pollMessages = {poll.getName(), poll.getQuestion(), poll.getFirstOpt(), poll.getSecondOpt()};
+            try {
+                connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, pollMessages);
+            } catch (NullPointerException e) {
+                Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
+                return;
+            }
+
         }
-        connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, POLL_REQUEST);
-        /*if(request_accepted){
-            connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, poll.getName());
-            connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, poll.getQuestion());
-            connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, poll.getFirstOpt());
-            connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, poll.getSecondOpt());
+        /*else if(otherRequest){
+
         }*/
-
-
 
         //}
 
@@ -179,11 +196,13 @@ public class ActivePollsActivity extends AppCompatActivity {
         super.onRestoreInstanceState(savedInstanceState, persistentState);
 
         if(savedInstanceState != null){
-            //ConcurrentHashMap<String, Poll> backup = (ConcurrentHashMap<String, Poll>) savedInstanceState.getSerializable("pollMap");
-            //pollManager.addAll(backup);
-            active_polls.addAll((ArrayList<Poll>) savedInstanceState.getSerializable(B_POLL_LIST));
-            Toast.makeText(this, "Backuped Polls are added back", Toast.LENGTH_LONG).show();
-
+            try {
+                active_polls.addAll((ArrayList<Poll>) savedInstanceState.getSerializable(B_POLL_LIST));
+                Log.d(TAG, "Backuped polls recovered from savedInstanceState");
+            }catch(NullPointerException e){
+                Log.d(TAG, "Returned null pointer from savedInstanceState");
+            }
+            recovered = true;
         }
 
     }
@@ -195,44 +214,22 @@ public class ActivePollsActivity extends AppCompatActivity {
         super.onPause();
 
         //String json = gson.toJson(active_polls);
-        editor.putString(MY_LIST, new Gson().toJson(new ArrayList<Poll>(active_polls)));
-        editor.commit();
 
-        /*try {
-            editor.putString(SP_POLL_LIST, ObjectSerializer.serialize(active_polls));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        editor.commit();*/
+        editor.putString(Consts.POLL_LIST, new Gson().toJson(new ArrayList<Poll>(active_polls)));
+        editor.commit();
     }
 
     @Override
     protected void onStop() {
-        Toast.makeText(this, "called onStop", Toast.LENGTH_LONG).show();
-
+        //Toast.makeText(this, "called onStop", Toast.LENGTH_LONG).show();
         super.onStop();
- /*
-        try {
-            editor.putString(SP_POLL_LIST, ObjectSerializer.serialize(active_polls));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        editor.commit();
-        */
     }
 
     @Override
     protected void onDestroy() {
-        Toast.makeText(this, "called Destroy", Toast.LENGTH_LONG).show();
-
+        //Toast.makeText(this, "called Destroy", Toast.LENGTH_LONG).show();
         super.onDestroy();
 
-        /*try {
-            editor.putString(POLL_LIST, ObjectSerializer.serialize(pollManager.getPolls()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        editor.commit();*/
     }
 
     @Override

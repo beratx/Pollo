@@ -18,18 +18,17 @@ import java.net.UnknownHostException;
 
 public class ClientThreadProcessor implements Runnable{
     private Socket socket;
-    private String textForSend;
     private Context context;
     private String serverIpAddress;
     private static final String POLL_REQUEST = "poll_request";
     private static final String ACCEPT = "accept";
     private static final String TAG = "ClientThreadProcess";
-    private String message;
+    private String[] messages;
 
-    public ClientThreadProcessor(String serverIpAddress, Context context, String message) {
+    public ClientThreadProcessor(String serverIpAddress, Context context, String[] messages) {
         this.context = context;
         this.serverIpAddress = serverIpAddress;
-        this.message = message;
+        this.messages = messages;
     }
 
     private Socket getSocket(String serverIpAddress) {
@@ -58,9 +57,18 @@ public class ClientThreadProcessor implements Runnable{
         try {
             socket = getSocket(serverIpAddress);
 
-            //message == POLL_REQUEST
             PrintWriter output = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-            output.println(message);
+            output.println(POLL_REQUEST);
+            output.println(messages[0]); //poll_name
+            output.println(messages[1]); //poll_question
+            output.println(messages[2]); //poll_firstOpt
+            output.println(messages[3]); //poll_secondOpt
+            output.println(socket.getInetAddress().getHostAddress()); //device address
+
+            if(output.checkError())
+                Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
+
+            Log.d(TAG, "sent POLL_REQUEST");
 
             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             final String messageFromClient = input.readLine();
@@ -74,6 +82,7 @@ public class ClientThreadProcessor implements Runnable{
                         ToastHelper.useShortToast(context, messageFromClient);
                     }
                 });
+
                 //Toast.makeText(context, "Poll request is accepted!", Toast.LENGTH_LONG).show();
             }
 
@@ -82,7 +91,7 @@ public class ClientThreadProcessor implements Runnable{
 
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+            //Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
 
         } finally {
             closeSocket(socket);

@@ -82,6 +82,10 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if(wifiConnected())
             startDataTransferring();
+        binding.createPollActivityButton.setEnabled(true);
+        binding.activePollsActivityButton.setEnabled(true);
+        binding.oldPollsActivityButton.setEnabled(true);
+        binding.showDeviceListButton.setEnabled(true);
     }
 
     private void startDataTransferring(){

@@ -39,10 +39,8 @@ public class MultiOptPollActivity extends AppCompatActivity {
 
                 if(poll == null)  return;
 
-
-
                 Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
-                     .putExtra("poll", (Parcelable) poll);
+                     .putExtra(Consts.POLL_MINE, (Parcelable) poll);
                 startActivity(intent);
 
             }
@@ -62,7 +60,7 @@ public class MultiOptPollActivity extends AppCompatActivity {
             return null;
         }
 
-        Poll poll = new Poll(name,question,first_opt,second_opt);
+        Poll poll = new Poll(name,question,first_opt,second_opt, Consts.OWN);
 
         return poll;
 
