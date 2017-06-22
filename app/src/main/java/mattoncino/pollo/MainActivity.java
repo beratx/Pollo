@@ -124,6 +124,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+/* Check if online device is empty, in case we will disable features.
+    public boolean checkOnlineDevices(){
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                String deviceId = ((MyApplication)getApplication()).getDeviceId();
+                final List<String> onlineDevices = connectionManager.getOnlineDevicesList(MainActivity.this, deviceId);
+
+                return onlineDevices.size() != 0;
+
+            }
+        };
+        Thread thread = new Thread(runnable);
+        thread.start();
+
+    }
+*/
+
     public void onShowOnlineDevicesListDialogPress(){
         Runnable runnable = new Runnable() {
             @Override
@@ -153,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
 
         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                 MainActivity.this,
-                android.R.layout.select_dialog_singlechoice);
+                android.R.layout.simple_list_item_1);
 
         for (int i = 0; i < devices.size(); i++){
             arrayAdapter.add(devices.get(i));

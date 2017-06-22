@@ -32,7 +32,8 @@ public class ServiceConnectionManager {
     private ServiceInfo serviceInfo;
     private WifiManager.MulticastLock multiCastLock;
     private boolean registered;
-    private ServerThreadProcessor serverThreadProcessor ;
+    private ServerThreadProcessor serverThreadProcessor;
+    private InetAddress ownAddress;
 
 
     public void initializeService(final Context context) {
@@ -92,6 +93,19 @@ public class ServiceConnectionManager {
         Log.d(TAG, "JmDNS Service is UNregistered");
     }
 
+
+    public String getHostAddress() {
+        //String serverIpAddress = getIPv4FromServiceInfo(jmdns.getServiceInfo());
+        InetAddress addr = null;
+        try {
+            addr = jmdns.getInetAddress();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return addr.getHostAddress();
+
+    }
+
     private InetAddress getInetAddress(WifiManager wifiManager) throws IOException {
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         int addrIntIp = wifiInfo.getIpAddress();
@@ -131,7 +145,7 @@ public class ServiceConnectionManager {
     }
 
 
-    public void sendMessageToAllDevicesInNetwork(final Context context, String[] messages) {
+    public void sendMessageToAllDevicesInNetwork(final Context context, String type, String[] messages) {
         if (jmdns != null) {
 
             Set<String> ipAddressesSet = getNeighborDevicesIpAddressesSet(context);
@@ -139,7 +153,7 @@ public class ServiceConnectionManager {
             for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
                 String serverIpAddress = (String) iterator.next();
                 //it's NOT a thread!!!
-                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, messages);
+                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, type, messages);
                 Thread t = new Thread(clientProcessor);
                 t.start();
                 //clientProcessor.sendSimpleMessageToOtherDevice(message);

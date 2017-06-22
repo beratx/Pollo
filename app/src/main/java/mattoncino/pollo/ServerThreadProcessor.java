@@ -43,7 +43,7 @@ public class ServerThreadProcessor extends Thread{
                 Log.v(TAG, "socket ACCEPTED");
                 Thread tClient = new Thread(new ClientHandler(socket, context));
                 tClient.start();
-                Log.v(TAG, "CLIENT HANDLER THREAD LAUNCHED");
+                //Log.v(TAG, "CLIENT HANDLER THREAD LAUNCHED");
             }
 
         } catch (Exception ex) {

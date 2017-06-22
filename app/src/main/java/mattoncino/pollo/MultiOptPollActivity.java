@@ -60,12 +60,16 @@ public class MultiOptPollActivity extends AppCompatActivity {
             return null;
         }
 
-        Poll poll = new Poll(name,question,first_opt,second_opt, Consts.OWN);
+        ServiceConnectionManager  connectionManager = ((MyApplication) getApplication()).getConnectionManager();
+        if (connectionManager == null) {
+            Log.d(TAG, "connectionManager is null!!!");
+            return null;
+        }
+        String hostAddress = connectionManager.getHostAddress();
+
+        Poll poll = new Poll(name, question, first_opt, second_opt, hostAddress);
 
         return poll;
-
-        //Log.e(TAG, "!!!DB INSERT Error!!!");
-
     }
 
     private void saveToDB(){
@@ -126,6 +130,13 @@ public class MultiOptPollActivity extends AppCompatActivity {
         }
 
     }
+
+    @Override
+    public void onBackPressed()
+    {
+        startActivity(new Intent(MultiOptPollActivity.this, mattoncino.pollo.MainActivity.class));
+    }
+
 
 
 }

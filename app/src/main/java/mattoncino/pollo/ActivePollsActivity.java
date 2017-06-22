@@ -1,5 +1,6 @@
 package mattoncino.pollo;
 
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,7 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -25,8 +25,7 @@ public class ActivePollsActivity extends AppCompatActivity {
     private static final String TAG = "ActivePollsActivity";
 
     //private static final String SP_POLL_LIST = "pollList1";
-    private static final String B_POLL_LIST = "pollList2";
-    private static final String SHARED_PREFS_FILE = "polloSharedPrefs";
+
     private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
     private ActivityActivePollsBinding binding;
     private RecyclerView.Adapter adapter;
@@ -39,6 +38,7 @@ public class ActivePollsActivity extends AppCompatActivity {
     private ServiceConnectionManager connectionManager;
     private boolean recovered = false;
     private boolean myPollRequest = false;
+    private boolean acceptedPollRequest = false;
 
 
     @Override
@@ -51,7 +51,7 @@ public class ActivePollsActivity extends AppCompatActivity {
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         //pref = PreferenceManager.getDefaultSharedPreferences(this);
-        pref = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
+        pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
         editor = pref.edit();
         gson = new Gson();
 
@@ -59,6 +59,21 @@ public class ActivePollsActivity extends AppCompatActivity {
         //pollManager = new PollManager();
         if(active_polls == null)
             active_polls = new ArrayList<Poll>();
+
+        Bundle data = getIntent().getExtras();
+        if(data != null) {
+            poll = (Poll) data.getParcelable(Consts.POLL_MINE);
+            if(poll == null) {
+                poll = (Poll) data.getParcelable(Consts.POLL_OTHER);
+                acceptedPollRequest = true;
+            }
+            else myPollRequest = true;
+            data.clear();
+            active_polls.add(poll);
+
+            Log.d(TAG, "OnCreate: new poll is added to the active_polls");
+        }
+
 
         /*if(savedInstanceState != null){
             /*if(active_polls == null)
@@ -79,16 +94,6 @@ public class ActivePollsActivity extends AppCompatActivity {
         }*/
 
 
-        Bundle data = getIntent().getExtras();
-        if(data != null) {
-            poll = (Poll) data.getParcelable(Consts.POLL_MINE);
-            if(poll == null)
-                poll = (Poll) data.getParcelable(Consts.POLL_OTHER);
-            else myPollRequest = true;
-
-            active_polls.add(poll);
-        }
-
         /*if(active_polls.size() != 0) {
             adapter = new PollsRecyclerViewListAdapter(active_polls);
             binding.recyclerView.setAdapter(adapter);
@@ -102,47 +107,69 @@ public class ActivePollsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         //Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
+        Log.d(TAG, "get in onResume()");
         super.onResume();
+        removeNotification(0);
+
+        Log.d(TAG, "onResume(): removed notification");
 
         if(!recovered) {
             if (pref == null)
-                pref = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
+                pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
 
-            //if(active_polls.size() == 0){
             ArrayList<Poll> backup = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
             if (backup != null && backup.size() != 0) {
                 active_polls.addAll(backup);
             }
+
             editor.clear();
             editor.commit();
 
-            adapter = new PollsRecyclerViewListAdapter(active_polls);
+            adapter = new PollsCardViewAdapter(active_polls);
             binding.recyclerView.setAdapter(adapter);
             //adapter.notifyDataSetChanged();
+
+            recovered = true;
         }
 
-        if(myPollRequest) {
 
+        if(myPollRequest) {
             connectionManager = ((MyApplication) getApplication()).getConnectionManager();
             if (connectionManager == null) {
                 Log.d(TAG, "connectionManager is null!!!");
                 return;
             }
+            //adapter.notifyDataSetChanged();
 
-            String[] pollMessages = {poll.getName(), poll.getQuestion(), poll.getFirstOpt(), poll.getSecondOpt()};
+            String[] pollMessages = {poll.getName(), poll.getQuestion(), poll.getFirstOpt(),
+                                       poll.getSecondOpt(), poll.getHostAddress() };
+            //Toast.makeText(this, "MY HOST ADDRESS: " + poll.getHostAddress(), Toast.LENGTH_LONG).show();
+
             try {
-                connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, pollMessages);
+                connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollMessages);
             } catch (NullPointerException e) {
                 Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
                 return;
             }
 
+            myPollRequest = false;
+
         }
-        /*else if(otherRequest){
+        else if(acceptedPollRequest){
+            Log.d(TAG, "onResume(): acceptedPollReq");
+            acceptedPollRequest = false;
+            String messages[] = {poll.getName(), poll.getHostAddress()};
+            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(), ActivePollsActivity.this, Consts.ACCEPT, messages);
+            Thread t = new Thread(clientProcessor);
+            t.start();
+            //active_polls.add(poll);
+            //adapter.notifyDataSetChanged();
+            //Toast.makeText(this, "ARRIVED FROM: " + poll.getHostAddress(), Toast.LENGTH_LONG).show();
+        }
 
-        }*/
 
-        //}
+        //adapter.notifyDataSetChanged();
+
 
             /*if(polls == null)
                 Toast.makeText(this, "poll list from sharedpref is null", Toast.LENGTH_LONG).show();
@@ -197,7 +224,7 @@ public class ActivePollsActivity extends AppCompatActivity {
 
         if(savedInstanceState != null){
             try {
-                active_polls.addAll((ArrayList<Poll>) savedInstanceState.getSerializable(B_POLL_LIST));
+                active_polls.addAll((ArrayList<Poll>) savedInstanceState.getSerializable(Consts.B_POLL_LIST));
                 Log.d(TAG, "Backuped polls recovered from savedInstanceState");
             }catch(NullPointerException e){
                 Log.d(TAG, "Returned null pointer from savedInstanceState");
@@ -209,7 +236,7 @@ public class ActivePollsActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        Toast.makeText(this, "called onPause", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onPause", Toast.LENGTH_LONG).show();
 
         super.onPause();
 
@@ -237,4 +264,11 @@ public class ActivePollsActivity extends AppCompatActivity {
     {
         startActivity(new Intent(ActivePollsActivity.this, mattoncino.pollo.MainActivity.class));
     }
+
+    private void removeNotification(int notificationID){
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(notificationID);
+    }
 }
+
+
