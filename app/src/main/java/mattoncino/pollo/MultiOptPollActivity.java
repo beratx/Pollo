@@ -44,6 +44,9 @@
                 public void onClick(View view) {
                     final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
                     rLayout.addView(createNewOptionEntry());
+
+                    if(count > 5)
+                        rLayout.removeView(binding.addFAB);
                 }
             });
 

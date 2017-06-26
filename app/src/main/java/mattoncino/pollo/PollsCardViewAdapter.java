@@ -2,6 +2,7 @@ package mattoncino.pollo;
 
 import android.content.Context;
 import android.databinding.DataBindingUtil;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -139,6 +140,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         button.setId(View.generateViewId());
         button.setTextSize(18);
         button.setText(option);
+        button.setBackgroundColor(Color.TRANSPARENT);
+
 
         return button;
     }
