@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:id="@+id/scrollView">
 
         <RelativeLayout
             android:id="@+id/activity_multi_opt_poll"
@@ -46,7 +48,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/questionInputLayout"
-                android:hint="First Option">
+                android:hint="1. Option">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/opt1EditText"
@@ -60,7 +62,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/opt1InputLayout"
-                android:hint="Second Option">
+                android:hint="2. Option">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/opt2EditText"
@@ -68,27 +70,31 @@
                     android:layout_height="wrap_content" />
             </android.support.design.widget.TextInputLayout>
 
-            <EditText
-                android:id="@+id/timeEditText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:inputType="time"
-                android:ems="10"
-                android:layout_below="@+id/opt2InputLayout"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="30dp"
-                android:hint="Expiration Time"
-                android:contentDescription="Expiration Time" />
-
             <Button
                 android:id="@+id/saveButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_below="@id/timeEditText"
+                android:layout_alignParentBottom="true"
+                android:layout_below="@id/opt2InputLayout"
                 android:layout_marginBottom="30dp"
-                android:text="Save" />
+                android:text="Save"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentStart="true" />
+
+            <android.support.design.widget.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                app:fabSize="normal"
+                app:srcCompat="@android:drawable/ic_input_add"
+                android:id="@+id/addFAB"
+                android:layout_marginEnd="21dp"
+                android:layout_below="@+id/opt2InputLayout"
+                android:layout_alignParentEnd="true" />
         </RelativeLayout>
+
+
+
     </ScrollView>
 
 </layout>

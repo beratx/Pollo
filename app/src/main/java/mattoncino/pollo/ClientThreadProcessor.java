@@ -14,6 +14,8 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class ClientThreadProcessor implements Runnable{
@@ -21,11 +23,11 @@ public class ClientThreadProcessor implements Runnable{
     private Context context;
     private String serverIpAddress;
     private static final String TAG = "ClientThreadProcess";
-    private String[] messages;
+    private List messages;
     private String type;
     private int vote;
 
-    public ClientThreadProcessor(String serverIpAddress, Context context, String type, String[] messages) {
+    public ClientThreadProcessor(String serverIpAddress, Context context, String type, ArrayList<String> messages) {
         this.context = context;
         this.serverIpAddress = serverIpAddress;
         this.messages = messages;
@@ -67,10 +69,11 @@ public class ClientThreadProcessor implements Runnable{
 
             if(type.equals(Consts.POLL_REQUEST))
                 sendPollRequest(socket);
-            else if(type.equals(Consts.POLL_VOTE))
-                sendVote(socket, vote);
             else if(type.equals(Consts.ACCEPT))
                 sendAccept(socket);
+            else if(type.equals(Consts.POLL_VOTE))
+                sendVote(socket, vote);
+
                 //updateVoterList(messages[0], messages[1]);
 
         } catch (Exception e) {
@@ -91,11 +94,13 @@ public class ClientThreadProcessor implements Runnable{
                                         new OutputStreamWriter(socket.getOutputStream())), true);
 
             output.println(Consts.POLL_REQUEST);
-            output.println(messages[0]); //poll_name
-            output.println(messages[1]); //poll_question
-            output.println(messages[2]); //poll_firstOpt
-            output.println(messages[3]); //poll_secondOpt
-            output.println(messages[4]); //device address
+            output.println(messages.get(0)); //poll_name
+            output.println(messages.get(1)); //poll_question
+            output.println(messages.get(2)); //device address
+            output.println(messages.size()-3); //number of options
+            for (int i = 3; i < messages.size(); i++) {
+                output.println(messages.get(i));
+            }
 
             if (output.checkError()) {
                 Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
@@ -137,8 +142,8 @@ public class ClientThreadProcessor implements Runnable{
             output = new PrintWriter(new BufferedWriter(
                     new OutputStreamWriter(socket.getOutputStream())), true);
             output.println(Consts.ACCEPT);
-            output.println(messages[0]); //poll_name
-            output.println(messages[1]); //poll_hostAddress
+            output.println(messages.get(0)); //poll_name
+            output.println(messages.get(1)); //poll_hostAddress
             //output.println(vote);
             //output.println(socket.getInetAddress().getHostAddress()); //device address
 

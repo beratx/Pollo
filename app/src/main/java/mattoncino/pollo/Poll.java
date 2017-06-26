@@ -12,19 +12,17 @@ import java.util.List;
 public class Poll implements Parcelable, Serializable {
     private String name;
     private String question;
-    private String first_opt;
-    private String second_opt;
+    private List<String> options;
     private String hostAddress;
     //private int owner;
     private List votes;
 
 
 
-    public Poll(String name, String question, String first_opt, String second_opt, String hostAddress) {
+    public Poll(String name, String question, List<String> options, String hostAddress) {
         this.name = name;
         this.question = question;
-        this.first_opt = first_opt;
-        this.second_opt = second_opt;
+        this.options = options;
         //this.owner = owner;
         this.hostAddress = hostAddress;
         this.votes = Collections.synchronizedList(new ArrayList());
@@ -38,12 +36,8 @@ public class Poll implements Parcelable, Serializable {
         return question;
     }
 
-    public String getFirstOpt() {
-        return first_opt;
-    }
-
-    public String getSecondOpt() {
-        return second_opt;
+    public List<String> getOptions(){
+        return options;
     }
 
     public String getHostAddress() {
@@ -83,7 +77,6 @@ public class Poll implements Parcelable, Serializable {
     }
 
 
-
     @Override
     public int describeContents() {
         return 0;
@@ -93,8 +86,7 @@ public class Poll implements Parcelable, Serializable {
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(name);
         parcel.writeString(question);
-        parcel.writeString(first_opt);
-        parcel.writeString(second_opt);
+        parcel.writeStringList(options);
         parcel.writeString(hostAddress);
         votes = Collections.synchronizedList(new ArrayList());
         parcel.writeList(votes);
@@ -115,8 +107,8 @@ public class Poll implements Parcelable, Serializable {
     public Poll(Parcel parcel) {
         name       = parcel.readString();
         question   = parcel.readString();
-        first_opt  = parcel.readString();
-        second_opt = parcel.readString();
+        options = new ArrayList<String>();
+        parcel.readStringList(options);
         hostAddress = parcel.readString();
         votes      = Collections.synchronizedList(new ArrayList());
         parcel.readList(votes, null);
@@ -131,8 +123,7 @@ public class Poll implements Parcelable, Serializable {
 
         if (!getName().equals(poll.getName())) return false;
         if (!getQuestion().equals(poll.getQuestion())) return false;
-        if (!first_opt.equals(poll.first_opt)) return false;
-        if (!second_opt.equals(poll.second_opt)) return false;
+        if (!getOptions().equals(poll.getOptions())) return false;
         return getHostAddress().equals(poll.getHostAddress());
 
     }
@@ -141,8 +132,7 @@ public class Poll implements Parcelable, Serializable {
     public int hashCode() {
         int result = getName().hashCode();
         result = 31 * result + getQuestion().hashCode();
-        result = 31 * result + first_opt.hashCode();
-        result = 31 * result + second_opt.hashCode();
+        result = 31 * result + getOptions().hashCode();
         result = 31 * result + getHostAddress().hashCode();
         return result;
     }

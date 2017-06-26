@@ -145,7 +145,7 @@ public class ServiceConnectionManager {
     }
 
 
-    public void sendMessageToAllDevicesInNetwork(final Context context, String type, String[] messages) {
+    public void sendMessageToAllDevicesInNetwork(final Context context, String type, ArrayList<String> messages) {
         if (jmdns != null) {
 
             Set<String> ipAddressesSet = getNeighborDevicesIpAddressesSet(context);

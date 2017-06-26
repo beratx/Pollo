@@ -141,12 +141,17 @@ public class ActivePollsActivity extends AppCompatActivity {
             }
             //adapter.notifyDataSetChanged();
 
-            String[] pollMessages = {poll.getName(), poll.getQuestion(), poll.getFirstOpt(),
-                                       poll.getSecondOpt(), poll.getHostAddress() };
+            ArrayList<String> pollData = new ArrayList<String>();
+            pollData.add(poll.getName());
+            pollData.add(poll.getQuestion());
+            pollData.add(poll.getHostAddress());
+            pollData.addAll(poll.getOptions());
+
+
             //Toast.makeText(this, "MY HOST ADDRESS: " + poll.getHostAddress(), Toast.LENGTH_LONG).show();
 
             try {
-                connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollMessages);
+                connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollData);
             } catch (NullPointerException e) {
                 Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
                 return;
@@ -158,8 +163,10 @@ public class ActivePollsActivity extends AppCompatActivity {
         else if(acceptedPollRequest){
             Log.d(TAG, "onResume(): acceptedPollReq");
             acceptedPollRequest = false;
-            String messages[] = {poll.getName(), poll.getHostAddress()};
-            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(), ActivePollsActivity.this, Consts.ACCEPT, messages);
+            ArrayList<String> pollData = new ArrayList<>();
+            pollData.add(poll.getName());
+            pollData.add(poll.getHostAddress());
+            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(), ActivePollsActivity.this, Consts.ACCEPT, pollData);
             Thread t = new Thread(clientProcessor);
             t.start();
             //active_polls.add(poll);

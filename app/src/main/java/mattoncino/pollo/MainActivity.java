@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         binding.createPollActivityButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if(wifiConnected())
+                //if(wifiConnected())
                     startActivity(new Intent(MainActivity.this, mattoncino.pollo.MultiOptPollActivity.class));
             }
         });
@@ -45,51 +45,52 @@ public class MainActivity extends AppCompatActivity {
         binding.showDeviceListButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if(wifiConnected()) {
+                //if(wifiConnected()) {
                     connectionManager.unregisterService();
                     connectionManager.registerService();
                     onShowOnlineDevicesListDialogPress();
-                }
+                //}
             }
         });
 
 
-        if(exist_active_pool) {
-            binding.activePollsActivityButton.setOnClickListener(new View.OnClickListener() {
+        binding.activePollsActivityButton.setOnClickListener(new View.OnClickListener() {
 
-                @Override
-                public void onClick(View view) {
-                    startActivity(new Intent(MainActivity.this, mattoncino.pollo.ActivePollsActivity.class));
-                }
-            });
-            binding.activePollsActivityButton.setVisibility(View.VISIBLE);
-        }
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, mattoncino.pollo.ActivePollsActivity.class));
+            }
+        });
 
-        if(exist_saved_pool) {
-            binding.oldPollsActivityButton.setOnClickListener(new View.OnClickListener() {
 
-                @Override
-                public void onClick(View view) {
-                    startActivity(new Intent(MainActivity.this, mattoncino.pollo.OldPollsActivity.class));
-                }
-            });
-            binding.oldPollsActivityButton.setVisibility(View.VISIBLE);
-        }
+        binding.oldPollsActivityButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, mattoncino.pollo.OldPollsActivity.class));
+            }
+        });
+
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if(wifiConnected())
+        if(wifiConnected()) {
             startDataTransferring();
-        binding.createPollActivityButton.setEnabled(true);
-        binding.activePollsActivityButton.setEnabled(true);
-        binding.oldPollsActivityButton.setEnabled(true);
-        binding.showDeviceListButton.setEnabled(true);
+            binding.createPollActivityButton.setEnabled(true);
+            binding.activePollsActivityButton.setEnabled(true);
+            binding.oldPollsActivityButton.setEnabled(true);
+            binding.showDeviceListButton.setEnabled(true);
+        }
     }
 
     private void startDataTransferring(){
-        Runnable runnable = new Runnable() {
+        connectionManager = ((MyApplication)getApplication()).getConnectionManager();
+        Intent connManagerServiceIntent = new Intent(this, ConnectionManagerService.class);
+        //mServiceIntent.setData(Uri.parse(dataUrl));
+        startService(connManagerServiceIntent);
+        /*Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 connectionManager = ((MyApplication)getApplication()).getConnectionManager();
@@ -97,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         Thread thread = new Thread(runnable);
-        thread.start();
+        thread.start();*/
     }
 
     @Override

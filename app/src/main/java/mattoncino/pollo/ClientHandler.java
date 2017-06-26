@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Parcelable;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -34,7 +35,7 @@ public class ClientHandler implements Runnable {
     private Context context;
     private BufferedReader inputBufferedReader;
     private PrintWriter outputPrintWriter;
-    private String pollElements[];
+    private List<String> pollData;
     private Poll poll;
     private ActivityMainBinding mainActbinding;
     private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
@@ -43,7 +44,7 @@ public class ClientHandler implements Runnable {
     public ClientHandler(Socket socket, Context context){
         this.socket = socket;
         this.context = context;
-        this.pollElements = new String[5];
+        this.pollData = new ArrayList<String>();
     }
 
     @Override
@@ -57,26 +58,29 @@ public class ClientHandler implements Runnable {
 
             //Log.v(TAG, "GOT INPUT AND OUTPUT STREAM");
 
-            final String response = inputBufferedReader.readLine(); //poll_request
+            final String message = inputBufferedReader.readLine();
 
-            if (response.equals(Consts.POLL_REQUEST)) {
+            if (message.equals(Consts.POLL_REQUEST)) {
 
-                pollElements[0] = inputBufferedReader.readLine(); //poll_name
-                pollElements[1] = inputBufferedReader.readLine(); //poll_question
-                pollElements[2] = inputBufferedReader.readLine(); //poll_firstOpt
-                pollElements[3] = inputBufferedReader.readLine(); //poll_secondOpt
-                pollElements[4] = inputBufferedReader.readLine(); //poll_hostAddress
+                String name = inputBufferedReader.readLine(); //poll_name
+                String question = inputBufferedReader.readLine(); //poll_question
+                final String hostAddress = inputBufferedReader.readLine(); //poll_hostAddress
+                int optSize = Integer.parseInt(inputBufferedReader.readLine());
+                List<String> options = new ArrayList<>();
+                for (int i = 0; i < optSize; i++) {
+                    options.add(inputBufferedReader.readLine());
+                }
 
-                poll = new Poll(pollElements[0], pollElements[1], pollElements[2], pollElements[3], pollElements[4]);
+                poll = new Poll(name, question, options, hostAddress);
 
                 /*outputPrintWriter.println(Consts.ACCEPT);*/
-                //Log.v(TAG, "SENT ACCEPT MESSAGE");
+                Log.d(TAG, "SENT ACCEPT MESSAGE");
 
                 Activity act = (Activity) context;
                 act.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        ToastHelper.useShortToast(context, response + " from: " + pollElements[4]);
+                        ToastHelper.useShortToast(context, message + " from: " + hostAddress);
                     }
                 });
 
@@ -84,7 +88,7 @@ public class ClientHandler implements Runnable {
                 //how to update main menu so you can see new polls note?
 
 
-            }else if(response.equals(Consts.ACCEPT)){
+            }else if(message.equals(Consts.ACCEPT)){
 
                 String pollName = inputBufferedReader.readLine();
                 String hostAddress = inputBufferedReader.readLine();
@@ -99,7 +103,7 @@ public class ClientHandler implements Runnable {
                 });
 
 
-            }else if(response.equals(Consts.POLL_VOTE)){
+            }else if(message.equals(Consts.POLL_VOTE)){
 
                 String pollName = inputBufferedReader.readLine();
                 final int vote = Integer.parseInt(inputBufferedReader.readLine());
