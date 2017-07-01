@@ -6,7 +6,9 @@ import android.os.Parcelable;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class Poll implements Parcelable, Serializable {
@@ -15,9 +17,9 @@ public class Poll implements Parcelable, Serializable {
     private List<String> options;
     private String hostAddress;
     //private int owner;
-    private List votes;
-
-
+    private List<Integer> votes;
+    private Set participants;
+    private boolean disabled;
 
     public Poll(String name, String question, List<String> options, String hostAddress) {
         this.name = name;
@@ -25,7 +27,9 @@ public class Poll implements Parcelable, Serializable {
         this.options = options;
         //this.owner = owner;
         this.hostAddress = hostAddress;
-        this.votes = Collections.synchronizedList(new ArrayList());
+        this.votes = Collections.synchronizedList(new ArrayList<Integer>());
+        this.participants = Collections.synchronizedSet(new HashSet<String>());
+        this.disabled = false;
     }
 
     public String getName() {
@@ -44,32 +48,51 @@ public class Poll implements Parcelable, Serializable {
         return hostAddress;
     }
 
-/*public int getOwner() {
-        return owner;
+    public List<String> getParticipants(){
+        return new ArrayList<String>(participants);
     }
 
-    public void setOwner(int owner){
-        this.owner = owner;
-    }*/
+    public void addParticipant(String device){
+        participants.add(device);
+    }
+
+    public int participantCount(){
+        return participants.size();
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    public void setOption(int i, String text){
+        options.set(i,text);
+    }
+
 
     /*public void setHostAddress(String hostAddress){
         this.hostAddress = hostAddress;
     }*/
 
+    //!!!ATTENTION WE SKIP THE "0" !!!
     public void addVote(int vote){
         votes.add(vote);
     }
 
     public double getResult(int opt){
-        //int first = 0, second = 0, total = 0;
-        if(votes.size() == 0) return 0.0;
         int count = 0;
-        for(int vote=0; vote<votes.size(); vote++){
+        if(votes.size() == 0) return 0.0;
+
+        for (Integer vote:votes) {
             if(vote == opt)
                 count++;
         }
 
-        return count/votes.size();
+        return count;
+        //return count/votes.size();
 
         //double firstPercent = (double)first / total;
         //double secondPercent = (double)second / total;

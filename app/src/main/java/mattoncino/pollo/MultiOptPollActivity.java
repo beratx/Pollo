@@ -54,17 +54,32 @@
             binding.saveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+
                     Poll poll = createPoll();
 
-                    if(poll == null)  return;
+                    if (poll == null) return;
+
+                    /*if(!presentOnlineDevices()) {
+                        Toast.makeText(MultiOptPollActivity.this, "No device is present", Toast.LENGTH_LONG).show();
+                        return;
+                    }*/
 
                     Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
-                         .putExtra(Consts.POLL_MINE, (Parcelable) poll);
+                            .putExtra(Consts.OWNER, Consts.OWN)
+                            .putExtra(Consts.POLL, (Parcelable) poll);
+
                     startActivity(intent);
 
                 }
             });
 
+        }
+
+        private boolean presentOnlineDevices(){
+            String deviceId = ((MyApplication)getApplication()).getDeviceId();
+            ServiceConnectionManager connManager = ((MyApplication)getApplication()).getConnectionManager();
+            final List<String> onlineDevices = connManager.getOnlineDevicesList(MultiOptPollActivity.this, deviceId);
+            return onlineDevices.size() != 0;
         }
 
         private TextInputLayout createNewOptionEntry() {

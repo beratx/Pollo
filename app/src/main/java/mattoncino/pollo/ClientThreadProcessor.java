@@ -1,6 +1,5 @@
 package mattoncino.pollo;
 
-import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
@@ -147,14 +146,18 @@ public class ClientThreadProcessor implements Runnable{
             //output.println(vote);
             //output.println(socket.getInetAddress().getHostAddress()); //device address
 
+            if (output.checkError())
+                Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
+
+            Log.d(TAG, "SENT ACCEPT MSG TO: " + messages.get(1));
+
             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             final String res = input.readLine();
 
             if(res.equals(Consts.RECEIVED))
-                Log.d(TAG, "i sent vote, other device received it");
+                Log.d(TAG, "DEVICE RECEIVED MY ACCEPT: " + messages.get(1));
 
-            if (output.checkError())
-                Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
+
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -169,27 +172,31 @@ public class ClientThreadProcessor implements Runnable{
                     new OutputStreamWriter(socket.getOutputStream())), true);
 
             output.println(Consts.POLL_VOTE);
-            output.println(vote);
+            output.println(messages.get(0)); //name
+            output.println(messages.get(1)); //vote
+            output.println(messages.get(2)); //hostAddress
             //output.println(socket.getInetAddress().getHostAddress()); //device address
 
             if (output.checkError())
                 Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
 
-            //Log.d(TAG, "sent POLL_VOTE");
+
+            Log.d(TAG, "SENT VOTE");
 
             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             final String messageFromClient = input.readLine();
 
             if (messageFromClient.equals(Consts.RECEIVED)) {
+                Log.d(TAG, "MY VOTE IS RECEIVED: ");
                 //qui devo aggiungere il client alla lista
                 //Log.d(TAG, "vote is received");
-                Activity act = (Activity) context;
+                /*Activity act = (Activity) context;
                 act.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         ToastHelper.useShortToast(context, "vote is received" );
                     }
-                });
+                });*/
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -31,9 +31,8 @@ public class ServiceConnectionManager {
     private ServiceListener listener = null;
     private ServiceInfo serviceInfo;
     private WifiManager.MulticastLock multiCastLock;
-    private boolean registered;
     private ServerThreadProcessor serverThreadProcessor;
-    private InetAddress ownAddress;
+
 
 
     public void initializeService(final Context context) {
@@ -50,7 +49,7 @@ public class ServiceConnectionManager {
                 Log.d(TAG, "JmDNS instance is created");
                 jmdns.addServiceListener(SERVICE_INFO_TYPE, listener = new ServiceListener() {
                     public void serviceResolved(ServiceEvent ev) {
-                        Log.d(TAG, "service is resolved");
+                        Log.d(TAG, "service is resolved: " + ev.getInfo());
                     }
 
                     public void serviceRemoved(ServiceEvent ev) {
@@ -59,7 +58,8 @@ public class ServiceConnectionManager {
 
                     public void serviceAdded(ServiceEvent event) {
                         jmdns.requestServiceInfo(event.getType(), event.getName(), 1);
-                        Log.d(TAG, "service is added");
+                        Log.d(TAG, "service is added: " + "info: " + event.getInfo() +
+                                "type: " + event.getType() + "name: " + event.getName());
                     }
                 });
                 Log.d(TAG, "JmDNS Service Listener is added");

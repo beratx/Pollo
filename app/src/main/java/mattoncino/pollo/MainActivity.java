@@ -2,7 +2,6 @@ package mattoncino.pollo;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
@@ -78,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if(wifiConnected()) {
             startDataTransferring();
+            Log.d(TAG, "connManagerServiceIntent is launched");
             binding.createPollActivityButton.setEnabled(true);
             binding.activePollsActivityButton.setEnabled(true);
             binding.oldPollsActivityButton.setEnabled(true);
@@ -178,14 +178,14 @@ public class MainActivity extends AppCompatActivity {
             arrayAdapter.add(devices.get(i));
         }
 
-        DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
+        /*DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
             }
-        };
+        };*/
 
 
-        builderSingle.setAdapter(arrayAdapter, clickListener);
+        builderSingle.setAdapter(arrayAdapter, null);
         builderSingle.show();
     }
 
