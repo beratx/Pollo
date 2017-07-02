@@ -1,5 +1,7 @@
 package mattoncino.pollo;
 
+import android.databinding.BaseObservable;
+import android.databinding.Bindable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -11,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 
-public class Poll implements Parcelable, Serializable {
+public class Poll extends BaseObservable implements Parcelable, Serializable {
     private String name;
     private String question;
     private List<String> options;
@@ -31,42 +33,75 @@ public class Poll implements Parcelable, Serializable {
         this.participants = Collections.synchronizedSet(new HashSet<String>());
         this.disabled = false;
     }
-
+    @Bindable
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+        notifyPropertyChanged(BR.name);
+    }
+
+    public void setQuestion(String question) {
+        this.question = question;
+        notifyPropertyChanged(BR.question);
+    }
+
+    public void setOptions(List<String> options) {
+        this.options = options;
+        notifyPropertyChanged(BR.options);
+    }
+
+    public void setHostAddress(String hostAddress) {
+        this.hostAddress = hostAddress;
+        notifyPropertyChanged(BR.hostAddress);
+    }
+
+    public void setParticipants(Set participants) {
+        this.participants = participants;
+        notifyPropertyChanged(BR.participants);
+    }
+
+    @Bindable
     public String getQuestion() {
         return question;
     }
 
+    @Bindable
     public List<String> getOptions(){
         return options;
     }
 
+    @Bindable
     public String getHostAddress() {
         return hostAddress;
     }
 
+    @Bindable
     public List<String> getParticipants(){
         return new ArrayList<String>(participants);
     }
 
     public void addParticipant(String device){
         participants.add(device);
+        notifyPropertyChanged(BR.participants);
     }
 
     public int participantCount(){
         return participants.size();
     }
 
+    @Bindable
     public boolean isDisabled() {
         return disabled;
     }
 
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
+        notifyPropertyChanged(BR.disabled);
     }
+
 
     public void setOption(int i, String text){
         options.set(i,text);
@@ -77,9 +112,20 @@ public class Poll implements Parcelable, Serializable {
         this.hostAddress = hostAddress;
     }*/
 
-    //!!!ATTENTION WE SKIP THE "0" !!!
+    @Bindable
+    public List<Integer> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(List<Integer> votes) {
+        this.votes = votes;
+        notifyPropertyChanged(BR.votes);
+    }
+
     public void addVote(int vote){
         votes.add(vote);
+        notifyPropertyChanged(BR.votes);
+
     }
 
     public double getResult(int opt){

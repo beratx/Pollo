@@ -11,9 +11,6 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +20,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
     private List<Poll> activePolls;
     private final static String TAG = "CARDVIEW_ADAPTER";
-    private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
+    //private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
 
     public PollsCardViewAdapter(List<Poll> polls){
         activePolls = polls;
@@ -114,6 +111,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
         for (int i = 2; i < poll.getOptions().size(); i++) {
             final Button button = createNewOptionButton(holder.getBinding().nameTextView.getContext(), options.get(i));
+            button.setText(poll.getOptions().get(i) + "\t" + poll.getResult(i));
             if(poll.isDisabled())
                 button.setEnabled(false);
             final int opt = i + 1;
