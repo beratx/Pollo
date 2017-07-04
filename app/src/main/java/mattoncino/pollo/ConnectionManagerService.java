@@ -16,6 +16,6 @@ public class ConnectionManagerService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         //Bundle data = intent.getData();
         connectionManager = ((MyApplication)getApplication()).getConnectionManager();
-        connectionManager.initializeService(getApplicationContext());
+        connectionManager.initializeService(this);
     }
 }

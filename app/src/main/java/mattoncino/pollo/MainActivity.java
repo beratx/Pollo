@@ -23,7 +23,6 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     public static boolean exist_active_pool = true;
     public static boolean exist_saved_pool = true;
-    //public static PollManager pollManager;
     private ServiceConnectionManager connectionManager;
 
 
@@ -183,7 +182,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
             }
         };*/
-
 
         builderSingle.setAdapter(arrayAdapter, null);
         builderSingle.show();

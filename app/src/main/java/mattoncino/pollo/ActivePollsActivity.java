@@ -1,44 +1,40 @@
 package mattoncino.pollo;
 
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.IntentFilter;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 import mattoncino.pollo.databinding.ActivityActivePollsBinding;
 
-public class ActivePollsActivity extends AppCompatActivity {
+public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private static final String TAG = "ActivePollsActivity";
 
     //private static final String SP_POLL_LIST = "pollList1";
-
-    private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
+    //private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
     private ActivityActivePollsBinding binding;
     private RecyclerView.Adapter adapter;
     private ArrayList<Poll> active_polls;
     private Poll poll;
-    private SharedPreferences pref;
-    private SharedPreferences.Editor editor;
     private ServiceConnectionManager connectionManager;
     private boolean myPollRequest = false;
     private boolean acceptedPollRequest = false;
-    private boolean calledBeforeMe = false; /* to save state onPause vs onSaveInstanceState */
-    private boolean restoredBeforeMe = false; /* to restore state onPause vs onSaveInstanceState */
+    private PollManager manager;
+    private BroadcastReceiver updateReceiver;
 
 
     @Override
@@ -50,12 +46,12 @@ public class ActivePollsActivity extends AppCompatActivity {
                 this, R.layout.activity_active_polls);
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        //pref = PreferenceManager.getDefaultSharedPreferences(this);
-        pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-        editor = pref.edit();
+        manager = PollManager.getInstance();
+        manager.addObserver(this);
 
-        if(active_polls == null)
-            active_polls = new ArrayList<Poll>();
+        updateReceiver = createBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(updateReceiver, new IntentFilter("mattoncino.pollo.receive.poll.vote"));
+
 
         /*if(savedInstanceState != null){
             active_polls = savedInstanceState.getParcelableArrayList("pollList");
@@ -65,20 +61,6 @@ public class ActivePollsActivity extends AppCompatActivity {
             }
         }
         else {*/
-            //new Thread(new Runnable(){
-             //   @Override
-             //   public void run() {
-                    //pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-
-                    ArrayList<Poll> backup = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
-                    if (backup != null && backup.size() != 0) {
-                        //active_polls.addAll(backup);
-                        active_polls = backup;
-                        Log.d(TAG, "backuped poll added to active polls");
-                    }
-              //  }
-            //}).start();
-        //}
 
         Bundle data = getIntent().getExtras();
         if(data != null) {
@@ -90,15 +72,33 @@ public class ActivePollsActivity extends AppCompatActivity {
             else if(type == Consts.OTHER)
                 acceptedPollRequest = true;
 
-            //active_polls.add(poll);
+            if(poll != null)
+                manager.addPoll(poll);
+                //active_polls.add(0, poll);
 
             getIntent().removeExtra(Consts.POLL);
             getIntent().removeExtra(Consts.OWNER);
-
-            //Log.d(TAG, "OnCreate: new poll is added to the active_polls");
         }
+    }
 
-        //Log.d(TAG, "at the end of onCreate(): restoredBeforeMe: " + restoredBeforeMe);
+    private BroadcastReceiver createBroadcastReceiver() {
+        Log.d(TAG, "received broadcast");
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String name = intent.getStringExtra("pollName");
+                int vote = intent.getIntExtra("vote", -1);
+                String hostAddress = intent.getStringExtra("hostAddress");
+                if(vote == -1)
+                    Log.d(TAG, "invalid vote");
+                else
+                    manager.updatePoll(name, vote);
+                intent.removeExtra("pollName");
+                intent.removeExtra("vote");
+                intent.removeExtra("hostAddress");
+                //adapter.notifyDataSetChanged();
+            }
+        };
     }
 
 
@@ -110,12 +110,8 @@ public class ActivePollsActivity extends AppCompatActivity {
 
         //removeNotification(0);
 
-        //Log.d(TAG, "beginning of onResume(): restoredBeforeMe: " + restoredBeforeMe);
-
-        if(poll != null)
-            active_polls.add(0, poll);
-
-        adapter = new PollsCardViewAdapter(active_polls);
+        //adapter = new PollsCardViewAdapter(active_polls);
+        adapter = new PollsCardViewAdapter(manager.getActivePolls());
         binding.recyclerView.setAdapter(adapter);
 
 
@@ -165,11 +161,22 @@ public class ActivePollsActivity extends AppCompatActivity {
 
     }
 
+    //called when a change has occurred in the state of the observable
+    @Override
+    public void update(Observable observable, Object o) {
+        if(adapter != null) {
+            adapter.notifyDataSetChanged();
+            Log.d(TAG, "activePollList is modified, adapter is notified");
+        }
+    }
+
     @Override
     protected void onRestart() {
         Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
         super.onRestart();
-        if(active_polls == null)
+        //active_polls = PollManager.getActivePolls();
+        manager = PollManager.getInstance();
+        /*if(active_polls == null)
             active_polls = new ArrayList<Poll>();
 
         //if(!restoredBeforeMe) {
@@ -185,10 +192,7 @@ public class ActivePollsActivity extends AppCompatActivity {
                     Log.d(TAG, "backuped poll added to active polls");
                 }
             }
-        }).start();
-        //active_polls.add(poll);
-        //adapter = new PollsRecyclerViewListAdapter(active_polls);
-        //binding.recyclerView.setAdapter(adapter);
+        }).start();*/
     }
 
     @Override
@@ -205,8 +209,6 @@ public class ActivePollsActivity extends AppCompatActivity {
             int type = adapter.getItemViewType(i);
 
         }*/
-
-
             //final LinearLayout rLayout = findViewById(R..listItemLayout;
 
             /*int mViewsCount = 0;
@@ -236,7 +238,6 @@ public class ActivePollsActivity extends AppCompatActivity {
                 mViewsCount++;
             }*/
 
-                restoredBeforeMe = true;
             }
     }
 
@@ -244,19 +245,7 @@ public class ActivePollsActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         Toast.makeText(this, "called onPause", Toast.LENGTH_LONG).show();
-            //new Thread(new Runnable() {
-            //    @Override
-            //    public void run() {
-                    if (pref == null)
-                        pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-                    if (editor == null)
-                        editor = pref.edit();
-                    //editor.clear();
-                    //editor.commit();
-                    editor.putString(Consts.POLL_LIST, new Gson().toJson(new ArrayList<Poll>(active_polls)));
-                    editor.commit();
-              //  }
-            //}).start();
+        manager.savePollsPermanently();
 
     }
 
@@ -269,6 +258,9 @@ public class ActivePollsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         Toast.makeText(this, "called Destroy", Toast.LENGTH_LONG).show();
+        if (updateReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(updateReceiver);
+        }
         super.onDestroy();
 
     }
@@ -283,6 +275,9 @@ public class ActivePollsActivity extends AppCompatActivity {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(notificationID);
     }
+
+
+
 }
 
 

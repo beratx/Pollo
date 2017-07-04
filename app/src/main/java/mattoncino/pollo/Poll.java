@@ -14,6 +14,7 @@ import java.util.Set;
 
 
 public class Poll extends BaseObservable implements Parcelable, Serializable {
+
     private String name;
     private String question;
     private List<String> options;
@@ -33,6 +34,7 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         this.participants = Collections.synchronizedSet(new HashSet<String>());
         this.disabled = false;
     }
+
     @Bindable
     public String getName() {
         return name;
@@ -102,6 +104,9 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         notifyPropertyChanged(BR.disabled);
     }
 
+    public String getText(int vote){
+        return getName() + " >> " + getResult(vote);
+    }
 
     public void setOption(int i, String text){
         options.set(i,text);
@@ -125,17 +130,18 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     public void addVote(int vote){
         votes.add(vote);
         notifyPropertyChanged(BR.votes);
-
     }
 
     public double getResult(int opt){
         int count = 0;
-        if(votes.size() == 0) return 0.0;
+        //if(votes.size() == 0) return 0.0;
 
         for (Integer vote:votes) {
             if(vote == opt)
                 count++;
         }
+
+        System.out.println("pollname: " + name + " votes: " + votes.toString());
 
         return count;
         //return count/votes.size();

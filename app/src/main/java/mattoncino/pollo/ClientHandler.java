@@ -5,12 +5,11 @@ import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Parcelable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
@@ -26,7 +25,7 @@ import java.util.List;
 import java.util.Random;
 
 
-public class ClientHandler implements Runnable {
+public class ClientHandler implements Runnable{
     private static String TAG = "CLIENT_HANDLER";
     private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
     private Socket socket;
@@ -35,12 +34,14 @@ public class ClientHandler implements Runnable {
     private PrintWriter outputPrintWriter;
     //private List<String> pollData;
     private Poll poll;
+    private PollManager manager;
 
 
 
     public ClientHandler(Socket socket, Context context){
         this.socket = socket;
         this.context = context;
+        this.manager = PollManager.getInstance();
         //this.pollData = new ArrayList<String>();
     }
 
@@ -90,7 +91,6 @@ public class ClientHandler implements Runnable {
                 String pollName = inputBufferedReader.readLine();
                 String hostAddress = inputBufferedReader.readLine();
 
-
                 Log.d(TAG, "RECEIVED ACCEPT FROM: " + hostAddress);
 
                 outputPrintWriter.println(Consts.RECEIVED);
@@ -101,52 +101,24 @@ public class ClientHandler implements Runnable {
                 //USE A THREAD TO DO IT!!!
                 //poll.addParticipant(hostAddress);
 
-                /*Activity act = (Activity) context;
-                act.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ToastHelper.useShortToast(context, "GONNA UPDATE VOTER LIST");
-                    }
-                });*/
             }else if(message.equals(Consts.POLL_VOTE)){
 
-                String pollName = inputBufferedReader.readLine();
+                final String pollName = inputBufferedReader.readLine();
                 final int vote = Integer.parseInt(inputBufferedReader.readLine());
-                String hostAddress = inputBufferedReader.readLine();
+                final String hostAddress = inputBufferedReader.readLine();
+                Log.d(TAG, "arrived vote: " + vote);
 
                 outputPrintWriter.println(Consts.RECEIVED);
 
                 Log.d(TAG, "SENT RECEIVED MSG TO: " + hostAddress);
 
+                Intent intent = new Intent("mattoncino.pollo.receive.poll.vote");
+                intent.putExtra("pollName", pollName);
+                intent.putExtra("vote", vote);
+                intent.putExtra("hostAddress", hostAddress);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
-
-                /*Activity act = (Activity) context;
-                act.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ToastHelper.useShortToast(context, "VOTED: " + vote);
-                    }
-                });*/
-
-                //QUI DEVO AGGIORNARE IL POLL IN QUESTIONE
-                //updatePoll(pollName, vote);
-
-                SharedPreferences pref = context.getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = pref.edit();
-                ArrayList<Poll> activePolls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
-
-                if (activePolls != null && activePolls.size() != 0) {
-                   for(Poll p : activePolls){
-                       if(pollName.equals(p.getName())) {
-                           p.addVote(vote);
-                           Log.d(TAG, "vote added to poll: " + pollName);
-                       }
-                   }
-
-                   editor.putString(Consts.POLL_LIST, new Gson().toJson(new ArrayList<Poll>(activePolls)));
-                   editor.apply();
-                   Log.d(TAG, "editor.apply() after poll vote update");
-                }
+                Log.d(TAG, "manager.updatePoll is called: " + hostAddress);
 
             }
 
@@ -205,9 +177,5 @@ public class ClientHandler implements Runnable {
                 Context.NOTIFICATION_SERVICE);
         manager.notify(0, builder.build());
     }
-
-
-
-
 
 }

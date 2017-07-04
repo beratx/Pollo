@@ -58,19 +58,22 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         final Poll poll = activePolls.get(position);
         final List<String> options = poll.getOptions();
         final LinearLayout rLayout = holder.getBinding().listItemLayout;
+        final TextView textView = null;
 
         holder.getBinding().opt1Button.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
                 poll.addVote(Consts.FIRST_OPT);
+                notifyDataSetChanged();
                 poll.setDisabled(true);
                 disableOptionButtons(rLayout);
 
                 holder.getBinding().opt1Button.setText(
                         holder.getBinding().opt1Button.getText().toString() + "    "+ "\u2713");
 
-                rLayout.addView(addMessageView(holder.getBinding().nameTextView.getContext()));
+                TextView textView = addMessageView(holder.getBinding().nameTextView.getContext());
+                rLayout.addView(textView);
 
                 ArrayList<String> pollData = new ArrayList<String>();
                 pollData.add(poll.getName());
@@ -89,13 +92,15 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             @Override
             public void onClick(View view) {
                 poll.addVote(Consts.SECOND_OPT);
+                notifyDataSetChanged();
                 poll.setDisabled(true);
                 disableOptionButtons(rLayout);
 
                 holder.getBinding().opt2Button.setText(
                         holder.getBinding().opt2Button.getText().toString() + "    "+ "\u2713");
 
-                rLayout.addView(addMessageView(holder.getBinding().nameTextView.getContext()));
+                TextView textView = addMessageView(holder.getBinding().nameTextView.getContext());
+                rLayout.addView(textView);
 
                 ArrayList<String> pollData = new ArrayList<String>();
                 pollData.add(poll.getName());
@@ -111,7 +116,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
         for (int i = 2; i < poll.getOptions().size(); i++) {
             final Button button = createNewOptionButton(holder.getBinding().nameTextView.getContext(), options.get(i));
-            button.setText(poll.getOptions().get(i) + "\t" + poll.getResult(i));
+            button.setText(poll.getText(i+1));
             if(poll.isDisabled())
                 button.setEnabled(false);
             final int opt = i + 1;
@@ -121,12 +126,14 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 @Override
                 public void onClick(View view) {
                     poll.addVote(opt);
+                    notifyDataSetChanged();
                     poll.setDisabled(true);
                     disableOptionButtons(rLayout);
 
                     button.setText(button.getText().toString() + "    "+ "\u2713");
 
-                    rLayout.addView(addMessageView(holder.getBinding().nameTextView.getContext()));
+                    TextView textView = addMessageView(holder.getBinding().nameTextView.getContext());
+                    rLayout.addView(textView);
 
                     ArrayList<String> pollData = new ArrayList<String>();
                     pollData.add(poll.getName());
@@ -145,7 +152,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         }
 
         if(poll.isDisabled()){
-            rLayout.addView(addMessageView(holder.getBinding().nameTextView.getContext()));
+            if(textView == null)
+                rLayout.addView(addMessageView(holder.getBinding().nameTextView.getContext()));
         }
 
         holder.getBinding().setVariable(BR.poll, poll);
@@ -173,8 +181,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
         return textView;
     }
-
-
 
     private Button createNewOptionButton(Context context, String option) {
         LinearLayout.LayoutParams lparams = new LinearLayout.LayoutParams(
