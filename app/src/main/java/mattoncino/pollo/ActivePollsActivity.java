@@ -13,7 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Observable;
@@ -40,7 +39,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Toast.makeText(this, "called onCreate", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onCreate", Toast.LENGTH_LONG).show();
         setTitle("Active Polls");
         binding = DataBindingUtil.setContentView(
                 this, R.layout.activity_active_polls);
@@ -105,7 +104,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     @Override
     protected void onResume() {
         super.onResume();
-        Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
         //Log.d(TAG, "get in onResume()");
 
         //removeNotification(0);
@@ -172,7 +171,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
 
     @Override
     protected void onRestart() {
-        Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
         super.onRestart();
         //active_polls = PollManager.getActivePolls();
         manager = PollManager.getInstance();
@@ -244,20 +243,20 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     @Override
     protected void onPause() {
         super.onPause();
-        Toast.makeText(this, "called onPause", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onPause", Toast.LENGTH_LONG).show();
         manager.savePollsPermanently();
 
     }
 
     @Override
     protected void onStop() {
-        Toast.makeText(this, "called onStop", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onStop", Toast.LENGTH_LONG).show();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        Toast.makeText(this, "called Destroy", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called Destroy", Toast.LENGTH_LONG).show();
         if (updateReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(updateReceiver);
         }

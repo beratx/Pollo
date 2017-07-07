@@ -3,6 +3,7 @@ package mattoncino.pollo;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,18 +17,17 @@ import java.util.List;
 
 import mattoncino.pollo.databinding.ActivePollsListItemBinding;
 
+
 public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdapter.CardViewHolder> {
 
     private List<Poll> activePolls;
     private final static String TAG = "CARDVIEW_ADAPTER";
-    //private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
 
     public PollsCardViewAdapter(List<Poll> polls){
         activePolls = polls;
     }
 
     public static class CardViewHolder extends RecyclerView.ViewHolder {
-
         private ActivePollsListItemBinding listItemBinding;
 
         public CardViewHolder(View v) {
@@ -38,6 +38,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         public ActivePollsListItemBinding getBinding(){
             return listItemBinding;
         }
+
     }
 
 
@@ -55,109 +56,64 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(final PollsCardViewAdapter.CardViewHolder holder, final int position) {
+        holder.getBinding().messageTextView.setVisibility(View.GONE);
         final Poll poll = activePolls.get(position);
-        final List<String> options = poll.getOptions();
         final LinearLayout rLayout = holder.getBinding().listItemLayout;
-        final TextView textView = null;
 
-        holder.getBinding().opt1Button.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View view) {
-                poll.addVote(Consts.FIRST_OPT);
-                notifyDataSetChanged();
-                poll.setDisabled(true);
-                disableOptionButtons(rLayout);
-
-                holder.getBinding().opt1Button.setText(
-                        holder.getBinding().opt1Button.getText().toString() + "    "+ "\u2713");
-
-                TextView textView = addMessageView(holder.getBinding().nameTextView.getContext());
-                rLayout.addView(textView);
-
-                ArrayList<String> pollData = new ArrayList<String>();
-                pollData.add(poll.getName());
-                pollData.add(new Integer(Consts.FIRST_OPT).toString());
-                pollData.add(poll.getHostAddress());
-
-                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(),
-                                            view.getContext(), Consts.POLL_VOTE, pollData);
-                Thread t = new Thread(clientProcessor);
-                t.start();
-
-            }
-        });
-
-        holder.getBinding().opt2Button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                poll.addVote(Consts.SECOND_OPT);
-                notifyDataSetChanged();
-                poll.setDisabled(true);
-                disableOptionButtons(rLayout);
-
-                holder.getBinding().opt2Button.setText(
-                        holder.getBinding().opt2Button.getText().toString() + "    "+ "\u2713");
-
-                TextView textView = addMessageView(holder.getBinding().nameTextView.getContext());
-                rLayout.addView(textView);
-
-                ArrayList<String> pollData = new ArrayList<String>();
-                pollData.add(poll.getName());
-                pollData.add(new Integer(Consts.SECOND_OPT).toString());
-                pollData.add(poll.getHostAddress());
-
-                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(),
-                                            view.getContext(), Consts.POLL_VOTE, pollData);
-                Thread t = new Thread(clientProcessor);
-                t.start();
-            }
-        });
-
-        for (int i = 2; i < poll.getOptions().size(); i++) {
-            final Button button = createNewOptionButton(holder.getBinding().nameTextView.getContext(), options.get(i));
-            button.setText(poll.getText(i+1));
-            if(poll.isDisabled())
-                button.setEnabled(false);
-            final int opt = i + 1;
-
-            button.setOnClickListener(new View.OnClickListener() {
-
-                @Override
-                public void onClick(View view) {
-                    poll.addVote(opt);
-                    notifyDataSetChanged();
-                    poll.setDisabled(true);
-                    disableOptionButtons(rLayout);
-
-                    button.setText(button.getText().toString() + "    "+ "\u2713");
-
-                    TextView textView = addMessageView(holder.getBinding().nameTextView.getContext());
-                    rLayout.addView(textView);
-
-                    ArrayList<String> pollData = new ArrayList<String>();
-                    pollData.add(poll.getName());
-                    pollData.add(Integer.toString(opt));
-                    pollData.add(poll.getHostAddress());
-
-                    ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(),
-                            view.getContext(), Consts.POLL_VOTE, pollData);
-                    Thread t = new Thread(clientProcessor);
-                    t.start();
+        for (int i = 0; i < poll.getOptions().size(); i++) {
+            final View view = rLayout.getChildAt(i+2);
+            if(view instanceof Button) {
+                final Button button = (Button) view;
+                final int opt = i+1;
+                button.setVisibility(View.VISIBLE);
+                button.setText(poll.getText(i+1));
+                if(!poll.isDisabled()){
+                    button.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            button.setText(button.getText().toString() + "    " + "\u2713");
+                            sendVote(view, poll, opt);
+                            setCardDetails(holder.getBinding().nameTextView.getContext(), rLayout, poll, opt);
+                        }
+                    });
                 }
-            });
-
-            rLayout.addView(button);
-
+            }
         }
 
-        if(poll.isDisabled()){
-            if(textView == null)
-                rLayout.addView(addMessageView(holder.getBinding().nameTextView.getContext()));
-        }
+        if(poll.isDisabled())
+            holder.getBinding().messageTextView.setVisibility(View.VISIBLE);
 
         holder.getBinding().setVariable(BR.poll, poll);
         holder.getBinding().executePendingBindings();
+    }
+
+    private void setCardDetails(final Context context, final LinearLayout rLayout, final Poll poll, final int opt){
+        poll.setDisabled(true);
+        disableOptionButtons(rLayout);
+
+        Handler handler = new Handler();
+        final Runnable r = new Runnable(){
+            @Override
+            public void run() {
+                poll.addVote(opt);
+                notifyDataSetChanged();
+                System.out.println("HOW MANY TIMES AM I INVOKED?");
+            }
+        };
+        handler.post(r);
+    }
+
+    private void sendVote(View view, Poll poll, int opt){
+        ArrayList<String> pollData = new ArrayList<String>();
+        pollData.add(poll.getName());
+        pollData.add(new Integer(opt).toString());
+        pollData.add(poll.getHostAddress());
+
+        ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(),
+                view.getContext(), Consts.POLL_VOTE, pollData);
+        Thread t = new Thread(clientProcessor);
+        t.start();
+
     }
 
     private void disableOptionButtons(ViewGroup layout){
@@ -182,22 +138,10 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         return textView;
     }
 
-    private Button createNewOptionButton(Context context, String option) {
-        LinearLayout.LayoutParams lparams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        final Button button = new Button(context);
-        button.setLayoutParams(lparams);
-        button.setId(View.generateViewId());
-        button.setTextSize(18);
-        button.setText(option);
-        //button.setBackgroundColor(Color.TRANSPARENT);
-
-        return button;
-    }
-
     @Override
     public int getItemCount() {
         return activePolls.size();
     }
 }
+
+

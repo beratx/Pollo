@@ -105,7 +105,7 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     }
 
     public String getText(int vote){
-        return getName() + " >> " + getResult(vote);
+        return getOptions().get(vote - 1) + " >> " + getResult(vote);
     }
 
     public void setOption(int i, String text){
