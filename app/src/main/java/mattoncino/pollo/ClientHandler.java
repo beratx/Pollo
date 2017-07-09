@@ -10,15 +10,12 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.google.gson.reflect.TypeToken;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,22 +24,16 @@ import java.util.Random;
 
 public class ClientHandler implements Runnable{
     private static String TAG = "CLIENT_HANDLER";
-    private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
     private Socket socket;
     private Context context;
     private BufferedReader inputBufferedReader;
     private PrintWriter outputPrintWriter;
-    //private List<String> pollData;
     private Poll poll;
-    private PollManager manager;
-
 
 
     public ClientHandler(Socket socket, Context context){
         this.socket = socket;
         this.context = context;
-        this.manager = PollManager.getInstance();
-        //this.pollData = new ArrayList<String>();
     }
 
     @Override
@@ -60,6 +51,7 @@ public class ClientHandler implements Runnable{
 
             if (message.equals(Consts.POLL_REQUEST)) {
 
+                String id = inputBufferedReader.readLine();//poll_id
                 String name = inputBufferedReader.readLine(); //poll_name
                 String question = inputBufferedReader.readLine(); //poll_question
                 final String hostAddress = inputBufferedReader.readLine(); //poll_hostAddress
@@ -69,7 +61,7 @@ public class ClientHandler implements Runnable{
                     options.add(inputBufferedReader.readLine());
                 }
 
-                poll = new Poll(name, question, options, hostAddress);
+                poll = new Poll(id, name, question, options);
 
                 /*outputPrintWriter.println(Consts.ACCEPT);*/
                 Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
@@ -82,20 +74,26 @@ public class ClientHandler implements Runnable{
                     }
                 });*/
 
-                addNotification(poll);
+                addNotification(poll, hostAddress);
                 //how to update main menu so you can see new polls note?
+                //with a handler!
 
 
             }else if(message.equals(Consts.ACCEPT)){
 
-                String pollName = inputBufferedReader.readLine();
+                String pollID = inputBufferedReader.readLine();
                 String hostAddress = inputBufferedReader.readLine();
 
                 Log.d(TAG, "RECEIVED ACCEPT FROM: " + hostAddress);
 
                 outputPrintWriter.println(Consts.RECEIVED);
 
-                Log.d(TAG, "SENT RECEIVED MSG TO: " + hostAddress);
+                Log.d(TAG, "SENT ACCEPT RECEIVED MSG TO: " + hostAddress);
+
+                Intent intent = new Intent("mattoncino.pollo.receive.poll.accept");
+                intent.putExtra("pollID", pollID);
+                intent.putExtra("hostAddress", hostAddress);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                 //aggiornare voter list
                 //WRONG YOU SHOULD GET THE POLL FROM NAME THEN ADD IT!!
                 //USE A THREAD TO DO IT!!!
@@ -103,22 +101,22 @@ public class ClientHandler implements Runnable{
 
             }else if(message.equals(Consts.POLL_VOTE)){
 
-                final String pollName = inputBufferedReader.readLine();
+                final String id = inputBufferedReader.readLine();
                 final int vote = Integer.parseInt(inputBufferedReader.readLine());
                 final String hostAddress = inputBufferedReader.readLine();
                 Log.d(TAG, "arrived vote: " + vote);
 
                 outputPrintWriter.println(Consts.RECEIVED);
 
-                Log.d(TAG, "SENT RECEIVED MSG TO: " + hostAddress);
+                Log.d(TAG, "SENT VOTE RECEIVED MSG TO: " + hostAddress);
 
                 Intent intent = new Intent("mattoncino.pollo.receive.poll.vote");
-                intent.putExtra("pollName", pollName);
+                intent.putExtra("pollID", id);
                 intent.putExtra("vote", vote);
                 intent.putExtra("hostAddress", hostAddress);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
-                Log.d(TAG, "manager.updatePoll is called: " + hostAddress);
+                Log.d(TAG, "manager.updatePoll is called for host: " + hostAddress);
 
             }
 
@@ -132,13 +130,16 @@ public class ClientHandler implements Runnable{
 
     }
 
-    private void addNotification(Poll poll){
+    private void addNotification(Poll poll, String hostAddress){
         Random randomGenerator = new Random();
         final int NOTIFICATION_ID = randomGenerator.nextInt();
 
         Intent notificationIntent = new Intent(context, ActivePollsActivity.class)
                 .putExtra(Consts.OWNER, Consts.OTHER)
-                .putExtra(Consts.POLL, (Parcelable) poll);
+                .putExtra(Consts.POLL, (Parcelable) poll)
+                .putExtra("hostAddress", hostAddress)
+                .putExtra("notificationID", NOTIFICATION_ID);
+
         //notificationIntent.putExtra(Consts.HOST_ADDR, hostAddress);
         //notificationIntent.putExtra()
 
@@ -175,7 +176,7 @@ public class ClientHandler implements Runnable{
         // Add as notification
         android.app.NotificationManager manager = (android.app.NotificationManager) context.getSystemService(
                 Context.NOTIFICATION_SERVICE);
-        manager.notify(0, builder.build());
+        manager.notify(NOTIFICATION_ID, builder.build());
     }
 
 }

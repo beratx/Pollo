@@ -27,13 +27,17 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     //private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
     private ActivityActivePollsBinding binding;
     private RecyclerView.Adapter adapter;
-    private ArrayList<Poll> active_polls;
+    private ArrayList<PollData> active_polls;
     private Poll poll;
     private ServiceConnectionManager connectionManager;
     private boolean myPollRequest = false;
     private boolean acceptedPollRequest = false;
     private PollManager manager;
     private BroadcastReceiver updateReceiver;
+    private BroadcastReceiver acceptReceiver;
+    private String xhostAddress;
+    private String ownAddress;
+
 
 
     @Override
@@ -48,9 +52,11 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         manager = PollManager.getInstance();
         manager.addObserver(this);
 
-        updateReceiver = createBroadcastReceiver();
+        updateReceiver = createUpdateBroadcastReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(updateReceiver, new IntentFilter("mattoncino.pollo.receive.poll.vote"));
 
+        acceptReceiver = createAcceptBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(acceptReceiver, new IntentFilter("mattoncino.pollo.receive.poll.accept"));
 
         /*if(savedInstanceState != null){
             active_polls = savedInstanceState.getParcelableArrayList("pollList");
@@ -64,36 +70,60 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         Bundle data = getIntent().getExtras();
         if(data != null) {
             int type = data.getInt(Consts.OWNER);
-            poll = (Poll) data.getParcelable(Consts.POLL);
+            poll = data.getParcelable(Consts.POLL);
+            int notfID = data.getInt("notificationID");
 
-            if(type == Consts.OWN)
-                myPollRequest = true;
-            else if(type == Consts.OTHER)
-                acceptedPollRequest = true;
+            if(poll != null) {
+                if (type == Consts.OWN) {
+                    myPollRequest = true;
+                    ownAddress = ((MyApplication) getApplication()).getConnectionManager().getHostAddress();
+                    manager.addPoll(new PollData(poll,ownAddress,type));
+                } else if (type == Consts.OTHER) {
+                    acceptedPollRequest = true;
+                    xhostAddress = data.getString("hostAddress");
+                    manager.addPoll(new PollData(poll,xhostAddress,type));
+                }
 
-            if(poll != null)
-                manager.addPoll(poll);
-                //active_polls.add(0, poll);
+            }
 
+            removeNotification(notfID);
             getIntent().removeExtra(Consts.POLL);
             getIntent().removeExtra(Consts.OWNER);
+            getIntent().removeExtra("notificationID");
+            if (type == Consts.OTHER) getIntent().removeExtra("hostAddress");
         }
     }
 
-    private BroadcastReceiver createBroadcastReceiver() {
-        Log.d(TAG, "received broadcast");
+    private BroadcastReceiver createUpdateBroadcastReceiver() {
+        Log.d(TAG, "received create broadcast");
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                String name = intent.getStringExtra("pollName");
+                String pollID = intent.getStringExtra("pollID");
                 int vote = intent.getIntExtra("vote", -1);
-                String hostAddress = intent.getStringExtra("hostAddress");
+                //String hostAddress = intent.getStringExtra("hostAddress");
                 if(vote == -1)
-                    Log.d(TAG, "invalid vote");
+                    Log.d(TAG, "corrupted vote");
                 else
-                    manager.updatePoll(name, vote);
-                intent.removeExtra("pollName");
+                    manager.updatePoll(pollID, vote);
+                intent.removeExtra("pollID");
                 intent.removeExtra("vote");
+                intent.removeExtra("hostAddress");
+                //adapter.notifyDataSetChanged();
+            }
+        };
+    }
+
+    private BroadcastReceiver createAcceptBroadcastReceiver() {
+        Log.d(TAG, "received accept broadcast");
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String pollID = intent.getStringExtra("pollID");
+                xhostAddress = intent.getStringExtra("hostAddress");
+
+                manager.addVoter(pollID, xhostAddress);
+                intent.removeExtra("pollID");
                 intent.removeExtra("hostAddress");
                 //adapter.notifyDataSetChanged();
             }
@@ -107,12 +137,8 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         //Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
         //Log.d(TAG, "get in onResume()");
 
-        //removeNotification(0);
-
-        //adapter = new PollsCardViewAdapter(active_polls);
         adapter = new PollsCardViewAdapter(manager.getActivePolls());
         binding.recyclerView.setAdapter(adapter);
-
 
         if(myPollRequest) {
             new Thread(new Runnable(){
@@ -124,14 +150,15 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                         return;
                     }
 
-                    ArrayList<String> pollData = new ArrayList<String>();
-                    pollData.add(poll.getName());
-                    pollData.add(poll.getQuestion());
-                    pollData.add(poll.getHostAddress());
-                    pollData.addAll(poll.getOptions());
+                    ArrayList<String> pollInfo = new ArrayList<String>();
+                    pollInfo.add(poll.getId());
+                    pollInfo.add(poll.getName());
+                    pollInfo.add(poll.getQuestion());
+                    pollInfo.add(ownAddress);
+                    pollInfo.addAll(poll.getOptions());
 
                     try {
-                        connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollData);
+                        connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollInfo);
                     } catch (NullPointerException e) {
                         Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
                         return;
@@ -140,21 +167,18 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                 }
             }).start();
 
-
             myPollRequest = false;
 
         }
         else if(acceptedPollRequest){
             Log.d(TAG, "onResume(): acceptedPollReq");
             acceptedPollRequest = false;
-            ArrayList<String> pollData = new ArrayList<>();
-            pollData.add(poll.getName());
-            pollData.add(poll.getHostAddress());
-            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(), ActivePollsActivity.this, Consts.ACCEPT, pollData);
+            ArrayList<String> pollInfo = new ArrayList<>();
+            pollInfo.add(poll.getId());
+            pollInfo.add(xhostAddress);
+            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(xhostAddress, ActivePollsActivity.this, Consts.ACCEPT, pollInfo);
             Thread t = new Thread(clientProcessor);
             t.start();
-            //active_polls.add(poll);
-            //adapter.notifyDataSetChanged();
             //Toast.makeText(this, "ARRIVED FROM: " + poll.getHostAddress(), Toast.LENGTH_LONG).show();
         }
 
@@ -175,23 +199,39 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         super.onRestart();
         //active_polls = PollManager.getActivePolls();
         manager = PollManager.getInstance();
-        /*if(active_polls == null)
-            active_polls = new ArrayList<Poll>();
+        manager.addObserver(this);
 
-        //if(!restoredBeforeMe) {
-        new Thread(new Runnable(){
-            @Override
-            public void run() {
-                pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
+        updateReceiver = createUpdateBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(updateReceiver, new IntentFilter("mattoncino.pollo.receive.poll.vote"));
 
-                ArrayList<Poll> backup = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
-                if (backup != null && backup.size() != 0) {
-                    //active_polls.addAll(backup);
-                    active_polls = backup;
-                    Log.d(TAG, "backuped poll added to active polls");
+        acceptReceiver = createAcceptBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(acceptReceiver, new IntentFilter("mattoncino.pollo.receive.poll.accept"));
+
+        Bundle data = getIntent().getExtras();
+        if(data != null) {
+            int type = data.getInt(Consts.OWNER);
+            poll = data.getParcelable(Consts.POLL);
+            int notfID = data.getInt("notificationID");
+
+            if(poll != null) {
+                if (type == Consts.OWN) {
+                    myPollRequest = true;
+                    ownAddress = ((MyApplication) getApplication()).getConnectionManager().getHostAddress();
+                    manager.addPoll(new PollData(poll,ownAddress, type));
+                } else if (type == Consts.OTHER) {
+                    acceptedPollRequest = true;
+                    xhostAddress = data.getString("hostAddress");
+                    manager.addPoll(new PollData(poll,xhostAddress, type));
                 }
+
             }
-        }).start();*/
+
+            removeNotification(notfID);
+            getIntent().removeExtra(Consts.POLL);
+            getIntent().removeExtra(Consts.OWNER);
+            if (type == Consts.OTHER) getIntent().removeExtra("hostAddress");
+        }
+
     }
 
     @Override

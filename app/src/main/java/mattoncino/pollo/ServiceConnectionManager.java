@@ -152,11 +152,9 @@ public class ServiceConnectionManager {
 
             for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
                 String serverIpAddress = (String) iterator.next();
-                //it's NOT a thread!!!
                 ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, type, messages);
                 Thread t = new Thread(clientProcessor);
                 t.start();
-                //clientProcessor.sendSimpleMessageToOtherDevice(message);
             }
         }
     }

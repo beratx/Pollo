@@ -2,7 +2,6 @@ package mattoncino.pollo;
 
 import android.content.Context;
 import android.databinding.DataBindingUtil;
-import android.graphics.Typeface;
 import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -10,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,10 +18,10 @@ import mattoncino.pollo.databinding.ActivePollsListItemBinding;
 
 public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdapter.CardViewHolder> {
 
-    private List<Poll> activePolls;
+    private List<PollData> activePolls;
     private final static String TAG = "CARDVIEW_ADAPTER";
 
-    public PollsCardViewAdapter(List<Poll> polls){
+    public PollsCardViewAdapter(List<PollData> polls){
         activePolls = polls;
     }
 
@@ -57,60 +55,66 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     @Override
     public void onBindViewHolder(final PollsCardViewAdapter.CardViewHolder holder, final int position) {
         holder.getBinding().messageTextView.setVisibility(View.GONE);
-        final Poll poll = activePolls.get(position);
+        final PollData pollData = activePolls.get(position);
+        final Poll poll = pollData.getPoll();
         final LinearLayout rLayout = holder.getBinding().listItemLayout;
+
 
         for (int i = 0; i < poll.getOptions().size(); i++) {
             final View view = rLayout.getChildAt(i+2);
+
             if(view instanceof Button) {
                 final Button button = (Button) view;
                 final int opt = i+1;
                 button.setVisibility(View.VISIBLE);
-                button.setText(poll.getText(i+1));
-                if(!poll.isDisabled()){
+                button.setText(pollData.getText(i+1));
+                button.setEnabled(!pollData.isDisabled());
+
+                if(!pollData.isDisabled()){
                     button.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             button.setText(button.getText().toString() + "    " + "\u2713");
-                            sendVote(view, poll, opt);
-                            setCardDetails(holder.getBinding().nameTextView.getContext(), rLayout, poll, opt);
+                            if(pollData.getOwner() == Consts.OTHER)
+                                sendVote(view, pollData, opt);
+                            System.out.println("HOST IN ONCLICK" + pollData.getHostAddress());
+                            setCardDetails(holder.getBinding().nameTextView.getContext(), rLayout, pollData, opt);
                         }
                     });
                 }
             }
         }
 
-        if(poll.isDisabled())
+        if(pollData.isDisabled())
             holder.getBinding().messageTextView.setVisibility(View.VISIBLE);
 
         holder.getBinding().setVariable(BR.poll, poll);
         holder.getBinding().executePendingBindings();
     }
 
-    private void setCardDetails(final Context context, final LinearLayout rLayout, final Poll poll, final int opt){
-        poll.setDisabled(true);
+    private void setCardDetails(final Context context, final LinearLayout rLayout, final PollData pd, final int opt){
+        pd.setDisabled(true);
         disableOptionButtons(rLayout);
 
         Handler handler = new Handler();
         final Runnable r = new Runnable(){
             @Override
             public void run() {
-                poll.addVote(opt);
+                pd.addVote(opt);
                 notifyDataSetChanged();
-                System.out.println("HOW MANY TIMES AM I INVOKED?");
             }
         };
         handler.post(r);
     }
 
-    private void sendVote(View view, Poll poll, int opt){
-        ArrayList<String> pollData = new ArrayList<String>();
-        pollData.add(poll.getName());
-        pollData.add(new Integer(opt).toString());
-        pollData.add(poll.getHostAddress());
+    private void sendVote(View view, PollData pd, int opt){
+        ArrayList<String> pollInfo = new ArrayList<String>();
+        pollInfo.add(pd.getID());
+        pollInfo.add(new Integer(opt).toString());
+        pollInfo.add(pd.getHostAddress());
 
-        ClientThreadProcessor clientProcessor = new ClientThreadProcessor(poll.getHostAddress(),
-                view.getContext(), Consts.POLL_VOTE, pollData);
+        ClientThreadProcessor clientProcessor = new ClientThreadProcessor(pd.getHostAddress(),
+                view.getContext(), Consts.POLL_VOTE, pollInfo);
         Thread t = new Thread(clientProcessor);
         t.start();
 
@@ -122,20 +126,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             if(child.hasOnClickListeners())
                 child.setEnabled(false);
         }
-    }
-
-    private TextView addMessageView(Context context){
-        LinearLayout.LayoutParams lparams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        TextView textView = new TextView(context);
-        textView.setLayoutParams(lparams);
-        textView.setId(View.generateViewId());
-        textView.setText("Thanks for voting! Wait for results...");
-        textView.setTextSize(20);
-        textView.setTypeface(null, Typeface.BOLD_ITALIC);
-
-        return textView;
     }
 
     @Override

@@ -2,21 +2,31 @@ package mattoncino.pollo;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.databinding.BaseObservable;
+import android.databinding.Bindable;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class PollManager extends Observable {
     public static final String TAG = "PollManager";
-    private static ArrayList<Poll> active_polls;
-    private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
+    private static final Type LIST_TYPE = new TypeToken<List<PollData>>() {}.getType();
+    //private static final Type MAP_TYPE = new TypeToken<HashMap<String,Poll>>() {}.getType();
+    private static ArrayList<PollData> active_polls;
+    //ConcurrentHashMap active_polls;
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
     private Context context;
@@ -26,7 +36,9 @@ public class PollManager extends Observable {
         this.context = MyApplication.getContext();
         this.pref = context.getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
         this.active_polls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
-        if(this.active_polls == null)   this.active_polls = new ArrayList<Poll>();
+        if(this.active_polls == null)   this.active_polls = new ArrayList<PollData>();
+        //this.active_polls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), MAP_TYPE);
+        //if(this.active_polls == null)   this.active_polls = new ConcurrentHashMap<String, Poll>();
     }
 
     private static class PollManagerHelper{
@@ -42,12 +54,12 @@ public class PollManager extends Observable {
     }
 
 
-    public void addPoll(Poll poll){
+    public void addPoll(PollData pd){
         synchronized (this) {
-            if (active_polls.contains(poll))
+            if (active_polls.contains(pd))
                 Log.i(TAG, "poll is already in list");
             else {
-                active_polls.add(0, poll);
+                active_polls.add(0, pd);
                 setChanged();
                 notifyObservers();
                 Log.d(TAG, "called addPoll-> setChanged -> notifyObservers");
@@ -63,17 +75,28 @@ public class PollManager extends Observable {
     }
 
 
-    public void addAll(ArrayList<Poll> polls){
+    public void addAll(ArrayList<PollData> polls){
         this.active_polls.addAll(polls);
     }
 
+    public void addVoter(String pollID, String hostAddress){
+        Log.d(TAG, "gets in addVoter...");
+        synchronized (this) {
+            for (PollData pd : active_polls) {
+                if (pollID.equals(pd.getID())) {
+                    pd.addVoter(hostAddress);
+                    Log.d(TAG, "voter " + hostAddress + " added to pol: " + pd.getPollName());
+                }
+            }
+        }
+    }
 
-    public void updatePoll(String name, int vote){
+    public void updatePoll(String pollID, int vote){
         Log.d(TAG, "gets in updatePoll...");
         synchronized (this) {
-            for (Poll p : active_polls) {
-                if (name.equals(p.getName())) {
-                    p.addVote(vote);
+            for (PollData pd : active_polls) {
+                if (pollID.equals(pd.getID())) {
+                    pd.addVote(vote);
                     setChanged();
                     notifyObservers();
                     Log.d(TAG, "poll will be updated with vote: " + vote);
@@ -88,9 +111,8 @@ public class PollManager extends Observable {
 
     public void savePollsPermanently(){
         editor = pref.edit();
-        editor.putString(Consts.POLL_LIST, new Gson().toJson(new ArrayList<Poll>(active_polls)));
+        editor.putString(Consts.POLL_LIST, new Gson().toJson(new ArrayList<PollData>(active_polls)));
         editor.commit();
     }
-
 
 }

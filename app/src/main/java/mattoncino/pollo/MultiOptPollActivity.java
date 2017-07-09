@@ -111,12 +111,12 @@
             String first_opt = binding.opt1EditText.getText().toString();
             String second_opt = binding.opt2EditText.getText().toString();
 
-            //options.add(first_opt);
-            //options.add(second_opt);
+            final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
+
 
             for(TextInputLayout til : optionsViews){
                 String op = til.getEditText().getText().toString();
-                    options.add(op);
+                options.add(op);
             }
 
 
@@ -132,9 +132,8 @@
                 Log.d(TAG, "connectionManager is null!!!");
                 return null;
             }
-            String hostAddress = connectionManager.getHostAddress();
 
-            Poll poll = new Poll(name, question, options, hostAddress);
+            Poll poll = new Poll(name, question, options);
 
             return poll;
         }
