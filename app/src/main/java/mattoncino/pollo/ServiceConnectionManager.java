@@ -145,7 +145,7 @@ public class ServiceConnectionManager {
     }
 
 
-    public void sendMessageToAllDevicesInNetwork(final Context context, String type, ArrayList<String> messages) {
+    public int sendMessageToAllDevicesInNetwork(final Context context, String type, ArrayList<String> messages) {
         if (jmdns != null) {
 
             Set<String> ipAddressesSet = getNeighborDevicesIpAddressesSet(context);
@@ -156,12 +156,24 @@ public class ServiceConnectionManager {
                 Thread t = new Thread(clientProcessor);
                 t.start();
             }
+
+            return ipAddressesSet.size();
         }
+
+        return 0;
     }
 
-    /*public void sendMessageToOtherDevice(final Context context, String message) {
+    public void sendResultToAllDevices(final Context context, Set<String> hostAdresses, String pollId, ArrayList<Double> result) {
+        if (jmdns != null) {
 
-    }*/
+            for (java.util.Iterator iterator = hostAdresses.iterator(); iterator.hasNext(); ) {
+                String hostAddress = (String) iterator.next();
+                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(hostAddress, context, Consts.RESULT, pollId, result);
+                Thread t = new Thread(clientProcessor);
+                t.start();
+            }
+        }
+    }
 
     private Set<String> getNeighborDevicesIpAddressesSet(Context context) {
 

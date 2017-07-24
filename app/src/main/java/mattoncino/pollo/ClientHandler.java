@@ -79,7 +79,7 @@ public class ClientHandler implements Runnable{
                 //with a handler!
 
 
-            }else if(message.equals(Consts.ACCEPT)){
+            } else if (message.equals(Consts.ACCEPT)) {
 
                 String pollID = inputBufferedReader.readLine();
                 String hostAddress = inputBufferedReader.readLine();
@@ -93,18 +93,29 @@ public class ClientHandler implements Runnable{
                 Intent intent = new Intent("mattoncino.pollo.receive.poll.accept");
                 intent.putExtra("pollID", pollID);
                 intent.putExtra("hostAddress", hostAddress);
+                intent.putExtra("accepted", true);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                 //aggiornare voter list
                 //WRONG YOU SHOULD GET THE POLL FROM NAME THEN ADD IT!!
                 //USE A THREAD TO DO IT!!!
                 //poll.addParticipant(hostAddress);
 
-            }else if(message.equals(Consts.POLL_VOTE)){
+            } else if (message.equals(Consts.REJECT)){
+                final String id = inputBufferedReader.readLine();
+                final String hostAddress = inputBufferedReader.readLine();
+
+                Intent intent = new Intent("mattoncino.pollo.receive.poll.accept");
+                intent.putExtra("pollID", id);
+                intent.putExtra("hostAddress", hostAddress);
+                intent.putExtra("accepted", false);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
+            } else if(message.equals(Consts.POLL_VOTE)){
 
                 final String id = inputBufferedReader.readLine();
                 final int vote = Integer.parseInt(inputBufferedReader.readLine());
-                final String hostAddress = inputBufferedReader.readLine();
-                Log.d(TAG, "arrived vote: " + vote);
+                final String hostAddress = socket.getInetAddress().getHostAddress();
+                Log.d(TAG, "ARRIVED VOTE " + vote + " FROM HOST " + hostAddress);
 
                 outputPrintWriter.println(Consts.RECEIVED);
 
@@ -115,9 +126,20 @@ public class ClientHandler implements Runnable{
                 intent.putExtra("vote", vote);
                 intent.putExtra("hostAddress", hostAddress);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+            }
+            else if(message.equals(Consts.RESULT)){
+                final String id = inputBufferedReader.readLine();
+                final int count = Integer.parseInt(inputBufferedReader.readLine());
+                ArrayList<Double> result = new ArrayList<>();
+                for (int i = 0; i < count; i++) {
+                    result.add(Double.parseDouble(inputBufferedReader.readLine()));
+                }
 
-                Log.d(TAG, "manager.updatePoll is called for host: " + hostAddress);
-
+                Intent intent = new Intent("mattoncino.pollo.receive.poll.result");
+                intent.putExtra("pollID", id);
+                intent.putExtra(Consts.RESULT, result);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                //Log.d(TAG, "manager.finishPoll will be called for host: " + hostAddress);
             }
 
 
@@ -133,6 +155,7 @@ public class ClientHandler implements Runnable{
     private void addNotification(Poll poll, String hostAddress){
         Random randomGenerator = new Random();
         final int NOTIFICATION_ID = randomGenerator.nextInt();
+        //System.out.println("call addNotification... hostAddress: " + hostAddress);
 
         Intent notificationIntent = new Intent(context, ActivePollsActivity.class)
                 .putExtra(Consts.OWNER, Consts.OTHER)
@@ -150,11 +173,10 @@ public class ClientHandler implements Runnable{
         PendingIntent acceptedPendingIntent =  PendingIntent.getActivity(context, 0,
                 notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent startMain = new Intent(Intent.ACTION_MAIN);
-        startMain.addCategory(Intent.CATEGORY_HOME);
-        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Intent startMain = new Intent(context, MainActivity.class)
+                .putExtra("notificationID", NOTIFICATION_ID);
 
-        PendingIntent rejectedPendingIntent = PendingIntent.getActivity(context, 1,
+        PendingIntent rejectedPendingIntent = PendingIntent.getActivity(context, 0,
                 startMain, PendingIntent.FLAG_UPDATE_CURRENT);
 
 

@@ -36,4 +36,5 @@ dependencies {
     compile files('libs/jmdns-3.5.1.jar')
     compile files('libs/slf4j-android-1.7.25.jar')
     compile files('libs/slf4j-api-1.7.25.jar')
+    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }

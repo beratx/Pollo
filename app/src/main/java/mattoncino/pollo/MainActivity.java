@@ -1,6 +1,7 @@
 package mattoncino.pollo;
 
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
@@ -31,6 +32,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+
+        Bundle data = getIntent().getExtras();
+        if (data != null) {
+            int notfID = data.getInt("notificationID");
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(notfID);
+            getIntent().removeExtra("notificationID");
+        }
+
 
         binding.createPollActivityButton.setOnClickListener(new View.OnClickListener(){
             @Override

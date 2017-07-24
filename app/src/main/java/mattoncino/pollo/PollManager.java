@@ -2,23 +2,16 @@ package mattoncino.pollo;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.databinding.BaseObservable;
-import android.databinding.Bindable;
-import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 public class PollManager extends Observable {
@@ -53,6 +46,44 @@ public class PollManager extends Observable {
         return active_polls;
     }
 
+    public PollData getPollData(String pollID){
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID()))
+                return pd;
+        }
+        return null;
+    }
+
+    public List<Double> getResult(String pollID){
+        List<Double> resos = new ArrayList<Double>();
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID())) {
+                for (int i = 1; i < pd.getPoll().getOptions().size(); i++) {
+                    resos.add(pd.getResult(i));
+                }
+                return resos;
+            }
+        }
+        return null;
+    }
+
+    public void setResult(String pollID, List<Double> result){
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID())) {
+                pd.setResult(result);
+                pd.setTerminated(true);
+                Log.d(TAG, "poll: " +  pd.getID() + "result: "  + pd.getResult());
+            }
+        }
+    }
+
+    public void setDeviceCount(String pollID, int count){
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID()))
+                pd.setDeviceCount(count);
+        }
+    }
+
 
     public void addPoll(PollData pd){
         synchronized (this) {
@@ -75,35 +106,65 @@ public class PollManager extends Observable {
     }
 
 
-    public void addAll(ArrayList<PollData> polls){
-        this.active_polls.addAll(polls);
-    }
 
-    public void addVoter(String pollID, String hostAddress){
-        Log.d(TAG, "gets in addVoter...");
+    public void updateContactedDeviceList(String pollID, String hostAddress, boolean accepted){
+        Log.d(TAG, "gets in updateContactedDeviceList... to add hostAddress: " + hostAddress);
         synchronized (this) {
             for (PollData pd : active_polls) {
                 if (pollID.equals(pd.getID())) {
-                    pd.addVoter(hostAddress);
-                    Log.d(TAG, "voter " + hostAddress + " added to pol: " + pd.getPollName());
+                    if(accepted)
+                        pd.addContactedDevice(hostAddress);
+                    pd.incrementResponseCount();
+                    Log.d(TAG, hostAddress + " poll: " + pd.getPollName() + " accepted? " + accepted);
+                    Log.d(TAG, "current deviceCount: " + pd.getDeviceCount());
+                    Log.d(TAG, "current responseCount: " + pd.getResponseCount());
+                    Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());
                 }
             }
         }
     }
 
-    public void updatePoll(String pollID, int vote){
-        Log.d(TAG, "gets in updatePoll...");
+
+    public void updatePoll(String pollID, String hostAddress, int vote){
+        Log.d(TAG, "gets in updatePoll... to add hostAddress: " + hostAddress);
         synchronized (this) {
             for (PollData pd : active_polls) {
                 if (pollID.equals(pd.getID())) {
+                    //NEED TO SYNCHRONIZE!!!
                     pd.addVote(vote);
+                    pd.addVotedDevice(hostAddress);
+                    pd.removeDevice(hostAddress); //from contacted devices
+
+                    Log.d(TAG, "poll " + pd.getID() + " updated with vote: " + vote);
                     setChanged();
                     notifyObservers();
-                    Log.d(TAG, "poll will be updated with vote: " + vote);
-                    Log.d(TAG, "called updatePoll-> setChanged -> notifyObservers");
+                    Log.d(TAG, "called setChanged -> notifyObservers");
+                    Log.d(TAG, "current deviceCount: " + pd.getDeviceCount());
+                    Log.d(TAG, "current responseCount: " + pd.getResponseCount());
+                    Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());
                 }
             }
         }
+    }
+
+
+    //TODO:hould check also if owner has voted
+    public boolean isCompleted(String pollID){
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID()))
+                return pd.getVotedDevices().size() == pd.getResponseCount();
+        }
+        return false;
+    }
+
+
+
+    public Set<String> getVotedDevices(String pollID){
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID()))
+                return pd.getVotedDevices();
+        }
+        return null;
     }
 
     // Passes the object specified in the parameter

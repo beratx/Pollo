@@ -76,8 +76,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                         public void onClick(View view) {
                             button.setText(button.getText().toString() + "    " + "\u2713");
                             if(pollData.getOwner() == Consts.OTHER)
-                                sendVote(view, pollData, opt);
-                            System.out.println("HOST IN ONCLICK" + pollData.getHostAddress());
+                                sendVote(view, pollData.getID(), opt, pollData.getHostAddress());
+                            System.out.println("HOST IN ONCLICK " + pollData.getHostAddress());
                             setCardDetails(holder.getBinding().nameTextView.getContext(), rLayout, pollData, opt);
                         }
                     });
@@ -107,13 +107,13 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         handler.post(r);
     }
 
-    private void sendVote(View view, PollData pd, int opt){
+    private void sendVote(View view, String id, int opt, String hostAddress){
         ArrayList<String> pollInfo = new ArrayList<String>();
-        pollInfo.add(pd.getID());
+        pollInfo.add(id);
         pollInfo.add(new Integer(opt).toString());
-        pollInfo.add(pd.getHostAddress());
+        //pollInfo.add(hostAddress);
 
-        ClientThreadProcessor clientProcessor = new ClientThreadProcessor(pd.getHostAddress(),
+        ClientThreadProcessor clientProcessor = new ClientThreadProcessor(hostAddress,
                 view.getContext(), Consts.POLL_VOTE, pollInfo);
         Thread t = new Thread(clientProcessor);
         t.start();

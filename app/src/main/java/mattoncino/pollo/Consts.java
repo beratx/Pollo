@@ -5,8 +5,6 @@ package mattoncino.pollo;
  */
 
 public final class Consts {
-    public static final String POLL_MINE = "poll_mine";
-    public static final String POLL_OTHER = "poll_other";
     public static final String POLL_REQUEST = "poll_request";
     public static final String POLL_VOTE = "poll_vote";
     public static final String ACCEPT = "accept";
@@ -16,6 +14,7 @@ public final class Consts {
     public static final String HOST_ADDR = "host_address";
     public static final String POLL = "poll";
     public static final String OWNER = "owner";
+    public static final String RESULT = "result";
 
 
     public static final String B_POLL_LIST = "pollList2";
@@ -23,8 +22,5 @@ public final class Consts {
 
     public static final int OWN = 10;
     public static final int OTHER = 20;
-    public static final int FIRST_OPT = 1;
-    public static final int SECOND_OPT = 2;
-
 
 }
