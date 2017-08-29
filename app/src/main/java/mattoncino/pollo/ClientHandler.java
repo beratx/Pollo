@@ -56,6 +56,7 @@ public class ClientHandler implements Runnable{
                 String question = inputBufferedReader.readLine(); //poll_question
                 final String hostAddress = inputBufferedReader.readLine(); //poll_hostAddress
                 int optCount = Integer.parseInt(inputBufferedReader.readLine());
+
                 List<String> options = new ArrayList<>();
                 for (int i = 0; i < optCount; i++) {
                     options.add(inputBufferedReader.readLine());
@@ -80,7 +81,6 @@ public class ClientHandler implements Runnable{
 
 
             } else if (message.equals(Consts.ACCEPT)) {
-
                 String pollID = inputBufferedReader.readLine();
                 String hostAddress = inputBufferedReader.readLine();
 
@@ -95,10 +95,6 @@ public class ClientHandler implements Runnable{
                 intent.putExtra("hostAddress", hostAddress);
                 intent.putExtra("accepted", true);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-                //aggiornare voter list
-                //WRONG YOU SHOULD GET THE POLL FROM NAME THEN ADD IT!!
-                //USE A THREAD TO DO IT!!!
-                //poll.addParticipant(hostAddress);
 
             } else if (message.equals(Consts.REJECT)){
                 final String id = inputBufferedReader.readLine();
@@ -111,7 +107,6 @@ public class ClientHandler implements Runnable{
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
             } else if(message.equals(Consts.POLL_VOTE)){
-
                 final String id = inputBufferedReader.readLine();
                 final int vote = Integer.parseInt(inputBufferedReader.readLine());
                 final String hostAddress = socket.getInetAddress().getHostAddress();
@@ -130,9 +125,9 @@ public class ClientHandler implements Runnable{
             else if(message.equals(Consts.RESULT)){
                 final String id = inputBufferedReader.readLine();
                 final int count = Integer.parseInt(inputBufferedReader.readLine());
-                ArrayList<Double> result = new ArrayList<>();
+                int[] result = new int[5];
                 for (int i = 0; i < count; i++) {
-                    result.add(Double.parseDouble(inputBufferedReader.readLine()));
+                    result[i] = Integer.parseInt(inputBufferedReader.readLine());
                 }
 
                 Intent intent = new Intent("mattoncino.pollo.receive.poll.result");

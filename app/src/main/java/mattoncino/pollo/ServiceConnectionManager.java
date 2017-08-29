@@ -163,10 +163,10 @@ public class ServiceConnectionManager {
         return 0;
     }
 
-    public void sendResultToAllDevices(final Context context, Set<String> hostAdresses, String pollId, ArrayList<Double> result) {
+    public void sendResultToAllDevices(final Context context, Set<String> hostAddresses, String pollId, int[] result) {
         if (jmdns != null) {
 
-            for (java.util.Iterator iterator = hostAdresses.iterator(); iterator.hasNext(); ) {
+            for (java.util.Iterator iterator = hostAddresses.iterator(); iterator.hasNext(); ) {
                 String hostAddress = (String) iterator.next();
                 ClientThreadProcessor clientProcessor = new ClientThreadProcessor(hostAddress, context, Consts.RESULT, pollId, result);
                 Thread t = new Thread(clientProcessor);

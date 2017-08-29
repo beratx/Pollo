@@ -13,7 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Observable;
@@ -127,6 +126,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                         } else {
                             //show "terminate poll button"
                         }
+                        //update situation #voted / #accepted / #contacted
                     }
 
                     intent.removeExtra("pollID");
@@ -150,7 +150,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     xhostAddress = intent.getStringExtra("hostAddress");
                     boolean accepted = intent.getBooleanExtra("accepted", false);
 
-                    manager.updateContactedDeviceList(pollID, xhostAddress, accepted);
+                    manager.updateAcceptedDeviceList(pollID, xhostAddress, accepted);
                     receivedAcceptBroadcast = true;
 
                     //intent.removeExtra("pollID");
@@ -169,9 +169,10 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals("mattoncino.pollo.receive.poll.result")) {
                     String pollID = intent.getStringExtra("pollID");
-                    ArrayList<Double> result = (ArrayList<Double>) intent.getSerializableExtra(Consts.RESULT);
+                    int[] result = (int[]) intent.getSerializableExtra(Consts.RESULT);
 
-                    manager.setResult(pollID, result);
+                    //inside sets also terminated flag
+                    manager.setVotes(pollID, result);
 
                     intent.removeExtra("pollID");
                     intent.removeExtra(Consts.RESULT);
@@ -235,12 +236,12 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             Log.d(TAG, "onResume(): completedPoll");
             completedPoll = false;
             //pollID
-            ArrayList<Double> result = (ArrayList<Double>) manager.getResult(completedPD.getID());
-            Set<String> voters = completedPD.getVotedDevices();
+            int[] result = manager.getVotes(completedPD.getID());
+            Set<String> devices = completedPD.getAcceptedDevices();
             try {
                 //here maybe add a handler to comunciate back to the thread
-                manager.setResult(completedPD.getID(), result);
-                connectionManager.sendResultToAllDevices(ActivePollsActivity.this, voters, completedPD.getID(), result);
+                //manager.setResult(completedPD.getID(), result);
+                connectionManager.sendResultToAllDevices(ActivePollsActivity.this, devices, completedPD.getID(), result);
             } catch (NullPointerException e) {
                 Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
                 return;
@@ -262,7 +263,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
 
     @Override
     protected void onRestart() {
-        Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
         super.onRestart();
         //active_polls = PollManager.getActivePolls();
         /*manager = PollManager.getInstance();

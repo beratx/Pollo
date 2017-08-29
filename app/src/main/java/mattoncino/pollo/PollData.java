@@ -7,29 +7,34 @@ import android.os.Parcelable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
 public class PollData extends BaseObservable implements Parcelable, Serializable {
     private Poll poll;
-    private Set<String> contactedDevices; /* devices which sent accept response */
+    private Set<String> acceptedDevices; /* devices which sent accept response, we hold this set to send them result */
     private Set<String> votedDevices; /* devices which sent accept and voted */
-    private List<Integer> votes;
-    private List<Double> result;
+    private int deviceCount; /* #devices that i sent request */
+    private int responseCount; /* #devices that sent accept/reject response */
+    private int[] votes;
+    //private List<Double> result;
+    private int myVote;
     private boolean disabled;
     private String hostAddress;
     private int owner;
     private boolean terminated;
-    private int deviceCount; /* #devices that i sent request */
-    private int responseCount; /* #devices that sent accept/reject response */
+
+
+
 
     public PollData(Poll poll, String hostAddress, int owner) {
         this.poll = poll;
-        this.contactedDevices = new HashSet<>(); //need to be thread safe!
+        this.acceptedDevices = new HashSet<>(); //need to be thread safe!
         this.votedDevices = new HashSet<>(); //need to be thread safe!
-        this.votes = new ArrayList<>();  //need to be thread safe!
+        this.votes = new int[5];  //need to be thread safe!
+        this.myVote = 0;
         this.hostAddress = hostAddress;
         this.disabled = false;
         this.owner = owner;
@@ -58,7 +63,7 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         return poll.getName();
     }
 
-    @Bindable
+    /*@Bindable
     public List<Integer> getVotes() {
         return votes;
     }
@@ -66,32 +71,56 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     public void addVote(int vote){
         votes.add(vote);
         notifyPropertyChanged(BR.votes);
+    }*/
+    @Bindable
+    public int[] getVotes() {
+        return votes;
+    }
+
+    public void setVotes(int[] votes){
+        this.votes = votes;
+        notifyPropertyChanged(BR.votes);
+    }
+
+    public void addVote(int vote){
+        votes[vote - 1]++;
+        notifyPropertyChanged(BR.votes);
     }
 
     public void addVotedDevice(String hostAddress){
         votedDevices.add(hostAddress);
     }
 
-    public Set<String> getContactedDevices(){
-        return contactedDevices;
+    public int getMyVote() {
+        return myVote;
     }
 
-    public void addContactedDevice(String hostAddress){
-        contactedDevices.add(hostAddress);
+    public void setMyVote(int myVote) {
+        this.myVote = myVote;
+    }
+
+    @Bindable
+    public Set<String> getAcceptedDevices(){
+        return acceptedDevices;
+    }
+
+    public void addAcceptedDevice(String hostAddress){
+        acceptedDevices.add(hostAddress);
+        notifyPropertyChanged(BR.acceptedDevices);
     }
 
     public void removeDevice(String hostAddress){
-        contactedDevices.remove(hostAddress);
+        acceptedDevices.remove(hostAddress);
     }
 
 
-    public List<Double> getResult() {
+    /*public List<Double> getResult() {
         return result;
     }
 
     public void setResult(List<Double> result) {
         this.result = result;
-    }
+    }*/
 
     public int getOwner() {
         return owner;
@@ -127,8 +156,12 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         this.terminated = terminated;
     }
 
-    public String getText(int opt){
-        return poll.getOptions().get(opt - 1) + " >> " + getResult(opt);
+    /*public String getText(int opt){
+        return poll.getOptions().get(opt - 1) + " >> " + getVotesFor(opt);
+    }*/
+
+    public String getOption(int i){
+        return poll.getOptions().get(i- 1);
     }
 
     public int getResponseCount() {
@@ -147,7 +180,7 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         this.deviceCount = count;
     }
 
-    public double getResult(int opt) {
+    /*public double getVotesFor(int opt) {
         int count = 0;
 
         for (Integer vote : votes) {
@@ -158,7 +191,22 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         System.out.println("pollname: " + poll.getName() + " votes: " + votes.toString());
 
         return count;
+    }*/
+
+    public int getVotesFor(int opt) {
+        System.out.println("pollname: " + poll.getName() + " votes: " + Arrays.toString(votes));
+        return votes[opt - 1];
     }
+
+    public int getSumVotes(){
+        int sum = 0;
+        for (int i = 0; i < votes.length; i++) {
+            sum += votes[i];
+        }
+
+        return sum;
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -189,7 +237,7 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         parcel.writeParcelable(poll,i);
         parcel.writeString(hostAddress);
         parcel.writeByte((byte) (disabled ? 1 : 0));
-        parcel.writeStringList(new ArrayList<String>(contactedDevices));
+        parcel.writeStringList(new ArrayList<String>(acceptedDevices));
         parcel.writeStringList(new ArrayList<String>(votedDevices));
         //parcel.writeString(hostAddress);
         //votes = Collections.synchronizedList(new ArrayList());
@@ -215,7 +263,7 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
 
         ArrayList<String> list2 = new ArrayList<>();
         parcel.readStringList(list2);
-        contactedDevices = new HashSet<String>(list2);
+        acceptedDevices = new HashSet<String>(list2);
 
         ArrayList<String> list = new ArrayList<>();
         parcel.readStringList(list);

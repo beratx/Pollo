@@ -45,8 +45,7 @@
                     final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
                     rLayout.addView(createNewOptionEntry());
 
-                    if(count > 5)
-                        rLayout.removeView(binding.addFAB);
+                    if(count > 5) rLayout.removeView(binding.addFAB);
                 }
             });
 
@@ -122,7 +121,7 @@
 
             if(name.isEmpty() || question.isEmpty() || isEmpty(options)){
                 Snackbar.make(binding.saveButton, "You should fill all fields!", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                    .setAction("Action", null).show();
                 return null;
             }
 

@@ -25,7 +25,7 @@ public class ClientThreadProcessor implements Runnable{
     private List<String> pollInfo;
     private String type;
     private String pollID;
-    private List<Double> result;
+    private int[] result;
 
     public ClientThreadProcessor(String hostIpAddress, Context context, String type, ArrayList<String> pollInfo) {
         this.context = context;
@@ -34,7 +34,7 @@ public class ClientThreadProcessor implements Runnable{
         this.type = type;
     }
 
-    public ClientThreadProcessor(String hostIpAddress, Context context, String type, String pollID, ArrayList<Double> result) {
+    public ClientThreadProcessor(String hostIpAddress, Context context, String type, String pollID, int[] result) {
         this.context = context;
         this.hostIpAddress = hostIpAddress;
         this.type = type;
@@ -133,6 +133,13 @@ public class ClientThreadProcessor implements Runnable{
             }*/
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (NullPointerException e) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e1) {
+                sendPollRequest(socket);
+            }
+            sendPollRequest(socket);
         } finally {
             output.close();
         }
@@ -205,9 +212,9 @@ public class ClientThreadProcessor implements Runnable{
                     new OutputStreamWriter(socket.getOutputStream())), true);
             output.println(Consts.RESULT);
             output.println(pollID);
-            output.println(result.size());
-            for (int i = 0; i < result.size(); i++) {
-                output.println(result.get(i));
+            output.println(result.length);
+            for (int i = 0; i < result.length; i++) {
+                output.println(result[i]);
             }
 
             if (output.checkError())

@@ -9,9 +9,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import mattoncino.pollo.databinding.ActivePollsListItemBinding;
 
@@ -20,6 +22,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
     private List<PollData> activePolls;
     private final static String TAG = "CARDVIEW_ADAPTER";
+    private static final int VIEW_OWN = 1;
+    private static final int VIEW_OTHER = 2;
 
     public PollsCardViewAdapter(List<PollData> polls){
         activePolls = polls;
@@ -40,6 +44,17 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     }
 
 
+    @Override
+    public int getItemViewType(int position) {
+        final PollData pd = activePolls.get(position);
+        if( pd.getOwner() == Consts.OWN) {
+            return VIEW_OWN;
+        } else {
+            return VIEW_OTHER;
+        }
+    }
+
+
     // Create new views (invoked by the layout manager)
     @Override
     public PollsCardViewAdapter.CardViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -55,38 +70,89 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     @Override
     public void onBindViewHolder(final PollsCardViewAdapter.CardViewHolder holder, final int position) {
         holder.getBinding().messageTextView.setVisibility(View.GONE);
+        //holder.getBinding().terminateButton.setVisibility(View.GONE);
         final PollData pollData = activePolls.get(position);
         final Poll poll = pollData.getPoll();
         final LinearLayout rLayout = holder.getBinding().listItemLayout;
 
 
         for (int i = 0; i < poll.getOptions().size(); i++) {
-            final View view = rLayout.getChildAt(i+2);
+            final Button button = (Button) rLayout.getChildAt(i+2);
+            final int opt = i+1;
+            button.setVisibility(View.VISIBLE);
 
-            if(view instanceof Button) {
-                final Button button = (Button) view;
-                final int opt = i+1;
+            //button.setEnabled(!pollData.isDisabled() && !pollData.isTerminated());
+
+            if(pollData.isTerminated() || pollData.getOwner() == Consts.OWN) {
+                int sum = pollData.getSumVotes();
+                if(sum == 0)
+                    button.setText(pollData.getOption(i+1) + " >> " + 0 + "%");
+                else
+                    button.setText(pollData.getOption(i+1) + " >> " +
+                                            pollData.getVotesFor(i+1)*(100.0/sum) + "%");
+            }
+            else
+                button.setText(pollData.getOption(opt));
+
+            if (pollData.getMyVote() == opt)
+                button.setText(button.getText().toString() + "    " + "\u2713");
+
+
+            if(!pollData.isDisabled() && !pollData.isTerminated()){
+                button.setEnabled(true);
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        button.setText(button.getText().toString() + "    " + "\u2713");
+
+                        if(pollData.getOwner() == Consts.OTHER)
+                            sendVote(view, pollData.getID(), opt, pollData.getHostAddress());
+
+                        pollData.setMyVote(opt);
+                        setCardDetails(holder.getBinding().nameTextView.getContext(), rLayout, pollData, opt);
+                        holder.getBinding().ownerLayout.getChildAt(0).setEnabled(false);
+                    }
+                });
+            }
+
+        }
+
+        if(pollData.getOwner() == Consts.OTHER && pollData.isDisabled() && !pollData.isTerminated())
+            holder.getBinding().messageTextView.setVisibility(View.VISIBLE);
+
+        if(pollData.getOwner() == Consts.OWN) {
+            //holder.getBinding().ownerLayout.setVisibility(View.VISIBLE);
+
+                //if(pollData.getVotedDevices().size() == pollData.getAcceptedDevices().size()) {
+                final Button button = (Button) holder.getBinding().ownerLayout.getChildAt(0);
                 button.setVisibility(View.VISIBLE);
-                button.setText(pollData.getText(i+1));
-                button.setEnabled(!pollData.isDisabled());
 
-                if(!pollData.isDisabled()){
+                if(!pollData.isTerminated()){
+                    button.setEnabled(true);
                     button.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            button.setText(button.getText().toString() + "    " + "\u2713");
-                            if(pollData.getOwner() == Consts.OTHER)
-                                sendVote(view, pollData.getID(), opt, pollData.getHostAddress());
-                            System.out.println("HOST IN ONCLICK " + pollData.getHostAddress());
-                            setCardDetails(holder.getBinding().nameTextView.getContext(), rLayout, pollData, opt);
+                            //TODO: check if no body is accepted / voted yet, ask it with popup
+                            button.setEnabled(false);
+                            pollData.setTerminated(true);
+
+                            for (int i = 0; i < poll.getOptions().size(); i++) {
+                                Button option = (Button) rLayout.getChildAt(i + 2);
+                                option.setEnabled(false);
+                            }
+
+                            sendResultToAllDevices(button.getContext(), pollData.getID(),
+                                        pollData.getVotes(), pollData.getAcceptedDevices());
                         }
                     });
+                //}
                 }
-            }
-        }
 
-        if(pollData.isDisabled())
-            holder.getBinding().messageTextView.setVisibility(View.VISIBLE);
+            TextView view = (TextView) holder.getBinding().ownerLayout.getChildAt(1);
+            view.setText(pollData.getVotedDevices().size() + " voted / " + pollData.getAcceptedDevices().size()
+                    + " accepted / "  + pollData.getDeviceCount() + " received");
+            view.setVisibility(View.VISIBLE);
+        }
 
         holder.getBinding().setVariable(BR.poll, poll);
         holder.getBinding().executePendingBindings();
@@ -119,6 +185,17 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         t.start();
 
     }
+    //(getContext(), pollData.getID(), pollData.getVotes(), pollData.getAcceptedDevices());
+    private void sendResultToAllDevices(Context context, String id, int[] result, Set<String> hostAddresses){
+        for (java.util.Iterator iterator = hostAddresses.iterator(); iterator.hasNext(); ) {
+            String hostAddress = (String) iterator.next();
+
+            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(hostAddress,
+                    context, Consts.RESULT, id, result);
+            Thread t = new Thread(clientProcessor);
+            t.start();
+        }
+    }
 
     private void disableOptionButtons(ViewGroup layout){
         for (int i = 0; i < layout.getChildCount(); i++) {
@@ -133,5 +210,3 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         return activePolls.size();
     }
 }
-
-

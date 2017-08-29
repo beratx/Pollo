@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name = "poll"
+            type = "mattoncino.pollo.Poll" />
+    </data>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        card_view:cardCornerRadius="@dimen/cardview_default_radius"
+        card_view:cardElevation="@dimen/cardview_default_elevation">
+
+        <LinearLayout
+            android:id="@+id/listItemLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="5dp">
+
+            <TextView
+                android:id="@+id/nameTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="30sp"
+                android:textAllCaps="false"
+                android:text="@{poll.name}"/>
+
+            <TextView
+                android:id="@+id/questionTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:text="@{poll.question}"/>
+
+            <Button
+                android:id="@+id/opt1Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/opt2Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textAllCaps="false"/>
+
+            <Button
+                android:id="@+id/opt3Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/opt4Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/opt5Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/terminateButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:text="Terminate Poll"
+                android:enabled="false"/>
+
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+</layout>

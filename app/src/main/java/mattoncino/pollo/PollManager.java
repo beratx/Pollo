@@ -54,25 +54,45 @@ public class PollManager extends Observable {
         return null;
     }
 
-    public List<Double> getResult(String pollID){
+    /*public List<Double> getResult(String pollID){
         List<Double> resos = new ArrayList<Double>();
         for (PollData pd : active_polls) {
             if (pollID.equals(pd.getID())) {
                 for (int i = 1; i < pd.getPoll().getOptions().size(); i++) {
-                    resos.add(pd.getResult(i));
+                    resos.add(pd.getResultFor(i));
                 }
                 return resos;
             }
         }
         return null;
+    }*/
+
+    public int[] getVotes(String pollID){
+        List<Double> resos = new ArrayList<Double>();
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID())) {
+                return pd.getVotes();
+            }
+        }
+        return null;
     }
 
-    public void setResult(String pollID, List<Double> result){
+    /*public void setResult(String pollID, int[] result){
         for (PollData pd : active_polls) {
             if (pollID.equals(pd.getID())) {
                 pd.setResult(result);
                 pd.setTerminated(true);
                 Log.d(TAG, "poll: " +  pd.getID() + "result: "  + pd.getResult());
+            }
+        }
+    }*/
+
+    public void setVotes(String pollID, int[] votes){
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID())) {
+                pd.setVotes(votes);
+                pd.setTerminated(true);
+                Log.d(TAG, "poll: " +  pd.getID() + "result: "  + pd.getVotes());
             }
         }
     }
@@ -107,13 +127,13 @@ public class PollManager extends Observable {
 
 
 
-    public void updateContactedDeviceList(String pollID, String hostAddress, boolean accepted){
-        Log.d(TAG, "gets in updateContactedDeviceList... to add hostAddress: " + hostAddress);
+    public void updateAcceptedDeviceList(String pollID, String hostAddress, boolean accepted){
+        Log.d(TAG, "gets in updateAcceptedDeviceList... to add hostAddress: " + hostAddress);
         synchronized (this) {
             for (PollData pd : active_polls) {
                 if (pollID.equals(pd.getID())) {
                     if(accepted)
-                        pd.addContactedDevice(hostAddress);
+                        pd.addAcceptedDevice(hostAddress);
                     pd.incrementResponseCount();
                     Log.d(TAG, hostAddress + " poll: " + pd.getPollName() + " accepted? " + accepted);
                     Log.d(TAG, "current deviceCount: " + pd.getDeviceCount());
@@ -133,8 +153,7 @@ public class PollManager extends Observable {
                     //NEED TO SYNCHRONIZE!!!
                     pd.addVote(vote);
                     pd.addVotedDevice(hostAddress);
-                    pd.removeDevice(hostAddress); //from contacted devices
-
+                    //pd.removeDevice(hostAddress); //from accepted devices
                     Log.d(TAG, "poll " + pd.getID() + " updated with vote: " + vote);
                     setChanged();
                     notifyObservers();
@@ -148,11 +167,13 @@ public class PollManager extends Observable {
     }
 
 
-    //TODO:hould check also if owner has voted
+    //TODO:should check also if owner has voted
     public boolean isCompleted(String pollID){
         for (PollData pd : active_polls) {
             if (pollID.equals(pd.getID()))
-                return pd.getVotedDevices().size() == pd.getResponseCount();
+                return (pd.getDeviceCount() == pd.getResponseCount()) &&
+                        (pd.getVotedDevices().size() == pd.getAcceptedDevices().size()) &&
+                        (pd.getMyVote() > 0);
         }
         return false;
     }
