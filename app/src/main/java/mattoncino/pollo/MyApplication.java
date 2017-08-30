@@ -2,11 +2,11 @@ package mattoncino.pollo;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -43,9 +43,11 @@ public class MyApplication extends Application {
 
         manager = new ServiceConnectionManager();
 
+        Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
+        startService(mServiceIntent);
 
-        pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-        active_polls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
+        //pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
+        //active_polls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
 
     }
 
@@ -61,7 +63,7 @@ public class MyApplication extends Application {
         return deviceId;
     }
 
-    public ArrayList<Poll> getActivePolls(){
+    /*public ArrayList<Poll> getActivePolls(){
         return active_polls;
-    }
+    }*/
 }

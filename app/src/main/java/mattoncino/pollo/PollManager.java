@@ -42,7 +42,7 @@ public class PollManager extends Observable {
         return PollManagerHelper.INSTANCE;
     }
 
-    public static ArrayList getActivePolls(){
+    public static ArrayList<PollData> getActivePolls(){
         return active_polls;
     }
 
@@ -92,6 +92,8 @@ public class PollManager extends Observable {
             if (pollID.equals(pd.getID())) {
                 pd.setVotes(votes);
                 pd.setTerminated(true);
+                setChanged();
+                notifyObservers();
                 Log.d(TAG, "poll: " +  pd.getID() + "result: "  + pd.getVotes());
             }
         }

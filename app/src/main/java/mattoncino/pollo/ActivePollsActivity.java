@@ -191,6 +191,11 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         adapter = new PollsCardViewAdapter(manager.getActivePolls());
         binding.recyclerView.setAdapter(adapter);
 
+        //Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
+        //mServiceIntent.putParcelableArrayListExtra("polls", manager.getActivePolls());
+        //mServiceIntent.setData(Uri.parse(dataUrl));
+        //startService(mServiceIntent);
+
         if (myPollRequest) {
             new Thread(new Runnable() {
                 @Override

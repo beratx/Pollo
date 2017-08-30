@@ -7,13 +7,10 @@
     import android.os.Bundle;
     import android.os.Parcelable;
     import android.support.design.widget.Snackbar;
-    import android.support.design.widget.TextInputEditText;
     import android.support.design.widget.TextInputLayout;
     import android.support.v7.app.AppCompatActivity;
     import android.util.Log;
     import android.view.View;
-    import android.view.ViewGroup;
-    import android.widget.LinearLayout;
     import android.widget.RelativeLayout;
     import android.widget.Toast;
 
@@ -25,8 +22,8 @@
     public class MultiOptPollActivity extends AppCompatActivity {
         private static final String TAG = "MultiOptPollActivity";
         private ActivityMultiOptPollBinding binding;
-        private int count = 3;
-        private List<TextInputLayout> optionsViews = new ArrayList<TextInputLayout>();
+        private int count = 4;
+        //private List<TextInputLayout> optionsViews = new ArrayList<TextInputLayout>();
         private List<String> options = new ArrayList<String>();
 
 
@@ -36,16 +33,17 @@
             //setContentView(R.layout.activity_multi_opt_poll);
             binding = DataBindingUtil.setContentView(this, R.layout.activity_multi_opt_poll);
 
-            optionsViews.add(binding.opt1InputLayout);
-            optionsViews.add(binding.opt2InputLayout);
+            //optionsViews.add(binding.opt1InputLayout);
+            //optionsViews.add(binding.opt2InputLayout);
 
             binding.addFAB.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
-                    rLayout.addView(createNewOptionEntry());
+                    rLayout.getChildAt(count++).setVisibility(View.VISIBLE);
+                    //rLayout.addView(createNewOptionEntry());
 
-                    if(count > 5) rLayout.removeView(binding.addFAB);
+                    if(count == 7) rLayout.removeView(binding.addFAB);
                 }
             });
 
@@ -81,7 +79,7 @@
             return onlineDevices.size() != 0;
         }
 
-        private TextInputLayout createNewOptionEntry() {
+        /*private TextInputLayout createNewOptionEntry() {
             RelativeLayout.LayoutParams fLayout = new RelativeLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
             fLayout.addRule(RelativeLayout.BELOW, optionsViews.get(optionsViews.size()-1 ).getId());
@@ -102,21 +100,27 @@
             optionsViews.add(textInputLayout);
 
             return textInputLayout;
-        }
+        }*/
 
         private Poll createPoll(){
             String name = binding.nameEditText.getText().toString();
             String question = binding.questionEditText.getText().toString();
-            String first_opt = binding.opt1EditText.getText().toString();
-            String second_opt = binding.opt2EditText.getText().toString();
+            //String first_opt = binding.opt1EditText.getText().toString();
+            //String second_opt = binding.opt2EditText.getText().toString();
 
             final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
 
-
-            for(TextInputLayout til : optionsViews){
+            for (int i = 2; i < count; i++) {
+                TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
                 String op = til.getEditText().getText().toString();
                 options.add(op);
             }
+
+
+            /*for(TextInputLayout til : optionsViews){
+                String op = til.getEditText().getText().toString();
+                options.add(op);
+            }*/
 
 
             if(name.isEmpty() || question.isEmpty() || isEmpty(options)){

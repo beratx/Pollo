@@ -43,7 +43,6 @@ public class ServiceConnectionManager {
 
         try {
             if (jmdns == null) {
-
                 InetAddress addr = getInetAddress(wifi);
                 jmdns = JmDNS.create(addr);
                 Log.d(TAG, "JmDNS instance is created");

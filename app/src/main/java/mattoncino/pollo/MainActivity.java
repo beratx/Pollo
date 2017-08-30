@@ -54,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //if(wifiConnected()) {
-                    connectionManager.unregisterService();
-                    connectionManager.registerService();
+                    //connectionManager.unregisterService();
+                    //connectionManager.registerService();
                     onShowOnlineDevicesListDialogPress();
                 //}
             }

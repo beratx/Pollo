@@ -29,7 +29,6 @@
             android:name=".ActivePollsActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name">
-
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -40,6 +39,9 @@
 
         <service
             android:name=".ConnectionManagerService"
+            android:exported="false" />
+        <service
+            android:name=".StatusUpdaterService"
             android:exported="false"></service>
     </application>
 

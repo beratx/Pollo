@@ -1,5 +1,6 @@
 package mattoncino.pollo;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
@@ -134,12 +135,14 @@ public class ClientThreadProcessor implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NullPointerException e) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e1) {
-                sendPollRequest(socket);
-            }
-            sendPollRequest(socket);
+            Log.d(TAG, e.toString());
+            Activity act = (Activity) context;
+            act.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ToastHelper.useLongToast(context, "Can't connect to other devices. Check your connection.");
+                }
+            });
         } finally {
             output.close();
         }

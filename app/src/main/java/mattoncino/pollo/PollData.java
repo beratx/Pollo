@@ -19,7 +19,6 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     private int deviceCount; /* #devices that i sent request */
     private int responseCount; /* #devices that sent accept/reject response */
     private int[] votes;
-    //private List<Double> result;
     private int myVote;
     private boolean disabled;
     private String hostAddress;
@@ -112,15 +111,6 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     public void removeDevice(String hostAddress){
         acceptedDevices.remove(hostAddress);
     }
-
-
-    /*public List<Double> getResult() {
-        return result;
-    }
-
-    public void setResult(List<Double> result) {
-        this.result = result;
-    }*/
 
     public int getOwner() {
         return owner;
@@ -239,26 +229,27 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         parcel.writeByte((byte) (disabled ? 1 : 0));
         parcel.writeStringList(new ArrayList<String>(acceptedDevices));
         parcel.writeStringList(new ArrayList<String>(votedDevices));
+        parcel.writeIntArray(votes);
         //parcel.writeString(hostAddress);
         //votes = Collections.synchronizedList(new ArrayList());
         //parcel.writeList(votes);
 
     }
 
-    public static final Parcelable.Creator<Poll> CREATOR
-            = new Parcelable.Creator<Poll>() {
-        public Poll createFromParcel(Parcel in) {
-            return new Poll(in);
+    public static final Parcelable.Creator<PollData> CREATOR
+            = new Parcelable.Creator<PollData>() {
+        public PollData createFromParcel(Parcel in) {
+            return new PollData(in);
         }
 
-        public Poll[] newArray(int size) {
-            return new Poll[size];
+        public PollData[] newArray(int size) {
+            return new PollData[size];
         }
     };
 
     public PollData(Parcel parcel) {
         poll = parcel.readParcelable(Poll.class.getClassLoader());
-        hostAddress = parcel.readString();
+        hostAddress = parcel.readString()   ;
         disabled = parcel.readByte() != 0;
 
         ArrayList<String> list2 = new ArrayList<>();
@@ -268,6 +259,10 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         ArrayList<String> list = new ArrayList<>();
         parcel.readStringList(list);
         votedDevices = new HashSet<String>(list);
+
+        votes = parcel.createIntArray();
+
+        //parcel.readIntArray(votes);
 
         //hostAddress = parcel.readString();
         //votes      = Collections.synchronizedList(new ArrayList());
