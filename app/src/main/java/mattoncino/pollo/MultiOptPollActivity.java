@@ -15,12 +15,14 @@
     import android.widget.Toast;
 
     import java.util.ArrayList;
+    import java.util.HashSet;
     import java.util.List;
 
     import mattoncino.pollo.databinding.ActivityMultiOptPollBinding;
 
     public class MultiOptPollActivity extends AppCompatActivity {
         private static final String TAG = "MultiOptPollActivity";
+        private static final int PICK_IMAGE_ID = 87;
         private ActivityMultiOptPollBinding binding;
         private int count = 4;
         //private List<TextInputLayout> optionsViews = new ArrayList<TextInputLayout>();
@@ -44,6 +46,15 @@
                     //rLayout.addView(createNewOptionEntry());
 
                     if(count == 7) rLayout.removeView(binding.addFAB);
+                }
+            });
+
+            binding.imageFAB.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //Intent chooseImageIntent = ImagePicker.getPickImageIntent(this);
+                    //startActivityForResult(chooseImageIntent, PICK_IMAGE_ID);
+
                 }
             });
 
@@ -72,10 +83,23 @@
 
         }
 
+        /*@Override
+        protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+            switch(requestCode) {
+                case PICK_IMAGE_ID:
+                    Bitmap bitmap = ImagePicker.getImageFromResult(this, resultCode, data);
+                    // TODO use bitmap
+                    break;
+                default:
+                    super.onActivityResult(requestCode, resultCode, data);
+                    break;
+            }
+        }*/
+
         private boolean presentOnlineDevices(){
             String deviceId = ((MyApplication)getApplication()).getDeviceId();
             ServiceConnectionManager connManager = ((MyApplication)getApplication()).getConnectionManager();
-            final List<String> onlineDevices = connManager.getOnlineDevicesList(MultiOptPollActivity.this, deviceId);
+            final HashSet<String> onlineDevices = (HashSet<String>) connManager.getOnlineDevices(MultiOptPollActivity.this);
             return onlineDevices.size() != 0;
         }
 

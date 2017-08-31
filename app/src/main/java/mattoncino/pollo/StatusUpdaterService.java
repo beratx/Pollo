@@ -6,7 +6,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
 
 
 public class StatusUpdaterService extends IntentService {
@@ -29,7 +30,7 @@ public class StatusUpdaterService extends IntentService {
         ArrayList<PollData> activePolls = PollManager.getInstance().getActivePolls();
 
         String deviceId = ((MyApplication)getApplication()).getDeviceId();
-        final List<String> onlineDevices  = ((MyApplication)getApplication()).getConnectionManager().getOnlineDevicesList(this, deviceId);
+
 
         //if (intent != null) {
             //get your stuff from intent
@@ -37,20 +38,49 @@ public class StatusUpdaterService extends IntentService {
             //intent.setExtrasClassLoader(getClass().getClassLoader());
             //ArrayList<PollData> activePolls = intent.getParcelableArrayListExtra("polls");
 
-
             while(true){
                 try {
                     Thread.sleep(10000);
+
                     if(!activePolls.isEmpty()){
+
+                        HashSet<String> onlineDevices = (HashSet<String>) ((MyApplication)getApplication()).getConnectionManager().getOnlineDevices(this);
+
+                        for (PollData pd : activePolls) {
+                            if(!pd.isTerminated()) {
+
+                                HashSet<String> contactedDevices = (HashSet<String>) pd.getContactedDevices();
+                                HashSet<String> acceptedDevices = (HashSet<String>) pd.getAcceptedDevices();
+                                HashSet<String> votedDevices = (HashSet<String>) pd.getVotedDevices();
+
+                                for (Iterator<String> i = contactedDevices.iterator(); i.hasNext();) {
+                                    String dev = i.next();
+                                    if (!onlineDevices.contains(dev)) {
+                                        if (votedDevices.contains(dev))
+                                            ; //do nothing
+                                        else if (acceptedDevices.contains(dev)){
+                                            acceptedDevices.remove(dev);
+                                            i.remove();
+                                            pd.decrementResponseCount();
+                                        }
+                                        else
+                                            i.remove();
+                                    }
+                                }
+                            }
+                        }
+
                         System.out.println("----------------Device Status Update starts--------------------");
                         System.out.println("Online Devices: " + onlineDevices.toString());
                         System.out.println("---------Active Poll Count: " + activePolls.size() + "-----------");
                         for (PollData pd : activePolls) {
                             System.out.println("pollName: " + pd.getPollName());
-                            System.out.println("deviceCount: " + pd.getDeviceCount());
+                            System.out.println("deviceCount: " + pd.getContactedDevices().size());
+                            System.out.println("contactedDevices: " + Arrays.toString(pd.getContactedDevices().toArray()));
                             System.out.println("responseCount: " + pd.getResponseCount());
                             System.out.println("acceptedDevices: " + Arrays.toString(pd.getAcceptedDevices().toArray()));
                             System.out.println("votedDevices: " + Arrays.toString(pd.getVotedDevices().toArray()));
+                            System.out.println("myVote: " + pd.getMyVote());
                             System.out.println("---------------------------------------------------------------------");
                         }
                         System.out.println("----------------Device Status Update finishes--------------------");

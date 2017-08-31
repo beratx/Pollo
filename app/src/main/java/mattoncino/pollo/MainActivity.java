@@ -14,7 +14,8 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import mattoncino.pollo.databinding.ActivityMainBinding;
 
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     public static boolean exist_active_pool = true;
     public static boolean exist_saved_pool = true;
-    private ServiceConnectionManager connectionManager;
+
 
 
     @Override
@@ -95,19 +96,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startDataTransferring(){
-        connectionManager = ((MyApplication)getApplication()).getConnectionManager();
-        Intent connManagerServiceIntent = new Intent(this, ConnectionManagerService.class);
-        //mServiceIntent.setData(Uri.parse(dataUrl));
+        //connectionManager = ((MyApplication)getApplication()).getConnectionManager();
+        Intent connManagerServiceIntent = new Intent(this, ConnectionManagerIntentService.class);
         startService(connManagerServiceIntent);
-        /*Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                connectionManager = ((MyApplication)getApplication()).getConnectionManager();
-                connectionManager.initializeService(MainActivity.this);
-            }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();*/
+
     }
 
     @Override
@@ -157,7 +149,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 String deviceId = ((MyApplication)getApplication()).getDeviceId();
-                final List<String> onlineDevices = connectionManager.getOnlineDevicesList(MainActivity.this, deviceId);
+                ServiceConnectionManager connectionManager = ((MyApplication)getApplication()).getConnectionManager();
+                final HashSet<String> onlineDevices = (HashSet<String>) connectionManager.getOnlineDevices(MainActivity.this);
 
                 //Activity act = (Activity) MainActivity.this;
                 MainActivity.this.runOnUiThread(new Runnable() {
@@ -173,27 +166,19 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void showDevicesInNetworkList(List<String> devices){
+    private void showDevicesInNetworkList(Set<String> devices){
         AlertDialog.Builder builderSingle = new AlertDialog.Builder(MainActivity.this);
 
-        //builderSingle.setIcon(R.drawable.ic_launcher);
         builderSingle.setTitle("Devices list");
 
         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                 MainActivity.this,
                 android.R.layout.simple_list_item_1);
 
-        for (int i = 0; i < devices.size(); i++){
-            arrayAdapter.add(devices.get(i));
-        }
-
-        /*DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-            }
-        };*/
+        arrayAdapter.addAll(devices);
 
         builderSingle.setAdapter(arrayAdapter, null);
+        arrayAdapter.notifyDataSetChanged();
         builderSingle.show();
     }
 

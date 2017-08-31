@@ -15,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
@@ -103,36 +104,28 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     }
 
     private BroadcastReceiver createUpdateBroadcastReceiver() {
-        Log.d(TAG, "received create broadcast");
+        Log.d(TAG, "received update broadcast");
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals("mattoncino.pollo.receive.poll.vote")) {
                     String pollID = intent.getStringExtra("pollID");
-                    int vote = intent.getIntExtra("vote", -1);
-                    String hostAddress = intent.getStringExtra("hostAddress");
-                    if (vote == -1)
-                        Log.d(TAG, "corrupted vote");
-                    else {
-                        manager.updatePoll(pollID, hostAddress, vote);
-                        //here launch a thread to check conjuction with online devices
-                        //List<String> onlineDevices = connectionManager.getOnlineDevicesList(ActivePollsActivity.this, "device");
-                        //checkOnlineDevices(pollID, onlineDevices);
-                        //thread.start();
-                        if (manager.isCompleted(pollID)) {
-                            completedPoll = true;
-                            completedPD = manager.getPollData(pollID);
-                            Log.d(TAG, "poll " + pollID + " is completed! Will send results...");
-                        } else {
-                            //show "terminate poll button"
+                    boolean isMyVote = intent.getBooleanExtra("myVote", false);
+                    if(!isMyVote) {
+                        int vote = intent.getIntExtra("vote", -1);
+                        if (vote != -1) {
+                            String hostAddress = intent.getStringExtra("hostAddress");
+                            manager.updatePoll(pollID, hostAddress, vote);
                         }
-                        //update situation #voted / #accepted / #contacted
                     }
-
+                    if (manager.isCompleted(pollID)) {
+                        completedPoll = true;
+                        completedPD = manager.getPollData(pollID);
+                        Log.d(TAG, "poll " + pollID + " is completed! Will send results...");
+                    }
                     intent.removeExtra("pollID");
                     intent.removeExtra("vote");
                     intent.removeExtra("hostAddress");
-                    //adapter.notifyDataSetChanged();
                 }
             }
         };
@@ -214,8 +207,11 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     pollInfo.addAll(poll.getOptions());
 
                     try {
-                        int deviceCount = connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollInfo);
-                        manager.setDeviceCount(poll.getId(), deviceCount);
+                        HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollInfo);
+                        if(contactedDevices != null)
+                            manager.setContactedDevices(poll.getId(), contactedDevices);
+                        else
+                            Log.d(TAG, "connectionManager.sendMessageToAllDevices contactedDevices set is null!!!");
                     } catch (NullPointerException e) {
                         Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
                         return;
@@ -246,6 +242,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             try {
                 //here maybe add a handler to comunciate back to the thread
                 //manager.setResult(completedPD.getID(), result);
+                Log.d(TAG, completedPD.getPollName() + " is finished, sending results to other devices...");
                 connectionManager.sendResultToAllDevices(ActivePollsActivity.this, devices, completedPD.getID(), result);
             } catch (NullPointerException e) {
                 Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");

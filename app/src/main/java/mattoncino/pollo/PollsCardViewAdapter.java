@@ -1,9 +1,12 @@
 package mattoncino.pollo;
 
 import android.content.Context;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -107,9 +110,11 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
                         if(pollData.getOwner() == Consts.OTHER)
                             sendVote(view, pollData.getID(), opt, pollData.getHostAddress());
-
-                        pollData.setMyVote(opt);
-                        setCardDetails(holder.getBinding().nameTextView.getContext(), rLayout, pollData, opt);
+                        else {
+                            pollData.setMyVote(opt);
+                            sendUpdateBroadcast(button.getContext(), pollData.getID());
+                        }
+                        setCardDetails(button.getContext(), rLayout, pollData, opt);
                         holder.getBinding().ownerLayout.getChildAt(0).setEnabled(false);
                     }
                 });
@@ -141,6 +146,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                                 option.setEnabled(false);
                             }
 
+                            Log.d(TAG, "poll " + pollData.getID() + " is terminated! Will send results...");
+
                             sendResultToAllDevices(button.getContext(), pollData.getID(),
                                         pollData.getVotes(), pollData.getAcceptedDevices());
                         }
@@ -150,7 +157,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
             TextView view = (TextView) holder.getBinding().ownerLayout.getChildAt(1);
             view.setText(pollData.getVotedDevices().size() + " voted / " + pollData.getAcceptedDevices().size()
-                    + " accepted / "  + pollData.getDeviceCount() + " received");
+                    + " accepted / "  + pollData.getContactedDevices().size() + " received");
             view.setVisibility(View.VISIBLE);
         }
 
@@ -171,6 +178,13 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             }
         };
         handler.post(r);
+    }
+
+    private void sendUpdateBroadcast(Context context, String id){
+        Intent intent = new Intent("mattoncino.pollo.receive.poll.vote");
+        intent.putExtra("pollID", id);
+        intent.putExtra("myVote", true);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     private void sendVote(View view, String id, int opt, String hostAddress){

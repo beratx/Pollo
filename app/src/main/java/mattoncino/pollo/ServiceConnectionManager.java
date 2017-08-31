@@ -10,7 +10,6 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Set;
 
 import javax.jmdns.JmDNS;
@@ -144,10 +143,10 @@ public class ServiceConnectionManager {
     }
 
 
-    public int sendMessageToAllDevicesInNetwork(final Context context, String type, ArrayList<String> messages) {
+    public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, ArrayList<String> messages) {
         if (jmdns != null) {
 
-            Set<String> ipAddressesSet = getNeighborDevicesIpAddressesSet(context);
+            Set<String> ipAddressesSet = getOnlineDevices(context);
 
             for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
                 String serverIpAddress = (String) iterator.next();
@@ -156,10 +155,10 @@ public class ServiceConnectionManager {
                 t.start();
             }
 
-            return ipAddressesSet.size();
+            return ipAddressesSet;
         }
 
-        return 0;
+        return null;
     }
 
     public void sendResultToAllDevices(final Context context, Set<String> hostAddresses, String pollId, int[] result) {
@@ -174,26 +173,28 @@ public class ServiceConnectionManager {
         }
     }
 
-    private Set<String> getNeighborDevicesIpAddressesSet(Context context) {
+    public Set<String> getOnlineDevices(Context context) {
+
+        /*if (jmdns == null) {
+            initializeService(context);
+        }*/
 
         Set<String> ipAddressesSet = new HashSet<String>();
-        javax.jmdns.ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE);
+        javax.jmdns.ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE, 6000);
+        String ownDeviceId = ((MyApplication) context.getApplicationContext()).getDeviceId();
 
         for (int index = 0; index < serviceInfoList.length; index++) {
-            javax.jmdns.ServiceInfo currentServiceInfo = serviceInfoList[index];
-
-            String device = currentServiceInfo.getPropertyString(SERVICE_INFO_PROPERTY_DEVICE);
-            String ownDeviceId = ((MyApplication) context.getApplicationContext()).getDeviceId();
+            String device = serviceInfoList[index].getPropertyString(SERVICE_INFO_PROPERTY_DEVICE);
 
             if (!device.equals(ownDeviceId)) {
-                String serverIpAddress = getIPv4FromServiceInfo(currentServiceInfo);
+                String serverIpAddress = getIPv4FromServiceInfo(serviceInfoList[index]);
                 ipAddressesSet.add(serverIpAddress);
             }
         }
         return ipAddressesSet;
     }
 
-    public List<String> getOnlineDevicesList(Context context, String deviceId) {
+    /*public List<String> getOnlineDevicesList(Context context, String deviceId) {
 
         List<String> onlineDevices = new ArrayList<String>();
         try {
@@ -201,7 +202,7 @@ public class ServiceConnectionManager {
                 initializeService(context);
             }
 
-            javax.jmdns.ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE);
+            javax.jmdns.ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE, 1000);
             if (serviceInfoList != null) {
 
                 for (int index = 0; index < serviceInfoList.length; index++) {
@@ -223,7 +224,7 @@ public class ServiceConnectionManager {
         }
 
         return onlineDevices;
-    }
+    }*/
 
 
 }

@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Set;
@@ -98,14 +99,21 @@ public class PollManager extends Observable {
             }
         }
     }
-
+/*
     public void setDeviceCount(String pollID, int count){
         for (PollData pd : active_polls) {
             if (pollID.equals(pd.getID()))
                 pd.setDeviceCount(count);
         }
     }
+*/
 
+    public void setContactedDevices(String pollID, HashSet<String> devices){
+        for (PollData pd : active_polls) {
+            if (pollID.equals(pd.getID()))
+                pd.setContactedDevices(devices);
+        }
+    }
 
     public void addPoll(PollData pd){
         synchronized (this) {
@@ -138,7 +146,7 @@ public class PollManager extends Observable {
                         pd.addAcceptedDevice(hostAddress);
                     pd.incrementResponseCount();
                     Log.d(TAG, hostAddress + " poll: " + pd.getPollName() + " accepted? " + accepted);
-                    Log.d(TAG, "current deviceCount: " + pd.getDeviceCount());
+                    Log.d(TAG, "current deviceCount: " + pd.getContactedDevices().size());
                     Log.d(TAG, "current responseCount: " + pd.getResponseCount());
                     Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());
                 }
@@ -160,7 +168,7 @@ public class PollManager extends Observable {
                     setChanged();
                     notifyObservers();
                     Log.d(TAG, "called setChanged -> notifyObservers");
-                    Log.d(TAG, "current deviceCount: " + pd.getDeviceCount());
+                    Log.d(TAG, "current deviceCount: " + pd.getContactedDevices().size());
                     Log.d(TAG, "current responseCount: " + pd.getResponseCount());
                     Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());
                 }
@@ -173,7 +181,7 @@ public class PollManager extends Observable {
     public boolean isCompleted(String pollID){
         for (PollData pd : active_polls) {
             if (pollID.equals(pd.getID()))
-                return (pd.getDeviceCount() == pd.getResponseCount()) &&
+                return (pd.getContactedDevices().size() == pd.getResponseCount()) &&
                         (pd.getVotedDevices().size() == pd.getAcceptedDevices().size()) &&
                         (pd.getMyVote() > 0);
         }

@@ -5,12 +5,12 @@ import android.content.Intent;
 import android.util.Log;
 
 
-public class ConnectionManagerService extends IntentService {
+public class ConnectionManagerIntentService extends IntentService {
     private static final String TAG = "ConnManagerService";
     private ServiceConnectionManager connectionManager;
 
-    public ConnectionManagerService() {
-        super("ConnectionManagerService");
+    public ConnectionManagerIntentService() {
+        super("ConnectionManagerIntentService");
     }
 
 
