@@ -2,8 +2,12 @@
 
     import android.content.ContentValues;
     import android.content.Intent;
+    import android.content.res.Resources;
     import android.database.sqlite.SQLiteDatabase;
     import android.databinding.DataBindingUtil;
+    import android.graphics.Bitmap;
+    import android.graphics.BitmapFactory;
+    import android.net.Uri;
     import android.os.Bundle;
     import android.os.Parcelable;
     import android.support.design.widget.Snackbar;
@@ -24,9 +28,12 @@
         private static final String TAG = "MultiOptPollActivity";
         private static final int PICK_IMAGE_ID = 87;
         private ActivityMultiOptPollBinding binding;
-        private int count = 4;
+        private int count = 6;
         //private List<TextInputLayout> optionsViews = new ArrayList<TextInputLayout>();
         private List<String> options = new ArrayList<String>();
+        private boolean hasImage = false;
+        private Bitmap bitmap;
+        private ImageInfo imageInfo;
 
 
         @Override
@@ -43,21 +50,20 @@
                 public void onClick(View view) {
                     final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
                     rLayout.getChildAt(count++).setVisibility(View.VISIBLE);
+                    System.out.println("addFab: count: " + count);
                     //rLayout.addView(createNewOptionEntry());
 
-                    if(count == 7) rLayout.removeView(binding.addFAB);
+                    if(count == 9) binding.addFAB.setVisibility(View.GONE);
                 }
             });
 
-            binding.imageFAB.setOnClickListener(new View.OnClickListener() {
+            binding.addImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    //Intent chooseImageIntent = ImagePicker.getPickImageIntent(this);
-                    //startActivityForResult(chooseImageIntent, PICK_IMAGE_ID);
-
+                    Intent chooseImageIntent = ImagePicker.getPickImageIntent(MultiOptPollActivity.this);
+                    startActivityForResult(chooseImageIntent, PICK_IMAGE_ID);
                 }
             });
-
 
             binding.saveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -77,24 +83,32 @@
                             .putExtra(Consts.POLL, (Parcelable) poll);
 
                     startActivity(intent);
-
                 }
             });
-
         }
 
-        /*@Override
+        @Override
         protected void onActivityResult(int requestCode, int resultCode, Intent data) {
             switch(requestCode) {
                 case PICK_IMAGE_ID:
-                    Bitmap bitmap = ImagePicker.getImageFromResult(this, resultCode, data);
-                    // TODO use bitmap
+                    if(resultCode == RESULT_OK){
+                        Log.d(TAG, "RESULT IS OK");
+                        imageInfo = ImagePicker.getImageFromResult(this, resultCode, data);
+                        bitmap = ImagePicker.getBitmapImage(imageInfo.getUri(), MultiOptPollActivity.this, imageInfo.isCamera());
+                        binding.imageView.setVisibility(View.VISIBLE);
+                        binding.imageView.setImageBitmap(bitmap);
+                        binding.imageView.invalidate();
+                        hasImage = true;
+                    }
+                    else
+                        Log.d(TAG, "RESULT CANCELED");
                     break;
                 default:
                     super.onActivityResult(requestCode, resultCode, data);
                     break;
             }
-        }*/
+        }
+
 
         private boolean presentOnlineDevices(){
             String deviceId = ((MyApplication)getApplication()).getDeviceId();
@@ -134,7 +148,7 @@
 
             final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
 
-            for (int i = 2; i < count; i++) {
+            for (int i = 4; i < count; i++) {
                 TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
                 String op = til.getEditText().getText().toString();
                 options.add(op);
@@ -160,7 +174,7 @@
                 return null;
             }
 
-            Poll poll = new Poll(name, question, options);
+            Poll poll = new Poll(name, question, options, hasImage, imageInfo);
 
             return poll;
         }

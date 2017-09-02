@@ -3,6 +3,7 @@ package mattoncino.pollo;
 import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
@@ -78,9 +79,17 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         final Poll poll = pollData.getPoll();
         final LinearLayout rLayout = holder.getBinding().listItemLayout;
 
+        if(pollData.hasImage()){
+            ImageInfo imageInfo = pollData.getImageInfo();
+            Bitmap bitmap = ImagePicker.getBitmapImage(imageInfo.getUri(), rLayout.getContext(), imageInfo.isCamera());
+            holder.getBinding().imageView.setVisibility(View.VISIBLE);
+            holder.getBinding().imageView.setImageBitmap(bitmap);
+            holder.getBinding().imageView.invalidate();
+        }
+
 
         for (int i = 0; i < poll.getOptions().size(); i++) {
-            final Button button = (Button) rLayout.getChildAt(i+2);
+            final Button button = (Button) rLayout.getChildAt(i+3);
             final int opt = i+1;
             button.setVisibility(View.VISIBLE);
 
@@ -93,6 +102,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 else
                     button.setText(pollData.getOption(i+1) + " >> " +
                                             pollData.getVotesFor(i+1)*(100.0/sum) + "%");
+                Log.d(TAG, "OPT"+opt + " : " + pollData.getOption(i+1));
             }
             else
                 button.setText(pollData.getOption(opt));
@@ -142,7 +152,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                             pollData.setTerminated(true);
 
                             for (int i = 0; i < poll.getOptions().size(); i++) {
-                                Button option = (Button) rLayout.getChildAt(i + 2);
+                                Button option = (Button) rLayout.getChildAt(i + 3);
                                 option.setEnabled(false);
                             }
 
@@ -165,9 +175,9 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         holder.getBinding().executePendingBindings();
     }
 
-    private void setCardDetails(final Context context, final LinearLayout rLayout, final PollData pd, final int opt){
+    private void setCardDetails(final Context context, final LinearLayout lLayout, final PollData pd, final int opt){
         pd.setDisabled(true);
-        disableOptionButtons(rLayout);
+        disableOptionButtons(lLayout);
 
         Handler handler = new Handler();
         final Runnable r = new Runnable(){

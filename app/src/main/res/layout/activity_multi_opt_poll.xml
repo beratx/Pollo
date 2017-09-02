@@ -43,11 +43,43 @@
                     android:layout_height="wrap_content" />
             </android.support.design.widget.TextInputLayout>
 
+            <LinearLayout
+                android:id="@+id/imageitemLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@id/questionInputLayout"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/addImageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAllCaps="false"
+                    android:text="Pick Image" />
+
+                <TextView
+                    android:id="@+id/addImageTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAllCaps="false"
+                    android:textAlignment="textStart"
+                    android:text="Add an image for your question..."/>
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:layout_below="@id/imageitemLayout"
+                android:visibility="gone"
+                android:src="@android:drawable/ic_menu_gallery" />
+
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/opt1InputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/questionInputLayout"
+                android:layout_below="@id/imageView"
                 android:hint="1. Option">
 
                 <android.support.design.widget.TextInputEditText
@@ -131,21 +163,12 @@
                 android:text="Save"/>
 
             <android.support.design.widget.FloatingActionButton
+                android:id="@+id/addFAB"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 app:fabSize="normal"
                 app:srcCompat="@android:drawable/ic_input_add"
-                android:id="@+id/addFAB"
-                android:layout_marginEnd="21dp" />
-
-            <android.support.design.widget.FloatingActionButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                app:fabSize="normal"
-                app:srcCompat="@android:drawable/ic_menu_gallery"
-                android:id="@+id/imageFAB"
                 android:layout_marginEnd="21dp" />
 
             </LinearLayout>

@@ -62,6 +62,8 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         return poll.getName();
     }
 
+
+
     /*@Bindable
     public List<Integer> getVotes() {
         return votes;
@@ -196,6 +198,14 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
 
         return count;
     }*/
+
+    public boolean hasImage(){
+        return poll.getImageInfo() != null;
+    }
+
+    public ImageInfo getImageInfo(){
+        return poll.getImageInfo();
+    }
 
     public int getVotesFor(int opt) {
         System.out.println("pollname: " + poll.getName() + " votes: " + Arrays.toString(votes));

@@ -10,6 +10,8 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.google.android.gms.common.images.ImageManager;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -62,7 +64,9 @@ public class ClientHandler implements Runnable{
                     options.add(inputBufferedReader.readLine());
                 }
 
-                poll = new Poll(id, name, question, options);
+                ImageInfo info = null;
+
+                poll = new Poll(id, name, question, options, false, info);
 
                 /*outputPrintWriter.println(Consts.ACCEPT);*/
                 Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);

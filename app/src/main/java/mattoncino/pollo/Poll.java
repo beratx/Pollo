@@ -2,6 +2,7 @@ package mattoncino.pollo;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -17,31 +18,28 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     private String name;
     private String question;
     private List<String> options;
+    private ImageInfo imageInfo;
     //private String hostAddress;
     //private List<Integer> votes;
     //private Set participants;
     //private boolean disabled;
 
-    public Poll(String id, String name, String question, List<String> options) {
+    public Poll(String id, String name, String question, List<String> options, boolean hasImage, ImageInfo info) {
         this.id = id;
         this.name = name;
         this.question = question;
         this.options = options;
+        this.imageInfo = (hasImage) ? info : null;
+        //this.imageInfo = imageInfo;
         //this.hostAddress = hostAddress;
         //this.votes = Collections.synchronizedList(new ArrayList<Integer>());
         //this.participants = Collections.synchronizedSet(new HashSet<String>());
         //this.disabled = false;
     }
 
-    public Poll(String name, String question, List<String> options) {
-        this.id = UUID.randomUUID().toString();
-        this.name = name;
-        this.question = question;
-        this.options = options;
-        //this.hostAddress = hostAddress;
-        //this.votes = Collections.synchronizedList(new ArrayList<Integer>());
-        //this.participants = Collections.synchronizedSet(new HashSet<String>());
-        //this.disabled = false;
+    public Poll(String name, String question, List<String> options, boolean hasImage, ImageInfo info) {
+        this(UUID.randomUUID().toString(), name, question, options, hasImage, info);
+        /*this.id = UUID.randomUUID().toString();*/
     }
 
     public String getId() {
@@ -70,6 +68,10 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     @Bindable
     public String getQuestion() {
         return question;
+    }
+
+    public ImageInfo getImageInfo() {
+        return imageInfo;
     }
 
     @Bindable
@@ -180,6 +182,10 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         parcel.writeString(name);
         parcel.writeString(question);
         parcel.writeStringList(options);
+        if(imageInfo != null)
+            parcel.writeParcelable(imageInfo,i);
+        else parcel.writeValue(imageInfo);
+
         //parcel.writeString(hostAddress);
         //votes = Collections.synchronizedList(new ArrayList());
         //parcel.writeList(votes);
@@ -203,6 +209,14 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         question   = parcel.readString();
         options = new ArrayList<String>();
         parcel.readStringList(options);
+        try {
+            imageInfo = parcel.readParcelable(ImageInfo.class.getClassLoader());
+        } catch (Exception e){
+            imageInfo = (ImageInfo) parcel.readValue(ImageInfo.class.getClassLoader());
+            System.out.println("imageInfo is NULL");
+        }
+
+        //imageUri = Uri.CREATOR.createFromParcel(parcel);
         //hostAddress = parcel.readString();
         //votes      = Collections.synchronizedList(new ArrayList());
         //parcel.readList(votes, null);
