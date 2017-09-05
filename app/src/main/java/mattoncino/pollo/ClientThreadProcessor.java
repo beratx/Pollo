@@ -2,13 +2,24 @@ package mattoncino.pollo;
 
 import android.app.Activity;
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -24,6 +35,7 @@ public class ClientThreadProcessor implements Runnable{
     private String hostIpAddress;
     private static final String TAG = "ClientThreadProcess";
     private List<String> pollInfo;
+    private Poll poll;
     private String type;
     private String pollID;
     private int[] result;
@@ -41,8 +53,16 @@ public class ClientThreadProcessor implements Runnable{
         this.type = type;
         this.pollID = pollID;
         this.result = result;
-
     }
+
+    public ClientThreadProcessor(String hostIpAddress, Context context, String type, Poll poll) {
+        this.context = context;
+        this.hostIpAddress = hostIpAddress;
+        this.poll = poll;
+        this.type = type;
+    }
+
+
 
     /*public ClientThreadProcessor(String hostIpAddress, Context context, String type, int vote) {
         this.context = context;
@@ -89,7 +109,6 @@ public class ClientThreadProcessor implements Runnable{
         } catch (Exception e) {
             e.printStackTrace();
             //Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
-
         } finally {
             closeSocket(socket);
         }
@@ -100,17 +119,43 @@ public class ClientThreadProcessor implements Runnable{
         PrintWriter output = null;
 
         try {
-            output = new PrintWriter(new BufferedWriter(
-                                        new OutputStreamWriter(socket.getOutputStream())), true);
+            OutputStream outputStream = socket.getOutputStream();
 
+
+            output = new PrintWriter(new BufferedWriter(
+                                        new OutputStreamWriter(outputStream)), true);
+
+
+            //DataOutputStream dout = new DataOutputStream(bout);
+
+            //TODO:CHANGE IT WITH POLL
             output.println(Consts.POLL_REQUEST);
-            output.println(pollInfo.get(0)); //poll_id
-            output.println(pollInfo.get(1)); //poll_name
-            output.println(pollInfo.get(2)); //poll_question
-            output.println(pollInfo.get(3)); //device address
-            output.println(pollInfo.size()-4); //number of options
-            for (int i = 4; i < pollInfo.size(); i++) {
-                output.println(pollInfo.get(i));
+            output.println(poll.getId()); //poll_id
+            output.println(poll.getName()); //poll_name
+            output.println(poll.getQuestion()); //poll_question
+            //output.println(poll.get(3)); //device address
+            output.println(poll.getOptions().size());//#options
+            for (int i = 0; i < poll.getOptions().size(); i++) {
+                output.println(poll.getOptions().get(i));
+            }
+            output.println(poll.hasImage());
+            if(poll.hasImage()){
+                output.println(poll.getImageInfo().isCamera());
+                BufferedOutputStream bout = new BufferedOutputStream(outputStream);
+                Log.d(TAG, "imagePath: " + poll.getImageInfo().getPath());
+                String realPath = ImagePicker.getRealPathFromUri(context, Uri.parse(poll.getImageInfo().getPath()));
+                if(realPath != null)  Log.d(TAG, "real path: " + realPath);
+                InputStream input = new FileInputStream(realPath);
+
+                byte[] buffer = new byte[1024];
+                int len;
+                while ((len = input.read(buffer)) != -1) {
+                    //bout.write(buffer, 0, len);
+                    bout.write(buffer);
+                }
+                input.close();
+                bout.close();
+                Log.d(TAG, "Image sent over network and stream is closed.");
             }
 
             if (output.checkError()) {
@@ -144,6 +189,7 @@ public class ClientThreadProcessor implements Runnable{
                 }
             });
         } finally {
+            if(output != null)
             output.close();
         }
     }
@@ -256,6 +302,8 @@ public class ClientThreadProcessor implements Runnable{
             closeSocket(socket);
         }
     }
+
+
 
 
 }

@@ -11,13 +11,18 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -98,7 +103,8 @@ public class ImagePicker {
             /*bm = getImageResized(context, selectedImage);
             int rotation = getRotation(context, selectedImage, isCamera);
             bm = rotate(bm, rotation);*/
-            return new ImageInfo(selectedImage, isCamera);
+            //return new ImageInfo(selectedImage, isCamera);
+            return new ImageInfo(selectedImage.toString(), isCamera);
         }
 
         //return bm
@@ -113,8 +119,12 @@ public class ImagePicker {
     }
 
 
-    private static File getTempFile(Context context) {
-        File imageFile = new File(context.getExternalCacheDir(), TEMP_IMAGE_NAME);
+    public static File getTempFile(Context context) {
+        File imageFile;
+        if(isExternalStorageWritable())
+            imageFile = new File(context.getExternalCacheDir(), TEMP_IMAGE_NAME);
+        else
+            imageFile = new File(context.getCacheDir(), TEMP_IMAGE_NAME);
         imageFile.getParentFile().mkdirs();
         return imageFile;
     }
@@ -133,7 +143,20 @@ public class ImagePicker {
         Bitmap actuallyUsableBitmap = BitmapFactory.decodeFileDescriptor(
                 fileDescriptor.getFileDescriptor(), null, options);
 
-        Log.d(TAG, options.inSampleSize + " sample method bitmap ... " +
+        if(actuallyUsableBitmap == null) {
+            InputStream imgFile = null;
+            try {
+                imgFile = context.getAssets().open(theUri.toString());
+                actuallyUsableBitmap = BitmapFactory.decodeStream(imgFile, null, options);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+
+        if(actuallyUsableBitmap == null)
+            Log.d(TAG, "actuallyUsableBitmap is NULL");
+        else
+            Log.d(TAG, options.inSampleSize + " sample method bitmap ... " +
                 actuallyUsableBitmap.getWidth() + " " + actuallyUsableBitmap.getHeight());
 
         return actuallyUsableBitmap;
@@ -222,5 +245,105 @@ public class ImagePicker {
             return bmOut;
         }
         return bm;
+    }
+
+    public static String getRealPathFromUri(Context context, Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = { MediaStore.Images.Media.DATA };
+            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    public static File getPictureStorageDir(Context context, String albumName) {
+        // Get the directory for the app's private pictures directory.
+        File file = new File(context.getExternalFilesDir(
+                Environment.DIRECTORY_PICTURES), albumName);
+        if (!file.mkdirs()) {
+            Log.e(TAG, "Directory not created");
+        }
+        return file;
+    }
+
+    public static File createImageFile(Context context) throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".bmp",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        //String absolutePathPath = image.getAbsolutePath();
+        return image;
+    }
+
+    public static File createFile(Context context, boolean external) {
+
+        File direct;
+
+        if(external)
+            direct = new File(Environment.getExternalStorageDirectory() + "/pollo_images");
+        else
+            direct = new File(context.getFilesDir() + "/pollo_images");
+
+
+        if (!direct.exists()) {
+            File imagesDir;
+            if(external)
+                imagesDir = new File("/sdcard/pollo_images/");
+            else
+                imagesDir = new File("/pollo_images");
+
+            imagesDir.mkdirs();
+        }
+
+        String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+        File file = null;
+        try {
+            if(external) {
+                //file = new File(new File("/sdcard/pollo_images/"), "pollo_" + timestamp);
+                file = File.createTempFile("pollo_" + timestamp, ".bmp", direct);
+            }
+            else {
+                //file = new File(new File("/pollo_images/"), "pollo_" + timestamp);
+                file = File.createTempFile("pollo_" + timestamp, ".bmp", direct);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return file;
+
+    }
+
+    /* Checks if external storage is available for read and write */
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
     }
 }

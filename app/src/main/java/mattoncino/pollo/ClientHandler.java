@@ -5,16 +5,23 @@ import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.common.images.ImageManager;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -41,32 +48,74 @@ public class ClientHandler implements Runnable{
     @Override
     public void run() {
         try {
+
+            InputStream input = socket.getInputStream();
             inputBufferedReader = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream()));
+                                    new InputStreamReader(input));
 
             outputPrintWriter = new PrintWriter(new BufferedWriter(
                     new OutputStreamWriter(socket.getOutputStream())), true);
+
+            ImageInfo info = null;
 
             //Log.v(TAG, "GOT INPUT AND OUTPUT STREAM");
 
             final String message = inputBufferedReader.readLine();
 
             if (message.equals(Consts.POLL_REQUEST)) {
-
                 String id = inputBufferedReader.readLine();//poll_id
                 String name = inputBufferedReader.readLine(); //poll_name
                 String question = inputBufferedReader.readLine(); //poll_question
-                final String hostAddress = inputBufferedReader.readLine(); //poll_hostAddress
                 int optCount = Integer.parseInt(inputBufferedReader.readLine());
-
                 List<String> options = new ArrayList<>();
                 for (int i = 0; i < optCount; i++) {
                     options.add(inputBufferedReader.readLine());
                 }
+                final String hostAddress = socket.getInetAddress().getHostAddress();
+                boolean hasImage = Boolean.valueOf(inputBufferedReader.readLine()); //hasImage
+                boolean isCamera = false;
+                if(hasImage) {
+                    isCamera = Boolean.valueOf(inputBufferedReader.readLine()); //isCamera
 
-                ImageInfo info = null;
+                    //if(ImagePicker.isExternalStorageWritable())
+                    //  File imageFile = ImagePicker.createFile(external);
+                    //else
+                    //  File imageFile = ImagePicker.createFile(internal);
+                    File imageFile = ImagePicker.createFile(context, ImagePicker.isExternalStorageWritable());
+                    // Continue only if the File was successfully created
+                    if (imageFile != null) {
+                        /*Uri imageUri = FileProvider.getUriForFile(context,
+                                "mattoncino.pollo.android.fileprovider",
+                                imageFile);*/
+                        Uri imageUri = Uri.fromFile(imageFile);
+                        Log.d(TAG, "imageUri for received image: " + imageUri.toString());
 
-                poll = new Poll(id, name, question, options, false, info);
+                        //File imageFile = ImagePicker.getTempFile(context);
+                        //Uri imageUri = Uri.fromFile(imageFile);
+
+                        BufferedInputStream bufin = new BufferedInputStream(input);
+                        FileOutputStream output = new FileOutputStream(imageFile);
+
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while((len = bufin.read(buffer)) != -1){
+                            output.write(buffer);
+                            output.flush();
+                        }
+                        //output.flush();
+                        output.close();
+                        bufin.close();
+
+                        Log.d(TAG, "Image is received and saved.");
+
+                        info = new ImageInfo(imageUri.toString(), isCamera);
+                    }
+                    else
+                        Log.d(TAG, "ImagePicker.createFile returns NULL");
+                }
+
+                //poll = new Poll(id, name, question, options, isCamera, info);
+                poll = new Poll(id, name, question, options, hasImage, info);
 
                 /*outputPrintWriter.println(Consts.ACCEPT);*/
                 Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
@@ -199,5 +248,4 @@ public class ClientHandler implements Runnable{
                 Context.NOTIFICATION_SERVICE);
         manager.notify(NOTIFICATION_ID, builder.build());
     }
-
 }

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.databinding.DataBindingUtil;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -14,6 +15,11 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Observable;
@@ -91,6 +97,47 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     xhostAddress = data.getString("hostAddress");
                     //System.out.println("accepted poll from: " + xhostAddress);
                     manager.addPoll(new PollData(poll, xhostAddress, type));
+                    /*if(poll.hasImage()){
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                File image = File.create
+                                imageFile.getParentFile().mkdirs();
+                                return imageFile;
+                                //IF has an image SHOULD SAVE PERMAMNENTLY
+                                File imageFile = ImagePicker.getTempFile(ActivePollsActivity.this);
+                                //Uri imageUri = Uri.fromFile(imageFile);
+                                File permanentPath = ImagePicker.getPictureStorageDir(ActivePollsActivity.this, "poll_pictures");
+
+                                FileInputStream input = null;
+                                FileOutputStream output = null;
+                                try {
+                                    input = new FileInputStream(imageFile);
+                                    output = new FileOutputStream(permanentPath);
+
+                                    byte[] buffer = new byte[1024];
+                                    int len;
+
+                                    while((len = input.read(buffer)) != -1){
+                                        output.write(buffer);
+                                        output.flush();
+                                    }
+                                    poll.getImageInfo().setPath(permanentPath.toString());
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                } finally {
+                                    try {
+                                        input.close();
+                                        output.close();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        }).start();
+                    }*/
                 }
             }
 
@@ -199,15 +246,20 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                         return;
                     }
 
-                    ArrayList<String> pollInfo = new ArrayList<String>();
+                    /*ArrayList<String> pollInfo = new ArrayList<String>();
                     pollInfo.add(poll.getId());
                     pollInfo.add(poll.getName());
                     pollInfo.add(poll.getQuestion());
                     pollInfo.add(ownAddress);
+                    pollInfo.add(String.valueOf(poll.hasImage()));
                     pollInfo.addAll(poll.getOptions());
-
+                    if(poll.hasImage()){
+                        pollInfo.add(poll.getImageInfo().getUri().toString());
+                        pollInfo.add(String.valueOf(poll.getImageInfo().isCamera()));
+                    }*/
                     try {
-                        HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollInfo);
+                        //HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollInfo);
+                        HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, poll);
                         if(contactedDevices != null)
                             manager.setContactedDevices(poll.getId(), contactedDevices);
                         else

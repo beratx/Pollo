@@ -19,6 +19,7 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     private String question;
     private List<String> options;
     private ImageInfo imageInfo;
+    private boolean hasImage;
     //private String hostAddress;
     //private List<Integer> votes;
     //private Set participants;
@@ -29,6 +30,7 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         this.name = name;
         this.question = question;
         this.options = options;
+        this.hasImage = hasImage;
         this.imageInfo = (hasImage) ? info : null;
         //this.imageInfo = imageInfo;
         //this.hostAddress = hostAddress;
@@ -82,6 +84,10 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     public void setOptions(List<String> options) {
         this.options = options;
         notifyPropertyChanged(BR.options);
+    }
+
+    public boolean hasImage() {
+        return hasImage;
     }
 
     /*public void setHostAddress(String hostAddress) {
@@ -182,7 +188,8 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         parcel.writeString(name);
         parcel.writeString(question);
         parcel.writeStringList(options);
-        if(imageInfo != null)
+        parcel.writeByte((byte) (hasImage ? 1 : 0));
+        if(hasImage)
             parcel.writeParcelable(imageInfo,i);
         else parcel.writeValue(imageInfo);
 
@@ -209,12 +216,13 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         question   = parcel.readString();
         options = new ArrayList<String>();
         parcel.readStringList(options);
-        try {
+        hasImage = parcel.readByte() != 0;
+        if(hasImage)
             imageInfo = parcel.readParcelable(ImageInfo.class.getClassLoader());
-        } catch (Exception e){
+        else
             imageInfo = (ImageInfo) parcel.readValue(ImageInfo.class.getClassLoader());
-            System.out.println("imageInfo is NULL");
-        }
+
+
 
         //imageUri = Uri.CREATOR.createFromParcel(parcel);
         //hostAddress = parcel.readString();

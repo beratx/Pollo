@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
@@ -81,7 +82,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
         if(pollData.hasImage()){
             ImageInfo imageInfo = pollData.getImageInfo();
-            Bitmap bitmap = ImagePicker.getBitmapImage(imageInfo.getUri(), rLayout.getContext(), imageInfo.isCamera());
+            Log.d(TAG, "imagePath: " + Uri.parse(imageInfo.getPath()));
+            Bitmap bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
             holder.getBinding().imageView.setVisibility(View.VISIBLE);
             holder.getBinding().imageView.setImageBitmap(bitmap);
             holder.getBinding().imageView.invalidate();

@@ -200,7 +200,7 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     }*/
 
     public boolean hasImage(){
-        return poll.getImageInfo() != null;
+        return poll.hasImage();
     }
 
     public ImageInfo getImageInfo(){

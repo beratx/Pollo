@@ -10,6 +10,7 @@
     import android.net.Uri;
     import android.os.Bundle;
     import android.os.Parcelable;
+    import android.os.StrictMode;
     import android.support.design.widget.Snackbar;
     import android.support.design.widget.TextInputLayout;
     import android.support.v7.app.AppCompatActivity;
@@ -41,6 +42,13 @@
             super.onCreate(savedInstanceState);
             //setContentView(R.layout.activity_multi_opt_poll);
             binding = DataBindingUtil.setContentView(this, R.layout.activity_multi_opt_poll);
+
+            if (android.os.Build.VERSION.SDK_INT > 9) {
+                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                        .permitAll().build();
+                StrictMode.setThreadPolicy(policy);
+            }
+
 
             //optionsViews.add(binding.opt1InputLayout);
             //optionsViews.add(binding.opt2InputLayout);
@@ -94,7 +102,7 @@
                     if(resultCode == RESULT_OK){
                         Log.d(TAG, "RESULT IS OK");
                         imageInfo = ImagePicker.getImageFromResult(this, resultCode, data);
-                        bitmap = ImagePicker.getBitmapImage(imageInfo.getUri(), MultiOptPollActivity.this, imageInfo.isCamera());
+                        bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), MultiOptPollActivity.this, imageInfo.isCamera());
                         binding.imageView.setVisibility(View.VISIBLE);
                         binding.imageView.setImageBitmap(bitmap);
                         binding.imageView.invalidate();

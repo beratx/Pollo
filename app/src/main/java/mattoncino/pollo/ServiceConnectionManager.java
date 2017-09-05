@@ -96,9 +96,13 @@ public class ServiceConnectionManager {
         //String serverIpAddress = getIPv4FromServiceInfo(jmdns.getServiceInfo());
         InetAddress addr = null;
         try {
+            if(jmdns == null){
+                initializeService(MyApplication.getContext());
+            }
             addr = jmdns.getInetAddress();
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            Log.d(TAG, e.toString());
         }
         return addr.getHostAddress();
 
@@ -142,11 +146,25 @@ public class ServiceConnectionManager {
         return serviceInfo.getPropertyString(SERVICE_INFO_PROPERTY_IP_VERSION);
     }
 
+    public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, Poll poll) {
+        Set<String> ipAddressesSet=null;
+        if (jmdns != null) {
+            ipAddressesSet = getOnlineDevices(context);
+
+            for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
+                String serverIpAddress = (String) iterator.next();
+                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, type, poll);
+                Thread t = new Thread(clientProcessor);
+                t.start();
+            }
+        }
+        return ipAddressesSet;
+    }
 
     public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, ArrayList<String> messages) {
+        Set<String> ipAddressesSet=null;
         if (jmdns != null) {
-
-            Set<String> ipAddressesSet = getOnlineDevices(context);
+            ipAddressesSet = getOnlineDevices(context);
 
             for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
                 String serverIpAddress = (String) iterator.next();
@@ -154,11 +172,8 @@ public class ServiceConnectionManager {
                 Thread t = new Thread(clientProcessor);
                 t.start();
             }
-
-            return ipAddressesSet;
         }
-
-        return null;
+        return ipAddressesSet;
     }
 
     public void sendResultToAllDevices(final Context context, Set<String> hostAddresses, String pollId, int[] result) {

@@ -43,8 +43,8 @@ public class MyApplication extends Application {
 
         manager = new ServiceConnectionManager();
 
-        Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
-        startService(mServiceIntent);
+        /*Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
+        startService(mServiceIntent);*/
 
         //pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
         //active_polls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
