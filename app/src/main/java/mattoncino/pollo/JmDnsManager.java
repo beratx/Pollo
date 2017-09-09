@@ -8,6 +8,7 @@ import android.util.Log;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
@@ -17,8 +18,8 @@ import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
-public class ServiceConnectionManager {
-    public static int SERVICE_INFO_PORT = 8856;
+public class JmDnsManager {
+    public static int SERVICE_INFO_PORT = 9856;
     private static final String TAG = "ServiceConnManager";
     private String SERVICE_INFO_TYPE = "_pollo_jmdns._tcp.local.";
     private String SERVICE_INFO_NAME = "pollo_jmdns_service";
@@ -43,8 +44,10 @@ public class ServiceConnectionManager {
         try {
             if (jmdns == null) {
                 InetAddress addr = getInetAddress(wifi);
-                jmdns = JmDNS.create(addr);
+                //jmdns = JmDNS.create(addr, InetAddress.getLocalHost().getHostName());
+                jmdns = JmDNS.create(addr, InetAddress.getLocalHost().getHostName());
                 Log.d(TAG, "JmDNS instance is created");
+                //jmdns.addServiceTypeListener();
                 jmdns.addServiceListener(SERVICE_INFO_TYPE, listener = new ServiceListener() {
                     public void serviceResolved(ServiceEvent ev) {
                         Log.d(TAG, "service is resolved: " + ev.getInfo());
@@ -55,7 +58,7 @@ public class ServiceConnectionManager {
                     }
 
                     public void serviceAdded(ServiceEvent event) {
-                        jmdns.requestServiceInfo(event.getType(), event.getName(), 1);
+                        jmdns.requestServiceInfo(event.getType(), event.getName(), true);
                         Log.d(TAG, "service is added: " + "info: " + event.getInfo() +
                                 "type: " + event.getType() + "name: " + event.getName());
                     }
@@ -75,6 +78,10 @@ public class ServiceConnectionManager {
         }
     }
 
+    public boolean initialized(){
+        return jmdns != null;
+    }
+
     public void registerService() {
         if (jmdns != null)
             try {
@@ -83,12 +90,28 @@ public class ServiceConnectionManager {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        /*else{
+            initializeService(context);
+        }*/
     }
 
     public void unregisterService() {
-        if (jmdns != null)
+        if (jmdns != null) {
             jmdns.unregisterService(serviceInfo);
-        Log.d(TAG, "JmDNS Service is UNregistered");
+            Log.d(TAG, "JmDNS Service is UNregistered");
+            try {
+                jmdns.close();
+                Log.d(TAG, "JmDNS Service is closed.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            jmdns = null;
+        }
+        if (multiCastLock != null && multiCastLock.isHeld()) {
+            multiCastLock.release();
+            multiCastLock = null;
+            Log.d(TAG, "Multicast lock is released.");
+        }
     }
 
 
@@ -195,8 +218,10 @@ public class ServiceConnectionManager {
         }*/
 
         Set<String> ipAddressesSet = new HashSet<String>();
-        javax.jmdns.ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE, 6000);
+        //ServiceInfo serviceInfo = jmdns.getServiceInfo(SERVICE_INFO_TYPE, SERVICE_INFO_NAME, false);
+        ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE);
         String ownDeviceId = ((MyApplication) context.getApplicationContext()).getDeviceId();
+        Log.d(TAG, "serviceInfoList.size() = " + serviceInfoList.length);
 
         for (int index = 0; index < serviceInfoList.length; index++) {
             String device = serviceInfoList[index].getPropertyString(SERVICE_INFO_PROPERTY_DEVICE);

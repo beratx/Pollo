@@ -7,18 +7,17 @@ import android.util.Log;
 
 public class ConnectionManagerIntentService extends IntentService {
     private static final String TAG = "ConnManagerService";
-    private ServiceConnectionManager connectionManager;
+    private JmDnsManager jManager;
 
     public ConnectionManagerIntentService() {
         super("ConnectionManagerIntentService");
     }
 
-
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.d(TAG, "Connection Manager Service is started.");
         //Bundle data = intent.getData();
-        connectionManager = ((MyApplication)getApplication()).getConnectionManager();
-        connectionManager.initializeService(this);
+        jManager = ((MyApplication)getApplication()).getConnectionManager();
+        jManager.initializeService(this);
     }
 }

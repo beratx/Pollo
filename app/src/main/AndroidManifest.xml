@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
 
     <application
         android:name=".MyApplication"
@@ -36,7 +38,6 @@
                 android:value=".MainActivity" />
         </activity>
         <activity android:name=".OldPollsActivity" />
-        <activity android:name=".PollDetailActivity" />
 
         <service
             android:name=".ConnectionManagerIntentService"
@@ -44,6 +45,17 @@
         <service
             android:name=".StatusUpdaterService"
             android:exported="false"></service>
+       <!-- <receiver android:name="mattoncino.pollo.WifiDog">
+            <intent-filter>
+                <action android:name="android.net.wifi.supplicant.STATE_CHANGE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.net.wifi.supplicant.NETWORK_STATE_CHANGED_ACTION"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+            </intent-filter>
+        </receiver> -->
     </application>
 
 </manifest>

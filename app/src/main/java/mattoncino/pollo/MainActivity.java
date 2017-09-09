@@ -2,12 +2,15 @@ package mattoncino.pollo;
 
 import android.app.AlertDialog;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     public static boolean exist_active_pool = true;
     public static boolean exist_saved_pool = true;
+    private JmDnsManager jmDnsManager;
+    private BroadcastReceiver wifiReceiver;
 
 
 
@@ -42,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
             getIntent().removeExtra("notificationID");
         }
 
+        /*wifiReceiver = createWifiBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter("mattoncino.pollo.receive.wifi.stat"));*/
+
 
         binding.createPollActivityButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -55,8 +63,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //if(wifiConnected()) {
-                    //connectionManager.unregisterService();
-                    //connectionManager.registerService();
                     onShowOnlineDevicesListDialogPress();
                 //}
             }
@@ -87,19 +93,34 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if(wifiConnected()) {
             startDataTransferring();
-            Log.d(TAG, "connManagerServiceIntent is launched");
-            binding.createPollActivityButton.setEnabled(true);
-            binding.activePollsActivityButton.setEnabled(true);
-            binding.oldPollsActivityButton.setEnabled(true);
-            binding.showDeviceListButton.setEnabled(true);
+            enableButtons(true);
         }
     }
 
-    private void startDataTransferring(){
-        //connectionManager = ((MyApplication)getApplication()).getConnectionManager();
-        Intent connManagerServiceIntent = new Intent(this, ConnectionManagerIntentService.class);
-        startService(connManagerServiceIntent);
+    @Override
+    protected void onStop() {
+        super.onStop();
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
+    }
 
+    private void startDataTransferring(){
+        jmDnsManager = ((MyApplication)getApplication()).getConnectionManager();
+        if(!jmDnsManager.initialized()) {
+            Log.d(TAG, "initializing jmdnsManager...");
+            Intent connManagerServiceIntent = new Intent(this, ConnectionManagerIntentService.class);
+            startService(connManagerServiceIntent);
+            Log.d(TAG, "connManagerServiceIntent is launched");
+        }
+    }
+
+    @Override
+    protected void onRestart() {
+        //Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
+        super.onRestart();
+        /*if(wifiReceiver == null)
+            wifiReceiver = createWifiBroadcastReceiver();
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter("mattoncino.pollo.receive.wifi.stat"));*/
     }
 
     @Override
@@ -113,8 +134,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean wifiConnected() {
         // BEGIN_INCLUDE(connect)
-        ConnectivityManager connMgr =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeInfo = connMgr.getActiveNetworkInfo();
         if (activeInfo != null && activeInfo.isConnected() && activeInfo.getType() == ConnectivityManager.TYPE_WIFI) {
             Log.i(TAG, getString(R.string.wifi_connection));
@@ -148,9 +168,10 @@ public class MainActivity extends AppCompatActivity {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                String deviceId = ((MyApplication)getApplication()).getDeviceId();
-                ServiceConnectionManager connectionManager = ((MyApplication)getApplication()).getConnectionManager();
-                final HashSet<String> onlineDevices = (HashSet<String>) connectionManager.getOnlineDevices(MainActivity.this);
+                //jmDnsManager.unregisterService();
+                //jmDnsManager.registerService();
+                //String deviceId = ((MyApplication)getApplication()).getDeviceId();
+                final HashSet<String> onlineDevices = (HashSet<String>) jmDnsManager.getOnlineDevices(MainActivity.this);
 
                 //Activity act = (Activity) MainActivity.this;
                 MainActivity.this.runOnUiThread(new Runnable() {
@@ -176,10 +197,29 @@ public class MainActivity extends AppCompatActivity {
                 android.R.layout.simple_list_item_1);
 
         arrayAdapter.addAll(devices);
-
         builderSingle.setAdapter(arrayAdapter, null);
-        arrayAdapter.notifyDataSetChanged();
         builderSingle.show();
+    }
+
+    private void enableButtons(boolean b){
+        binding.createPollActivityButton.setEnabled(b);
+        binding.activePollsActivityButton.setEnabled(b);
+        binding.oldPollsActivityButton.setEnabled(b);
+        binding.showDeviceListButton.setEnabled(b);
+    }
+
+    private BroadcastReceiver createWifiBroadcastReceiver() {
+        Log.d(TAG, "received wifi broadcast");
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getAction() != null
+                        && intent.getAction().equals("mattoncino.pollo.receive.wifi")) {
+                    boolean stat = intent.getBooleanExtra("wifi", false);
+                    enableButtons(stat);
+                }
+            }
+        };
     }
 
 

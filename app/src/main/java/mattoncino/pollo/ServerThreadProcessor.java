@@ -14,8 +14,6 @@ import java.net.Socket;
 public class ServerThreadProcessor extends Thread{
     public static final int SERVER_PORT = 8700;
     private static String TAG = "SERVER_THREAD_PROCESSOR";
-    private static final String POLL_REQUEST = "poll_request";
-    private static final String ACCEPT = "accept";
     private ServerSocket serverSocket = null;
     private Context context;
     //private Thread serverProcessorThread;
@@ -32,11 +30,7 @@ public class ServerThreadProcessor extends Thread{
         Socket socket = null;
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        try {
             while (!Thread.currentThread().isInterrupted()) {
 
                 socket = serverSocket.accept();
@@ -45,6 +39,9 @@ public class ServerThreadProcessor extends Thread{
                 tClient.start();
                 //Log.v(TAG, "CLIENT HANDLER THREAD LAUNCHED");
             }
+
+        } catch (IOException e) {
+            e.printStackTrace();
 
         } catch (Exception ex) {
             Log.v(TAG, "thread EXCEPTION : " + ex.toString());

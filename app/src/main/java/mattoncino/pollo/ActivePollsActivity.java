@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.databinding.DataBindingUtil;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -15,11 +14,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Observable;
@@ -37,7 +31,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private RecyclerView.Adapter adapter;
     private ArrayList<PollData> active_polls;
     private Poll poll;
-    private ServiceConnectionManager connectionManager;
+    private JmDnsManager connectionManager;
     private boolean myPollRequest = false;
     private boolean acceptedPollRequest = false;
     private PollManager manager;
@@ -159,6 +153,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     String pollID = intent.getStringExtra("pollID");
                     boolean isMyVote = intent.getBooleanExtra("myVote", false);
                     if(!isMyVote) {
+                        Log.d(TAG, "poll " + pollID + "received NOT MY vote...");
                         int vote = intent.getIntExtra("vote", -1);
                         if (vote != -1) {
                             String hostAddress = intent.getStringExtra("hostAddress");

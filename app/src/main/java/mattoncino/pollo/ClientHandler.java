@@ -72,15 +72,10 @@ public class ClientHandler implements Runnable{
                     options.add(inputBufferedReader.readLine());
                 }
                 final String hostAddress = socket.getInetAddress().getHostAddress();
-                boolean hasImage = Boolean.valueOf(inputBufferedReader.readLine()); //hasImage
+                boolean hasImage = Boolean.valueOf(inputBufferedReader.readLine());
                 boolean isCamera = false;
                 if(hasImage) {
-                    isCamera = Boolean.valueOf(inputBufferedReader.readLine()); //isCamera
-
-                    //if(ImagePicker.isExternalStorageWritable())
-                    //  File imageFile = ImagePicker.createFile(external);
-                    //else
-                    //  File imageFile = ImagePicker.createFile(internal);
+                    isCamera = Boolean.valueOf(inputBufferedReader.readLine());
                     File imageFile = ImagePicker.createFile(context, ImagePicker.isExternalStorageWritable());
                     // Continue only if the File was successfully created
                     if (imageFile != null) {
@@ -90,21 +85,27 @@ public class ClientHandler implements Runnable{
                         Uri imageUri = Uri.fromFile(imageFile);
                         Log.d(TAG, "imageUri for received image: " + imageUri.toString());
 
+                        BufferedInputStream bufin = null;
+                        FileOutputStream output = null;
+
                         //File imageFile = ImagePicker.getTempFile(context);
                         //Uri imageUri = Uri.fromFile(imageFile);
+                        try{
+                            bufin = new BufferedInputStream(input);
+                            output = new FileOutputStream(imageFile);
 
-                        BufferedInputStream bufin = new BufferedInputStream(input);
-                        FileOutputStream output = new FileOutputStream(imageFile);
-
-                        byte[] buffer = new byte[1024];
-                        int len;
-                        while((len = bufin.read(buffer)) != -1){
-                            output.write(buffer);
-                            output.flush();
+                            byte[] buffer = new byte[1024];
+                            int len;
+                            while((len = bufin.read(buffer)) != -1){
+                                output.write(buffer);
+                                output.flush();
+                            }
+                        } catch(Exception e){
+                            e.printStackTrace();
+                        } finally {
+                            output.close();
+                            bufin.close();
                         }
-                        //output.flush();
-                        output.close();
-                        bufin.close();
 
                         Log.d(TAG, "Image is received and saved.");
 
@@ -117,7 +118,6 @@ public class ClientHandler implements Runnable{
                 //poll = new Poll(id, name, question, options, isCamera, info);
                 poll = new Poll(id, name, question, options, hasImage, info);
 
-                /*outputPrintWriter.println(Consts.ACCEPT);*/
                 Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
 
                 /*Activity act = (Activity) context;
@@ -171,6 +171,7 @@ public class ClientHandler implements Runnable{
 
                 Intent intent = new Intent("mattoncino.pollo.receive.poll.vote");
                 intent.putExtra("pollID", id);
+                intent.putExtra("myVote", false);
                 intent.putExtra("vote", vote);
                 intent.putExtra("hostAddress", hostAddress);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
@@ -189,15 +190,16 @@ public class ClientHandler implements Runnable{
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                 //Log.d(TAG, "manager.finishPoll will be called for host: " + hostAddress);
             }
-
-
-            inputBufferedReader.close();
-            outputPrintWriter.close();
-
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                inputBufferedReader.close();
+                outputPrintWriter.close();
+            } catch(IOException e){
+                e.printStackTrace();
+            }
         }
-
     }
 
     private void addNotification(Poll poll, String hostAddress){

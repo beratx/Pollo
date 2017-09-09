@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -14,20 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MyApplication extends Application {
-    private ServiceConnectionManager manager;
+    private static final String TAG = "MyApplication";
+    private JmDnsManager manager;
     private String deviceId = "";
-    //public static Context currentContext;
-    private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
-    private SharedPreferences pref;
-    private SharedPreferences.Editor editor;
-    public static ArrayList active_polls;
     private static MyApplication instance;
-
-    public ServiceConnectionManager getConnectionManager() {
-        if (manager == null)
-            manager = new ServiceConnectionManager();
-        return manager;
-    }
 
     @Override
     public void onCreate() {
@@ -41,14 +32,21 @@ public class MyApplication extends Application {
             setDeviceId(Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID)); //use for tablets
         }
 
-        manager = new ServiceConnectionManager();
+        manager = new JmDnsManager();
 
         /*Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
-        startService(mServiceIntent);*/
+        startService(mServiceIntent);
+        Log.d(TAG, "StatusUpdaterService is launched");*/
 
         //pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
         //active_polls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
 
+    }
+
+    public JmDnsManager getConnectionManager() {
+        if (manager == null)
+            manager = new JmDnsManager();
+        return manager;
     }
 
     public static MyApplication getContext(){

@@ -29,7 +29,7 @@ public class StatusUpdaterService extends IntentService {
 
         ArrayList<PollData> activePolls = PollManager.getInstance().getActivePolls();
 
-        String deviceId = ((MyApplication)getApplication()).getDeviceId();
+        //String deviceId = ((MyApplication)getApplication()).getDeviceId();
 
 
         //if (intent != null) {
@@ -40,7 +40,7 @@ public class StatusUpdaterService extends IntentService {
 
             while(true){
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(30000);
 
                     if(!activePolls.isEmpty()){
 

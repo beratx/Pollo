@@ -2,11 +2,9 @@
 
     import android.content.ContentValues;
     import android.content.Intent;
-    import android.content.res.Resources;
     import android.database.sqlite.SQLiteDatabase;
     import android.databinding.DataBindingUtil;
     import android.graphics.Bitmap;
-    import android.graphics.BitmapFactory;
     import android.net.Uri;
     import android.os.Bundle;
     import android.os.Parcelable;
@@ -120,7 +118,7 @@
 
         private boolean presentOnlineDevices(){
             String deviceId = ((MyApplication)getApplication()).getDeviceId();
-            ServiceConnectionManager connManager = ((MyApplication)getApplication()).getConnectionManager();
+            mattoncino.pollo.JmDnsManager connManager = ((MyApplication)getApplication()).getConnectionManager();
             final HashSet<String> onlineDevices = (HashSet<String>) connManager.getOnlineDevices(MultiOptPollActivity.this);
             return onlineDevices.size() != 0;
         }
@@ -176,7 +174,7 @@
             }
 
 
-            ServiceConnectionManager  connectionManager = ((MyApplication) getApplication()).getConnectionManager();
+            mattoncino.pollo.JmDnsManager connectionManager = ((MyApplication) getApplication()).getConnectionManager();
             if (connectionManager == null) {
                 Log.d(TAG, "connectionManager is null!!!");
                 return null;
