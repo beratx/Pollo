@@ -26,8 +26,6 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "Pollo Main Activity";
     private ActivityMainBinding binding;
-    public static boolean exist_active_pool = true;
-    public static boolean exist_saved_pool = true;
     private JmDnsManager jmDnsManager;
     private BroadcastReceiver wifiReceiver;
 
@@ -47,14 +45,13 @@ public class MainActivity extends AppCompatActivity {
             getIntent().removeExtra("notificationID");
         }
 
-        /*wifiReceiver = createWifiBroadcastReceiver();
-        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter("mattoncino.pollo.receive.wifi.stat"));*/
+        wifiReceiver = createWifiBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter("mattoncino.pollo.receive.wifi.stat"));
 
 
         binding.createPollActivityButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                //if(wifiConnected())
                     startActivity(new Intent(MainActivity.this, mattoncino.pollo.MultiOptPollActivity.class));
             }
         });
@@ -62,9 +59,7 @@ public class MainActivity extends AppCompatActivity {
         binding.showDeviceListButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                //if(wifiConnected()) {
                     onShowOnlineDevicesListDialogPress();
-                //}
             }
         });
 
@@ -76,16 +71,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, mattoncino.pollo.ActivePollsActivity.class));
             }
         });
-
-
-        binding.oldPollsActivityButton.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, mattoncino.pollo.OldPollsActivity.class));
-            }
-        });
-
     }
 
     @Override
@@ -204,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
     private void enableButtons(boolean b){
         binding.createPollActivityButton.setEnabled(b);
         binding.activePollsActivityButton.setEnabled(b);
-        binding.oldPollsActivityButton.setEnabled(b);
         binding.showDeviceListButton.setEnabled(b);
     }
 

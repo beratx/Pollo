@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,6 +17,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
+import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -75,7 +80,9 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     @Override
     public void onBindViewHolder(final PollsCardViewAdapter.CardViewHolder holder, final int position) {
         holder.getBinding().messageTextView.setVisibility(View.GONE);
-        //holder.getBinding().terminateButton.setVisibility(View.GONE);
+        holder.getBinding().imageView.setVisibility(View.GONE);
+        holder.getBinding().statsTextView.setVisibility(View.GONE);
+        holder.getBinding().terminateButton.setEnabled(false);
         final PollData pollData = activePolls.get(position);
         final Poll poll = pollData.getPoll();
         final LinearLayout rLayout = holder.getBinding().listItemLayout;
@@ -83,10 +90,18 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         if(pollData.hasImage()){
             ImageInfo imageInfo = pollData.getImageInfo();
             Log.d(TAG, "imagePath: " + Uri.parse(imageInfo.getPath()));
-            Bitmap bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
+            holder.getBinding().imageView.setVisibility(View.VISIBLE);
+            Picasso.with(rLayout.getContext()).load(imageInfo.getPath()).into(holder.getBinding().imageView);
+
+            /*File sdDir = Environment.getExternalStorageDirectory();
+            File file = new File(sdDir + imageInfo.getPath());
+            if(file.exists() || file.canRead()){
+                Log.d(TAG, "FILE EXISTS! file length: " + file.length());
+            }*/
+            /*Bitmap bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
             holder.getBinding().imageView.setVisibility(View.VISIBLE);
             holder.getBinding().imageView.setImageBitmap(bitmap);
-            holder.getBinding().imageView.invalidate();
+            holder.getBinding().imageView.invalidate();*/
         }
 
 
@@ -103,8 +118,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                     button.setText(pollData.getOption(i+1) + " >> " + 0 + "%");
                 else
                     button.setText(pollData.getOption(i+1) + " >> " +
-                                            pollData.getVotesFor(i+1)*(100.0/sum) + "%");
-                Log.d(TAG, "OPT"+opt + " : " + pollData.getOption(i+1));
+                            new DecimalFormat("#.##").format(pollData.getVotesFor(i+1)*(100.0/sum)) + "%");
             }
             else
                 button.setText(pollData.getOption(opt));
@@ -138,9 +152,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             holder.getBinding().messageTextView.setVisibility(View.VISIBLE);
 
         if(pollData.getOwner() == Consts.OWN) {
-            //holder.getBinding().ownerLayout.setVisibility(View.VISIBLE);
-
-                //if(pollData.getVotedDevices().size() == pollData.getAcceptedDevices().size()) {
                 final Button button = (Button) holder.getBinding().ownerLayout.getChildAt(0);
                 button.setVisibility(View.VISIBLE);
 
@@ -149,9 +160,9 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                     button.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            //TODO: check if no body is accepted / voted yet, ask it with popup
-                            button.setEnabled(false);
                             pollData.setTerminated(true);
+                            button.setEnabled(false);
+                            button.invalidate();
 
                             for (int i = 0; i < poll.getOptions().size(); i++) {
                                 Button option = (Button) rLayout.getChildAt(i + 3);
@@ -167,11 +178,18 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 //}
                 }
 
-            TextView view = (TextView) holder.getBinding().ownerLayout.getChildAt(1);
+            TextView view = (TextView) holder.getBinding().statsTextView;
             view.setText(pollData.getVotedDevices().size() + " voted / " + pollData.getAcceptedDevices().size()
                     + " accepted / "  + pollData.getContactedDevices().size() + " received");
             view.setVisibility(View.VISIBLE);
         }
+
+        holder.getBinding().removeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendRemoveBroadcast(rLayout.getContext(), pollData.getID());
+            }
+        });
 
         holder.getBinding().setVariable(BR.poll, poll);
         holder.getBinding().executePendingBindings();
@@ -190,6 +208,12 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             }
         };
         handler.post(r);
+    }
+
+    private void sendRemoveBroadcast(Context context, String id){
+        Intent intent = new Intent("mattoncino.pollo.receive.poll.remove");
+        intent.putExtra("pollID", id);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     private void sendUpdateBroadcast(Context context, String id){
@@ -224,7 +248,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     }
 
     private void disableOptionButtons(ViewGroup layout){
-        for (int i = 0; i < layout.getChildCount(); i++) {
+        for (int i = 0; i < layout.getChildCount() - 1; i++) {
             View child = layout.getChildAt(i);
             if(child.hasOnClickListeners())
                 child.setEnabled(false);
@@ -235,4 +259,5 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     public int getItemCount() {
         return activePolls.size();
     }
+
 }

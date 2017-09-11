@@ -37,7 +37,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity android:name=".OldPollsActivity" />
 
         <service
             android:name=".ConnectionManagerIntentService"
@@ -45,7 +44,7 @@
         <service
             android:name=".StatusUpdaterService"
             android:exported="false"></service>
-       <!-- <receiver android:name="mattoncino.pollo.WifiDog">
+            <receiver android:name="mattoncino.pollo.WifiDog">
             <intent-filter>
                 <action android:name="android.net.wifi.supplicant.STATE_CHANGE"/>
             </intent-filter>
@@ -55,7 +54,7 @@
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
             </intent-filter>
-        </receiver> -->
+        </receiver>
     </application>
 
 </manifest>

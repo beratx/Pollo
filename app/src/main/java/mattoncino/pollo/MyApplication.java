@@ -34,12 +34,9 @@ public class MyApplication extends Application {
 
         manager = new JmDnsManager();
 
-        /*Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
+        Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
         startService(mServiceIntent);
-        Log.d(TAG, "StatusUpdaterService is launched");*/
-
-        //pref = getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-        //active_polls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
+        Log.d(TAG, "StatusUpdaterService is launched");
 
     }
 
@@ -61,7 +58,4 @@ public class MyApplication extends Application {
         return deviceId;
     }
 
-    /*public ArrayList<Poll> getActivePolls(){
-        return active_polls;
-    }*/
 }

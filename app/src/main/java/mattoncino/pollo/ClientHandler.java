@@ -58,8 +58,6 @@ public class ClientHandler implements Runnable{
 
             ImageInfo info = null;
 
-            //Log.v(TAG, "GOT INPUT AND OUTPUT STREAM");
-
             final String message = inputBufferedReader.readLine();
 
             if (message.equals(Consts.POLL_REQUEST)) {
@@ -107,7 +105,7 @@ public class ClientHandler implements Runnable{
                             bufin.close();
                         }
 
-                        Log.d(TAG, "Image is received and saved.");
+                        Log.d(TAG, "Image is received and saved. File length: " + imageFile.length());
 
                         info = new ImageInfo(imageUri.toString(), isCamera);
                     }
@@ -119,14 +117,6 @@ public class ClientHandler implements Runnable{
                 poll = new Poll(id, name, question, options, hasImage, info);
 
                 Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
-
-                /*Activity act = (Activity) context;
-                act.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ToastHelper.useShortToast(context, message + " from: " + hostAddress);
-                    }
-                });*/
 
                 addNotification(poll, hostAddress);
                 //how to update main menu so you can see new polls note?
@@ -188,7 +178,6 @@ public class ClientHandler implements Runnable{
                 intent.putExtra("pollID", id);
                 intent.putExtra(Consts.RESULT, result);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-                //Log.d(TAG, "manager.finishPoll will be called for host: " + hostAddress);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -204,8 +193,9 @@ public class ClientHandler implements Runnable{
 
     private void addNotification(Poll poll, String hostAddress){
         Random randomGenerator = new Random();
-        final int NOTIFICATION_ID = randomGenerator.nextInt();
-        //System.out.println("call addNotification... hostAddress: " + hostAddress);
+        int NOTIFICATION_ID;
+        while((NOTIFICATION_ID = randomGenerator.nextInt()) == 0)
+            ;
 
         Intent notificationIntent = new Intent(context, ActivePollsActivity.class)
                 .putExtra(Consts.OWNER, Consts.OTHER)
@@ -213,8 +203,6 @@ public class ClientHandler implements Runnable{
                 .putExtra("hostAddress", hostAddress)
                 .putExtra("notificationID", NOTIFICATION_ID);
 
-        //notificationIntent.putExtra(Consts.HOST_ADDR, hostAddress);
-        //notificationIntent.putExtra()
 
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         stackBuilder.addParentStack(ActivePollsActivity.class);

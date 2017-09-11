@@ -15,7 +15,9 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
@@ -24,9 +26,6 @@ import mattoncino.pollo.databinding.ActivityActivePollsBinding;
 
 public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private static final String TAG = "ActivePollsActivity";
-
-    //private static final String SP_POLL_LIST = "pollList1";
-    //private static final Type LIST_TYPE = new TypeToken<List<Poll>>() {}.getType();
     private ActivityActivePollsBinding binding;
     private RecyclerView.Adapter adapter;
     private ArrayList<PollData> active_polls;
@@ -38,11 +37,13 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private BroadcastReceiver updateReceiver;
     private BroadcastReceiver acceptReceiver;
     private BroadcastReceiver resultReceiver;
+    private BroadcastReceiver removeReceiver;
     private String xhostAddress;
     private String ownAddress;
-    private boolean completedPoll = false;
-    private PollData completedPD;
-    private static boolean receivedAcceptBroadcast = false;
+    //private boolean completedPoll = false;
+    //private PollData completedPD;
+    private boolean receivedAcceptBroadcast;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,14 +57,18 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         manager = PollManager.getInstance();
         manager.addObserver(this);
 
-        updateReceiver = createUpdateBroadcastReceiver();
-        LocalBroadcastManager.getInstance(this).registerReceiver(updateReceiver, new IntentFilter("mattoncino.pollo.receive.poll.vote"));
 
         acceptReceiver = createAcceptBroadcastReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(acceptReceiver, new IntentFilter("mattoncino.pollo.receive.poll.accept"));
 
+        updateReceiver = createUpdateBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(updateReceiver, new IntentFilter("mattoncino.pollo.receive.poll.vote"));
+
         resultReceiver = createResultBroadcastReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(resultReceiver, new IntentFilter("mattoncino.pollo.receive.poll.result"));
+
+        removeReceiver = createRemoveBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(removeReceiver, new IntentFilter("mattoncino.pollo.receive.poll.remove"));
 
         /*if(savedInstanceState != null){
             active_polls = savedInstanceState.getParcelableArrayList("pollList");
@@ -72,8 +77,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                 Log.d(TAG, "in onCreate() restored from savedInstanceState");
             }
         }
-        else {
-        }*/
+        */
 
         Bundle data = getIntent().getExtras();
         if (data != null) {
@@ -89,49 +93,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                 } else if (type == Consts.OTHER) {
                     acceptedPollRequest = true;
                     xhostAddress = data.getString("hostAddress");
-                    //System.out.println("accepted poll from: " + xhostAddress);
                     manager.addPoll(new PollData(poll, xhostAddress, type));
-                    /*if(poll.hasImage()){
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                File image = File.create
-                                imageFile.getParentFile().mkdirs();
-                                return imageFile;
-                                //IF has an image SHOULD SAVE PERMAMNENTLY
-                                File imageFile = ImagePicker.getTempFile(ActivePollsActivity.this);
-                                //Uri imageUri = Uri.fromFile(imageFile);
-                                File permanentPath = ImagePicker.getPictureStorageDir(ActivePollsActivity.this, "poll_pictures");
-
-                                FileInputStream input = null;
-                                FileOutputStream output = null;
-                                try {
-                                    input = new FileInputStream(imageFile);
-                                    output = new FileOutputStream(permanentPath);
-
-                                    byte[] buffer = new byte[1024];
-                                    int len;
-
-                                    while((len = input.read(buffer)) != -1){
-                                        output.write(buffer);
-                                        output.flush();
-                                    }
-                                    poll.getImageInfo().setPath(permanentPath.toString());
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                } finally {
-                                    try {
-                                        input.close();
-                                        output.close();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-                        }).start();
-                    }*/
                 }
             }
 
@@ -143,6 +105,73 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         }
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
+        //Log.d(TAG, "get in onResume()");
+
+        List<PollData> activePolls = Collections.synchronizedList(PollManager.getInstance().getActivePolls());
+
+        adapter = new PollsCardViewAdapter(manager.getActivePolls());
+        binding.recyclerView.setAdapter(adapter);
+
+        if (myPollRequest) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    connectionManager = ((MyApplication) getApplication()).getConnectionManager();
+                    if (connectionManager == null) {
+                        Log.d(TAG, "connectionManager is null!!!");
+                    }
+                    else {
+                        try {
+                            //HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollInfo);
+                            HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, poll);
+                            if (contactedDevices.size() != 0)
+                                manager.setContactedDevices(poll.getId(), contactedDevices);
+                            else
+                                Log.d(TAG, "connectionManager.sendMessageToAllDevices on device to contact!!!");
+                        } catch (NullPointerException e) {
+                            Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
+                            return;
+                        }
+                    }
+                }
+            }).start();
+
+            myPollRequest = false;
+
+        } else if (acceptedPollRequest) {
+            Log.d(TAG, "onResume(): acceptedPollReq");
+            acceptedPollRequest = false;
+            ArrayList<String> pollInfo = new ArrayList<>();
+            pollInfo.add(poll.getId());
+            pollInfo.add(ownAddress);
+            //System.out.println("poll from: " + xhostAddress + " is accepted.");
+            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(xhostAddress, ActivePollsActivity.this, Consts.ACCEPT, pollInfo);
+            Thread t = new Thread(clientProcessor);
+            t.start();
+            //Toast.makeText(this, "ARRIVED FROM: " + poll.getHostAddress(), Toast.LENGTH_LONG).show();
+        } /*else if (completedPoll) {
+            Log.d(TAG, "onResume(): completedPoll");
+            int[] result = manager.getVotes(completedPD.getID());
+            Set<String> devices = completedPD.getAcceptedDevices();
+            completedPoll = false;
+
+            try {
+
+                //here maybe add a handler to comunciate back to the thread
+                //manager.setResult(completedPD.getID(), result);
+                Log.d(TAG, completedPD.getPollName() + " is finished, sending results to other devices...");
+                connectionManager.sendResultToAllDevices(ActivePollsActivity.this, devices, completedPD.getID(), result);
+            } catch (NullPointerException e) {
+                Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
+            }
+        }*/
+    }
+
 
     private BroadcastReceiver createUpdateBroadcastReceiver() {
         Log.d(TAG, "received update broadcast");
@@ -160,14 +189,14 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                             manager.updatePoll(pollID, hostAddress, vote);
                         }
                     }
-                    if (manager.isCompleted(pollID)) {
+                    /*if (manager.isCompleted(pollID)) {
                         completedPoll = true;
                         completedPD = manager.getPollData(pollID);
                         Log.d(TAG, "poll " + pollID + " is completed! Will send results...");
                     }
                     intent.removeExtra("pollID");
                     intent.removeExtra("vote");
-                    intent.removeExtra("hostAddress");
+                    intent.removeExtra("hostAddress");*/
                 }
             }
         };
@@ -180,7 +209,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null
                    && intent.getAction().equals("mattoncino.pollo.receive.poll.accept")) {
-                    //TODO: E' MEGLIO LANCIARE UN SERVICE?
                     String pollID = intent.getStringExtra("pollID");
                     xhostAddress = intent.getStringExtra("hostAddress");
                     boolean accepted = intent.getBooleanExtra("accepted", false);
@@ -188,10 +216,10 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     manager.updateAcceptedDeviceList(pollID, xhostAddress, accepted);
                     receivedAcceptBroadcast = true;
 
-                    //intent.removeExtra("pollID");
-                    //intent.removeExtra("hostAddress");
-                    //intent.removeExtra("accepted");
-                    //adapter.notifyDataSetChanged();
+                    intent.removeExtra("pollID");
+                    intent.removeExtra("hostAddress");
+                    intent.removeExtra("accepted");
+                    adapter.notifyDataSetChanged();
                 }
             }
         };
@@ -211,95 +239,31 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
 
                     intent.removeExtra("pollID");
                     intent.removeExtra(Consts.RESULT);
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        };
+    }
+
+    private BroadcastReceiver createRemoveBroadcastReceiver() {
+        Log.d(TAG, "received result broadcast");
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getAction() != null && intent.getAction().equals("mattoncino.pollo.receive.poll.remove")) {
+                    String pollID = intent.getStringExtra("pollID");
+                    try {
+                        manager.removePoll(pollID);
+                    } catch(NullPointerException e){
+
+                    }
+                    intent.removeExtra("pollID");
                 }
             }
         };
     }
 
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
-        //Log.d(TAG, "get in onResume()");
-
-        adapter = new PollsCardViewAdapter(manager.getActivePolls());
-        binding.recyclerView.setAdapter(adapter);
-
-        //Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
-        //mServiceIntent.putParcelableArrayListExtra("polls", manager.getActivePolls());
-        //mServiceIntent.setData(Uri.parse(dataUrl));
-        //startService(mServiceIntent);
-
-        if (myPollRequest) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    connectionManager = ((MyApplication) getApplication()).getConnectionManager();
-                    if (connectionManager == null) {
-                        Log.d(TAG, "connectionManager is null!!!");
-                        return;
-                    }
-
-                    /*ArrayList<String> pollInfo = new ArrayList<String>();
-                    pollInfo.add(poll.getId());
-                    pollInfo.add(poll.getName());
-                    pollInfo.add(poll.getQuestion());
-                    pollInfo.add(ownAddress);
-                    pollInfo.add(String.valueOf(poll.hasImage()));
-                    pollInfo.addAll(poll.getOptions());
-                    if(poll.hasImage()){
-                        pollInfo.add(poll.getImageInfo().getUri().toString());
-                        pollInfo.add(String.valueOf(poll.getImageInfo().isCamera()));
-                    }*/
-                    try {
-                        //HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, pollInfo);
-                        HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, poll);
-                        if(contactedDevices != null)
-                            manager.setContactedDevices(poll.getId(), contactedDevices);
-                        else
-                            Log.d(TAG, "connectionManager.sendMessageToAllDevices contactedDevices set is null!!!");
-                    } catch (NullPointerException e) {
-                        Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
-                        return;
-                    }
-
-                }
-            }).start();
-
-            myPollRequest = false;
-
-        } else if (acceptedPollRequest) {
-            Log.d(TAG, "onResume(): acceptedPollReq");
-            acceptedPollRequest = false;
-            ArrayList<String> pollInfo = new ArrayList<>();
-            pollInfo.add(poll.getId());
-            pollInfo.add(ownAddress);
-            //System.out.println("poll from: " + xhostAddress + " is accepted.");
-            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(xhostAddress, ActivePollsActivity.this, Consts.ACCEPT, pollInfo);
-            Thread t = new Thread(clientProcessor);
-            t.start();
-            //Toast.makeText(this, "ARRIVED FROM: " + poll.getHostAddress(), Toast.LENGTH_LONG).show();
-        } else if (completedPoll) {
-            Log.d(TAG, "onResume(): completedPoll");
-            completedPoll = false;
-            //pollID
-            int[] result = manager.getVotes(completedPD.getID());
-            Set<String> devices = completedPD.getAcceptedDevices();
-            try {
-                //here maybe add a handler to comunciate back to the thread
-                //manager.setResult(completedPD.getID(), result);
-                Log.d(TAG, completedPD.getPollName() + " is finished, sending results to other devices...");
-                connectionManager.sendResultToAllDevices(ActivePollsActivity.this, devices, completedPD.getID(), result);
-            } catch (NullPointerException e) {
-                Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
-                return;
-            }
-            //Quando finisce di mandare i messaggi
-            //1)deve togliere poll dall active_polls
-            //2)deve aggiungere poll nell db -> old polls
-        }
-    }
 
     //called when a change has occurred in the state of the observable
     @Override

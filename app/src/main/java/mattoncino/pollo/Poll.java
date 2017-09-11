@@ -20,10 +20,6 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     private List<String> options;
     private ImageInfo imageInfo;
     private boolean hasImage;
-    //private String hostAddress;
-    //private List<Integer> votes;
-    //private Set participants;
-    //private boolean disabled;
 
     public Poll(String id, String name, String question, List<String> options, boolean hasImage, ImageInfo info) {
         this.id = id;
@@ -32,16 +28,10 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         this.options = options;
         this.hasImage = hasImage;
         this.imageInfo = (hasImage) ? info : null;
-        //this.imageInfo = imageInfo;
-        //this.hostAddress = hostAddress;
-        //this.votes = Collections.synchronizedList(new ArrayList<Integer>());
-        //this.participants = Collections.synchronizedSet(new HashSet<String>());
-        //this.disabled = false;
     }
 
     public Poll(String name, String question, List<String> options, boolean hasImage, ImageInfo info) {
         this(UUID.randomUUID().toString(), name, question, options, hasImage, info);
-        /*this.id = UUID.randomUUID().toString();*/
     }
 
     public String getId() {
@@ -81,100 +71,10 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         return options;
     }
 
-    public void setOptions(List<String> options) {
-        this.options = options;
-        notifyPropertyChanged(BR.options);
-    }
 
     public boolean hasImage() {
         return hasImage;
     }
-
-    /*public void setHostAddress(String hostAddress) {
-        this.hostAddress = hostAddress;
-        notifyPropertyChanged(BR.hostAddress);
-    }
-
-    public void setParticipants(Set participants) {
-        this.participants = participants;
-        notifyPropertyChanged(BR.participants);
-    }*/
-
-    /*@Bindable
-    public String getHostAddress() {
-        return hostAddress;
-    }
-
-    @Bindable
-    public List<String> getParticipants(){
-        return new ArrayList<String>(participants);
-    }
-
-    public void addParticipant(String device){
-        participants.add(device);
-        notifyPropertyChanged(BR.participants);
-    }
-
-    public int participantCount(){
-        return participants.size();
-    }
-
-    @Bindable
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
-        notifyPropertyChanged(BR.disabled);
-    }*/
-
-    /*public String getText(int vote){
-        return getOptions().get(vote - 1) + " >> " + getResult(vote);
-    }*/
-
-    public void setOption(int i, String text){
-        options.set(i,text);
-    }
-
-
-    /*public void setHostAddress(String hostAddress){
-        this.hostAddress = hostAddress;
-    }*/
-
-    /*@Bindable
-    public List<Integer> getVotes() {
-        return votes;
-    }
-
-    public void setVotes(List<Integer> votes) {
-        this.votes = votes;
-        notifyPropertyChanged(BR.votes);
-    }
-
-    public void addVote(int vote){
-        votes.add(vote);
-        notifyPropertyChanged(BR.votes);
-    }*/
-
-    /*public double getResult(int opt){
-        int count = 0;
-        //if(votes.size() == 0) return 0.0;
-
-        for (Integer vote:votes) {
-            if(vote == opt)
-                count++;
-        }
-
-        System.out.println("pollname: " + name + " votes: " + votes.toString());
-
-        return count;
-        //return count/votes.size();
-
-        //double firstPercent = (double)first / total;
-        //double secondPercent = (double)second / total;
-
-    }*/
 
 
     @Override
@@ -221,7 +121,6 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
             imageInfo = parcel.readParcelable(ImageInfo.class.getClassLoader());
         else
             imageInfo = (ImageInfo) parcel.readValue(ImageInfo.class.getClassLoader());
-
 
 
         //imageUri = Uri.CREATOR.createFromParcel(parcel);

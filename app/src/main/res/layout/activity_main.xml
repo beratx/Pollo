@@ -32,13 +32,6 @@
                 android:enabled="false" />
 
             <Button
-                android:id="@+id/oldPollsActivityButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Old Polls"
-                android:enabled="false"/>
-
-            <Button
                 android:id="@+id/showDeviceListButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

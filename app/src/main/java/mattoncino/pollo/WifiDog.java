@@ -14,6 +14,7 @@ public class WifiDog extends BroadcastReceiver {
     private static final String TAG = "WIFI_DOG";
     private Intent connManagerServiceIntent;
     private JmDnsManager jmDnsManager;
+    Intent statusUpdater;
     private static boolean serviceLaunched = false;
     private static boolean first_on = true;
     private static boolean first_off = true;
@@ -30,53 +31,45 @@ public class WifiDog extends BroadcastReceiver {
                 NetworkInfo activeInfo = connMgr.getActiveNetworkInfo();
 
                 jmDnsManager = ((MyApplication) context.getApplicationContext()).getConnectionManager();
+
+                statusUpdater = new Intent(context, StatusUpdaterService.class);
                 //Log.d(TAG, "serviceLaunched: " + serviceLaunched);
                 Log.d(TAG, "first_on: " + first_on + " first_off: " + first_off);
                 if (activeInfo != null && activeInfo.isConnected() && activeInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                     if (first_on) {
-                    //if (!serviceLaunched) {
                         Log.d(TAG, "WIFI IS ON");
 
-                        Intent connManagerServiceIntent = new Intent(context, ConnectionManagerIntentService.class);
+                        connManagerServiceIntent = new Intent(context, ConnectionManagerIntentService.class);
                         context.startService(connManagerServiceIntent);
-                        Log.d(TAG, "connManagerServiceIntent is launched");
-                        //jmDnsManager.registerService();
+                        Log.d(TAG, "WifiDog launches connManagerServiceIntent");
 
-
-                        /*connManagerServiceIntent = new Intent(context, ConnectionManagerIntentService.class);
-                        context.startService(connManagerServiceIntent);
-                        Log.d(TAG, "WifiDog launches connManagerServiceIntent");*/
-
-                        /*Intent serviceIntent = new Intent(context, StatusUpdaterService.class);
-                        context.startService(serviceIntent);
+                        /*context.startService(statusUpdater);
                         Log.d(TAG, "WifiDog launches StatusUpdaterService");*/
+
                         updateWifiStat(context, true);
-                        //serviceLaunched = true;
+
                         first_on = false;
                         first_off = true;
                     }
                 } else {
                     if(first_off) {
-                        //if (serviceLaunched) {
-                        jmDnsManager.unregisterService();
                         Log.d(TAG, "WIFI IS OFF");
+                        if(jmDnsManager != null) {
+                            jmDnsManager.unregisterService();
+                            Log.d(TAG, "WifiDog stops jmDNS service");
+                        }
 
-                        /*context.stopService(connManagerServiceIntent);
-                        Log.d(TAG, "WifiDog stops connManagerServiceIntent");*/
-
-                        /*Intent statusService = new Intent(context, StatusUpdaterService.class);
-                        context.stopService(statusService);
+                        /*context.stopService(statusUpdater);
                         Log.d(TAG, "WifiDog stops StatusUpdaterService");*/
+
                         updateWifiStat(context, false);
-                        //serviceLaunched = false;
+
                         first_off = false;
                         first_on = true;
                     }
                   }
-                //}
             }
     }
-
 
     private void updateWifiStat(Context context, boolean stat) {
         Intent intent = new Intent("mattoncino.pollo.receive.wifi.stat");

@@ -12,11 +12,13 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -292,6 +294,7 @@ public class ImagePicker {
 
         File direct;
 
+
         if(external)
             direct = new File(Environment.getExternalStorageDirectory() + "/pollo_images");
         else
@@ -313,12 +316,13 @@ public class ImagePicker {
         File file = null;
         try {
             if(external) {
+                //file = new File(direct, "pollo_" + timestamp + ".jpg");
                 //file = new File(new File("/sdcard/pollo_images/"), "pollo_" + timestamp);
-                file = File.createTempFile("pollo_" + timestamp, ".bmp", direct);
+                file = File.createTempFile("pollo_" + timestamp, ".jpg", direct);
             }
             else {
                 //file = new File(new File("/pollo_images/"), "pollo_" + timestamp);
-                file = File.createTempFile("pollo_" + timestamp, ".bmp", direct);
+                file = File.createTempFile("pollo_" + timestamp, ".jpg", direct);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -345,5 +349,14 @@ public class ImagePicker {
             return true;
         }
         return false;
+    }
+
+    public static Bitmap getBitmapFromUri(Context context, Uri uri) throws IOException {
+        ParcelFileDescriptor parcelFileDescriptor =
+                context.getContentResolver().openFileDescriptor(uri, "r");
+        FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+        Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);
+        parcelFileDescriptor.close();
+        return image;
     }
 }

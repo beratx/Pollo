@@ -96,6 +96,9 @@ public class JmDnsManager {
     }
 
     public void unregisterService() {
+        if(serverThreadProcessor != null)
+            serverThreadProcessor.terminate();
+
         if (jmdns != null) {
             jmdns.unregisterService(serviceInfo);
             Log.d(TAG, "JmDNS Service is UNregistered");
@@ -119,10 +122,11 @@ public class JmDnsManager {
         //String serverIpAddress = getIPv4FromServiceInfo(jmdns.getServiceInfo());
         InetAddress addr = null;
         try {
-            if(jmdns == null){
-                initializeService(MyApplication.getContext());
+            if(jmdns != null) {
+                //initializeService(MyApplication.getContext());
+
+                addr = jmdns.getInetAddress();
             }
-            addr = jmdns.getInetAddress();
         } catch (IOException e) {
             //e.printStackTrace();
             Log.d(TAG, e.toString());
@@ -165,7 +169,7 @@ public class JmDnsManager {
         return settings;
     }
 
-    private String getIPv4FromServiceInfo(javax.jmdns.ServiceInfo serviceInfo) {
+    private String getIPv4FromServiceInfo(ServiceInfo serviceInfo) {
         return serviceInfo.getPropertyString(SERVICE_INFO_PROPERTY_IP_VERSION);
     }
 
@@ -184,38 +188,11 @@ public class JmDnsManager {
         return ipAddressesSet;
     }
 
-    public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, ArrayList<String> messages) {
-        Set<String> ipAddressesSet=null;
-        if (jmdns != null) {
-            ipAddressesSet = getOnlineDevices(context);
+     public Set<String> getOnlineDevices(Context context) {
 
-            for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
-                String serverIpAddress = (String) iterator.next();
-                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, type, messages);
-                Thread t = new Thread(clientProcessor);
-                t.start();
-            }
-        }
-        return ipAddressesSet;
-    }
-
-    public void sendResultToAllDevices(final Context context, Set<String> hostAddresses, String pollId, int[] result) {
-        if (jmdns != null) {
-
-            for (java.util.Iterator iterator = hostAddresses.iterator(); iterator.hasNext(); ) {
-                String hostAddress = (String) iterator.next();
-                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(hostAddress, context, Consts.RESULT, pollId, result);
-                Thread t = new Thread(clientProcessor);
-                t.start();
-            }
-        }
-    }
-
-    public Set<String> getOnlineDevices(Context context) {
-
-        /*if (jmdns == null) {
+        if (jmdns == null) {
             initializeService(context);
-        }*/
+        }
 
         Set<String> ipAddressesSet = new HashSet<String>();
         //ServiceInfo serviceInfo = jmdns.getServiceInfo(SERVICE_INFO_TYPE, SERVICE_INFO_NAME, false);
@@ -233,38 +210,4 @@ public class JmDnsManager {
         }
         return ipAddressesSet;
     }
-
-    /*public List<String> getOnlineDevicesList(Context context, String deviceId) {
-
-        List<String> onlineDevices = new ArrayList<String>();
-        try {
-            if (jmdns == null) {
-                initializeService(context);
-            }
-
-            javax.jmdns.ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE, 1000);
-            if (serviceInfoList != null) {
-
-                for (int index = 0; index < serviceInfoList.length; index++) {
-                    String device = serviceInfoList[index].getPropertyString(SERVICE_INFO_PROPERTY_DEVICE);
-
-                    try {
-                        if (!device.equals(deviceId)) {
-                            String ip = getIPv4FromServiceInfo(serviceInfoList[index]);
-                            if (!onlineDevices.contains(ip))
-                                onlineDevices.add(ip);
-                        }
-                    } catch (NullPointerException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        return onlineDevices;
-    }*/
-
-
 }

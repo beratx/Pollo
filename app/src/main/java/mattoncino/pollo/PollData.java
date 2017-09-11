@@ -63,17 +63,6 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     }
 
 
-
-    /*@Bindable
-    public List<Integer> getVotes() {
-        return votes;
-    }
-
-    public void addVote(int vote){
-        votes.add(vote);
-        notifyPropertyChanged(BR.votes);
-    }*/
-
     @Bindable
     public Set<String> getContactedDevices() {
         return contactedDevices;
@@ -121,16 +110,8 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         notifyPropertyChanged(BR.acceptedDevices);
     }
 
-    public void removeDevice(String hostAddress){
-        acceptedDevices.remove(hostAddress);
-    }
-
     public int getOwner() {
         return owner;
-    }
-
-    public void setOwner(int owner) {
-        this.owner = owner;
     }
 
     @Bindable
@@ -147,10 +128,6 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         return hostAddress;
     }
 
-    public void setHostAddress(String hostAddress) {
-        this.hostAddress = hostAddress;
-    }
-
     public boolean isTerminated() {
         return terminated;
     }
@@ -158,10 +135,6 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     public void setTerminated(boolean terminated) {
         this.terminated = terminated;
     }
-
-    /*public String getText(int opt){
-        return poll.getOptions().get(opt - 1) + " >> " + getVotesFor(opt);
-    }*/
 
     public String getOption(int i){
         return poll.getOptions().get(i- 1);

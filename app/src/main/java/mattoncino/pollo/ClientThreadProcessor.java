@@ -30,51 +30,43 @@ import java.util.List;
 
 
 public class ClientThreadProcessor implements Runnable{
+    private static final String TAG = "ClientThreadProcess";
+    private static final int SERVER_PORT = 8700;
     private Socket socket;
     private Context context;
     private String hostIpAddress;
-    private static final String TAG = "ClientThreadProcess";
     private List<String> pollInfo;
     private Poll poll;
     private String type;
     private String pollID;
     private int[] result;
 
-    public ClientThreadProcessor(String hostIpAddress, Context context, String type, ArrayList<String> pollInfo) {
+    public ClientThreadProcessor(String hostIpAddress, Context context, String type){
         this.context = context;
         this.hostIpAddress = hostIpAddress;
-        this.pollInfo = pollInfo;
         this.type = type;
     }
 
+    public ClientThreadProcessor(String hostIpAddress, Context context, String type, ArrayList<String> pollInfo) {
+        this(hostIpAddress, context, type);
+        this.pollInfo = pollInfo;
+    }
+
     public ClientThreadProcessor(String hostIpAddress, Context context, String type, String pollID, int[] result) {
-        this.context = context;
-        this.hostIpAddress = hostIpAddress;
-        this.type = type;
+        this(hostIpAddress, context, type);
         this.pollID = pollID;
         this.result = result;
     }
 
     public ClientThreadProcessor(String hostIpAddress, Context context, String type, Poll poll) {
-        this.context = context;
-        this.hostIpAddress = hostIpAddress;
+        this(hostIpAddress, context, type);
         this.poll = poll;
-        this.type = type;
     }
-
-
-
-    /*public ClientThreadProcessor(String hostIpAddress, Context context, String type, int vote) {
-        this.context = context;
-        this.hostIpAddress = hostIpAddress;
-        this.type = type;
-        this.vote = vote;
-    }*/
 
     private Socket getSocket(String hostIpAddress) {
         try {
             InetAddress serverAddr = InetAddress.getByName(hostIpAddress);
-            socket = new Socket(serverAddr, ServerSocketHandler.SERVER_PORT);
+            socket = new Socket(serverAddr, SERVER_PORT);
         } catch (UnknownHostException e1) {
             e1.printStackTrace();
         } catch (IOException e1) {
@@ -128,7 +120,6 @@ public class ClientThreadProcessor implements Runnable{
 
             //DataOutputStream dout = new DataOutputStream(bout);
 
-            //TODO:CHANGE IT WITH POLL
             output.println(Consts.POLL_REQUEST);
             output.println(poll.getId()); //poll_id
             output.println(poll.getName()); //poll_name
@@ -163,20 +154,8 @@ public class ClientThreadProcessor implements Runnable{
                 return;
             }
 
-            //Toast.makeText(context, "i send poll from host: " + pollInfo[4], Toast.LENGTH_LONG).show();
-
             Log.d(TAG, "SENT POLL_REQUEST");
 
-            /*Activity act = (Activity) context;
-                act.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ToastHelper.useShortToast(context, messageFromClient);
-                    }
-                });
-
-                //Toast.makeText(context, "Poll request is accepted!", Toast.LENGTH_LONG).show();
-            }*/
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NullPointerException e) {
@@ -274,36 +253,5 @@ public class ClientThreadProcessor implements Runnable{
         } finally {
             output.close();
         }
-
     }
-
-    public void sendSimpleMessageToOtherDevice(String message) {
-        try {
-            socket = getSocket(hostIpAddress);
-
-            PrintWriter output = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-            output.println(message);
-
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            String messageFromClient = input.readLine();
-
-            if(messageFromClient.equals(Consts.ACCEPT))
-                Log.d(TAG, "arrived message: ACCEPT");
-                Toast.makeText(context, "Poll request is accepted!",  Toast.LENGTH_LONG).show();
-
-            output.close();
-            socket.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
-
-        } finally {
-            closeSocket(socket);
-        }
-    }
-
-
-
-
 }
