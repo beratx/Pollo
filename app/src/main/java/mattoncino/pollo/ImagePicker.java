@@ -1,6 +1,7 @@
 package mattoncino.pollo;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
@@ -16,6 +17,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -290,10 +292,8 @@ public class ImagePicker {
         return image;
     }
 
-    public static File createFile(Context context, boolean external) {
-
+    public static File createFile(Context context, boolean external, String ext) {
         File direct;
-
 
         if(external)
             direct = new File(Environment.getExternalStorageDirectory() + "/pollo_images");
@@ -318,11 +318,11 @@ public class ImagePicker {
             if(external) {
                 //file = new File(direct, "pollo_" + timestamp + ".jpg");
                 //file = new File(new File("/sdcard/pollo_images/"), "pollo_" + timestamp);
-                file = File.createTempFile("pollo_" + timestamp, ".jpg", direct);
+                file = File.createTempFile("pollo_" + timestamp, "." + ext, direct);
             }
             else {
                 //file = new File(new File("/pollo_images/"), "pollo_" + timestamp);
-                file = File.createTempFile("pollo_" + timestamp, ".jpg", direct);
+                file = File.createTempFile("pollo_" + timestamp, "." + ext, direct);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -358,5 +358,19 @@ public class ImagePicker {
         Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);
         parcelFileDescriptor.close();
         return image;
+    }
+
+    public static String getMimeType(Context context, Uri uri) {
+        String mimeType = null;
+        if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            ContentResolver cr = context.getContentResolver();
+            mimeType = cr.getType(uri);
+        } else {
+            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri
+                    .toString());
+            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+                    fileExtension.toLowerCase());
+        }
+        return mimeType;
     }
 }

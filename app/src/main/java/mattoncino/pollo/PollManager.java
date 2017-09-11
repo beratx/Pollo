@@ -45,17 +45,17 @@ public class PollManager extends Observable {
         return active_polls;
     }
 
-    public synchronized PollData getPollData(String pollID){
+    /*public synchronized PollData getPollData(String pollID){
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
             PollData pd = i.next();
             if (pd.getID().equals(pollID))
                 return pd;
         }
         return null;
-    }
+    }*/
 
 
-    public synchronized int[] getVotes(String pollID){
+    /*public synchronized int[] getVotes(String pollID){
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
             PollData pd = i.next();
             if (pd.getID().equals(pollID)) {
@@ -63,7 +63,7 @@ public class PollManager extends Observable {
             }
         }
         return new int[5];
-    }
+    }*/
 
 
     public synchronized void setVotes(String pollID, int[] votes){
@@ -79,14 +79,7 @@ public class PollManager extends Observable {
             }
         }
     }
-/*
-    public void setDeviceCount(String pollID, int count){
-        for (PollData pd : active_polls) {
-            if (pd.getID().equals(pollID))
-                pd.setDeviceCount(count);
-        }
-    }
-*/
+
 
     public synchronized void setContactedDevices(String pollID, HashSet<String> devices){
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
@@ -98,6 +91,7 @@ public class PollManager extends Observable {
         }
     }
 
+
     public synchronized void addPoll(PollData pd){
             if (!active_polls.contains(pd)){
                 active_polls.add(0, pd);
@@ -106,6 +100,7 @@ public class PollManager extends Observable {
                 //Log.d(TAG, "called addPoll-> setChanged -> notifyObservers");
             }
     }
+
 
     public synchronized void removePoll(String pollID){
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
@@ -164,19 +159,6 @@ public class PollManager extends Observable {
     }
 
 
-    /*public synchronized boolean isCompleted(String pollID){
-        for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
-            PollData pd = i.next();
-            if (pd.getID().equals(pollID))
-                return (pd.getContactedDevices().size() == pd.getResponseCount()) &&
-                        (pd.getVotedDevices().size() == pd.getAcceptedDevices().size()) &&
-                        (pd.getMyVote() > 0);
-        }
-        return false;
-    }*/
-
-
-
     public Set<String> getVotedDevices(String pollID){
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
             PollData pd = i.next();
@@ -186,8 +168,6 @@ public class PollManager extends Observable {
         return null;
     }
 
-    // Passes the object specified in the parameter
-    // list to the notify() method of the observer.
 
     public synchronized void savePollsPermanently(){
         editor = pref.edit();

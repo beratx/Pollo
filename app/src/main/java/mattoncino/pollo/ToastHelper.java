@@ -8,26 +8,15 @@ import android.widget.Toast;
 import java.util.Iterator;
 import java.util.Set;
 
-/**
- * Created by berat on 10.06.2017.
- */
 
 public class ToastHelper {
     public static void useLongToast(Context context, String message) {
         Toast toast = Toast.makeText(context, message, Toast.LENGTH_LONG);
-
-//		View view = toast.getView();
-//		view.setBackgroundResource(R.color.col_blue_my);
-
         toast.show();
     }
 
     public static void useShortToast(Context context, String message) {
         Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
-
-//		View view = toast.getView();
-//		view.setBackgroundResource(R.color.col_blue_my);
-
         toast.show();
     }
 
@@ -64,17 +53,6 @@ public class ToastHelper {
         useLongToast(context, pringStr);
     }
 
-
-    /*
-    USE THIS FOR useToastInService method.
-    private Handler handler;
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        handler = new Handler();
-        return super.onStartCommand(intent, flags, startId);
-    }
-     */
 
     public static void  useToastInService(final Handler handler, final Context context, final String message){
 

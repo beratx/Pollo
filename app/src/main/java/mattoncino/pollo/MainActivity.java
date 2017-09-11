@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        //LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
     }
 
     private void startDataTransferring(){
@@ -131,34 +131,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-/* Check if online device is empty, in case we will disable features.
-    public boolean checkOnlineDevices(){
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                String deviceId = ((MyApplication)getApplication()).getDeviceId();
-                final List<String> onlineDevices = connectionManager.getOnlineDevicesList(MainActivity.this, deviceId);
-
-                return onlineDevices.size() != 0;
-
-            }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();
-
-    }
-*/
 
     public void onShowOnlineDevicesListDialogPress(){
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                //jmDnsManager.unregisterService();
-                //jmDnsManager.registerService();
-                //String deviceId = ((MyApplication)getApplication()).getDeviceId();
                 final HashSet<String> onlineDevices = (HashSet<String>) jmDnsManager.getOnlineDevices(MainActivity.this);
 
-                //Activity act = (Activity) MainActivity.this;
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

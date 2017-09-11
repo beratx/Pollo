@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
@@ -132,16 +133,20 @@ public class ClientThreadProcessor implements Runnable{
             output.println(poll.hasImage());
             if(poll.hasImage()){
                 output.println(poll.getImageInfo().isCamera());
+                Uri imageUri = Uri.parse(poll.getImageInfo().getPath());
+                String mimeType = ImagePicker.getMimeType(context, imageUri);
+                String ext = mimeType.substring(mimeType.lastIndexOf("/") + 1);
+                //Log.d(TAG, "Mime type: " + mimeType + "ext: " + ext);
+                if(ext == null) ext = "bmp";
+                output.println(ext);
                 BufferedOutputStream bout = new BufferedOutputStream(outputStream);
-                Log.d(TAG, "imagePath: " + poll.getImageInfo().getPath());
-                String realPath = ImagePicker.getRealPathFromUri(context, Uri.parse(poll.getImageInfo().getPath()));
-                if(realPath != null)  Log.d(TAG, "real path: " + realPath);
+                String realPath = ImagePicker.getRealPathFromUri(context, imageUri);
+                //if(realPath != null)  Log.d(TAG, "real path: " + realPath);
                 InputStream input = new FileInputStream(realPath);
 
                 byte[] buffer = new byte[1024];
                 int len;
                 while ((len = input.read(buffer)) != -1) {
-                    //bout.write(buffer, 0, len);
                     bout.write(buffer);
                 }
                 input.close();

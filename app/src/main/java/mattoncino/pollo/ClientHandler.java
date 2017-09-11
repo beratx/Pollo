@@ -74,20 +74,15 @@ public class ClientHandler implements Runnable{
                 boolean isCamera = false;
                 if(hasImage) {
                     isCamera = Boolean.valueOf(inputBufferedReader.readLine());
-                    File imageFile = ImagePicker.createFile(context, ImagePicker.isExternalStorageWritable());
-                    // Continue only if the File was successfully created
+                    String imageType = inputBufferedReader.readLine();
+                    File imageFile = ImagePicker.createFile(context, ImagePicker.isExternalStorageWritable(), imageType);
                     if (imageFile != null) {
-                        /*Uri imageUri = FileProvider.getUriForFile(context,
-                                "mattoncino.pollo.android.fileprovider",
-                                imageFile);*/
                         Uri imageUri = Uri.fromFile(imageFile);
                         Log.d(TAG, "imageUri for received image: " + imageUri.toString());
 
                         BufferedInputStream bufin = null;
                         FileOutputStream output = null;
 
-                        //File imageFile = ImagePicker.getTempFile(context);
-                        //Uri imageUri = Uri.fromFile(imageFile);
                         try{
                             bufin = new BufferedInputStream(input);
                             output = new FileOutputStream(imageFile);
@@ -113,7 +108,6 @@ public class ClientHandler implements Runnable{
                         Log.d(TAG, "ImagePicker.createFile returns NULL");
                 }
 
-                //poll = new Poll(id, name, question, options, isCamera, info);
                 poll = new Poll(id, name, question, options, hasImage, info);
 
                 Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
@@ -121,7 +115,6 @@ public class ClientHandler implements Runnable{
                 addNotification(poll, hostAddress);
                 //how to update main menu so you can see new polls note?
                 //with a handler!
-
 
             } else if (message.equals(Consts.ACCEPT)) {
                 String pollID = inputBufferedReader.readLine();
@@ -194,8 +187,14 @@ public class ClientHandler implements Runnable{
     private void addNotification(Poll poll, String hostAddress){
         Random randomGenerator = new Random();
         int NOTIFICATION_ID;
+        int requestCode;
+
         while((NOTIFICATION_ID = randomGenerator.nextInt()) == 0)
             ;
+
+        while((requestCode = randomGenerator.nextInt()) == 0)
+            ;
+
 
         Intent notificationIntent = new Intent(context, ActivePollsActivity.class)
                 .putExtra(Consts.OWNER, Consts.OTHER)
@@ -208,13 +207,13 @@ public class ClientHandler implements Runnable{
         stackBuilder.addParentStack(ActivePollsActivity.class);
         stackBuilder.addNextIntent(notificationIntent);
 
-        PendingIntent acceptedPendingIntent =  PendingIntent.getActivity(context, 0,
+        PendingIntent acceptedPendingIntent =  PendingIntent.getActivity(context, requestCode,
                 notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent startMain = new Intent(context, MainActivity.class)
                 .putExtra("notificationID", NOTIFICATION_ID);
 
-        PendingIntent rejectedPendingIntent = PendingIntent.getActivity(context, 0,
+        PendingIntent rejectedPendingIntent = PendingIntent.getActivity(context, requestCode,
                 startMain, PendingIntent.FLAG_UPDATE_CURRENT);
 
 

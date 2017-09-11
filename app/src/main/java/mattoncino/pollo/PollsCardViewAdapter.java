@@ -20,6 +20,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,18 +91,26 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         if(pollData.hasImage()){
             ImageInfo imageInfo = pollData.getImageInfo();
             Log.d(TAG, "imagePath: " + Uri.parse(imageInfo.getPath()));
-            holder.getBinding().imageView.setVisibility(View.VISIBLE);
-            Picasso.with(rLayout.getContext()).load(imageInfo.getPath()).into(holder.getBinding().imageView);
+            //holder.getBinding().imageView.setVisibility(View.VISIBLE);
+            /*Picasso.with(rLayout.getContext()).
+                    load(imageInfo.getPath()).centerCrop().
+                    into(holder.getBinding().imageView);*/
 
             /*File sdDir = Environment.getExternalStorageDirectory();
             File file = new File(sdDir + imageInfo.getPath());
             if(file.exists() || file.canRead()){
                 Log.d(TAG, "FILE EXISTS! file length: " + file.length());
             }*/
-            /*Bitmap bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
-            holder.getBinding().imageView.setVisibility(View.VISIBLE);
-            holder.getBinding().imageView.setImageBitmap(bitmap);
-            holder.getBinding().imageView.invalidate();*/
+            //Bitmap bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
+            try {
+                Bitmap bitmap = ImagePicker.getBitmapFromUri(rLayout.getContext(), Uri.parse(imageInfo.getPath()));
+                holder.getBinding().imageView.setVisibility(View.VISIBLE);
+                holder.getBinding().imageView.setImageBitmap(bitmap);
+                holder.getBinding().imageView.invalidate();
+            }catch(IOException e){
+                Log.d(TAG, e.toString());
+                holder.getBinding().imageView.setVisibility(View.GONE);
+            }
         }
 
 
@@ -259,5 +268,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     public int getItemCount() {
         return activePolls.size();
     }
+
+
 
 }
