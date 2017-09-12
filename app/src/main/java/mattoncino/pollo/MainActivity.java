@@ -1,7 +1,9 @@
 package mattoncino.pollo;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +12,7 @@ import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -25,16 +28,19 @@ import mattoncino.pollo.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "Pollo Main Activity";
+    final static private long THIRTY_SECONDS = 1000 * 30;
     private ActivityMainBinding binding;
     private JmDnsManager jmDnsManager;
     private BroadcastReceiver wifiReceiver;
+    private AlarmManager alarm;
+    //private BroadcastReceiver alarmReceiver;
+    private PendingIntent pintent;
 
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_main);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         Bundle data = getIntent().getExtras();
@@ -71,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, mattoncino.pollo.ActivePollsActivity.class));
             }
         });
+
+        setAlarm();
     }
 
     @Override
@@ -85,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
     }
 
     private void startDataTransferring(){
@@ -99,14 +107,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onRestart() {
+    protected void onStart() {
         //Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
-        super.onRestart();
-        /*if(wifiReceiver == null)
+        super.onStart();
+        if(wifiReceiver == null)
             wifiReceiver = createWifiBroadcastReceiver();
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter("mattoncino.pollo.receive.wifi.stat"));*/
+        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver,
+                                new IntentFilter("mattoncino.pollo.receive.wifi.stat"));
     }
+
 
     @Override
     public void onBackPressed() {
@@ -126,7 +136,8 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else {
             Log.i(TAG, getString(R.string.mobile_connection) + " or " + R.string.no_wifi_or_mobile);
-            Toast.makeText(this, "Pollo works only under LAN. Please activate your wifi and connect to an Access Point", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Pollo works only under LAN. Please activate your wifi and connect to an Access Point",
+                    Toast.LENGTH_LONG).show();
             return false;
         }
     }
@@ -185,5 +196,20 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    private void setAlarm() {
 
+        Intent intent = new Intent(MainActivity.this, StatusUpdaterService.class);
+        pintent = PendingIntent.getService(MainActivity.this, 0, intent, 0);
+        alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        //alarm.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, cal.getTimeInMillis(), 30*1000, pintent);
+        alarm.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime(), THIRTY_SECONDS, pintent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        alarm.cancel(pintent);
+        //unregisterReceiver(alarmReceiver);
+        super.onDestroy();
+    }
 }

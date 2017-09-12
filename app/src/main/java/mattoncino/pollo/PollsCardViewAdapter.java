@@ -102,15 +102,16 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 Log.d(TAG, "FILE EXISTS! file length: " + file.length());
             }*/
             //Bitmap bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
-            try {
-                Bitmap bitmap = ImagePicker.getBitmapFromUri(rLayout.getContext(), Uri.parse(imageInfo.getPath()));
+            //try {
+                //Bitmap bitmap = ImagePicker.getBitmapFromUri(rLayout.getContext(), Uri.parse(imageInfo.getPath()));
+                Bitmap bitmap = ImagePicker.getBitmapImage( Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
                 holder.getBinding().imageView.setVisibility(View.VISIBLE);
                 holder.getBinding().imageView.setImageBitmap(bitmap);
                 holder.getBinding().imageView.invalidate();
-            }catch(IOException e){
+            /*}catch(IOException e){
                 Log.d(TAG, e.toString());
                 holder.getBinding().imageView.setVisibility(View.GONE);
-            }
+            }*/
         }
 
 

@@ -16,7 +16,6 @@ public class ConnectionManagerIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.d(TAG, "Connection Manager Service is started.");
-        //Bundle data = intent.getData();
         jManager = ((MyApplication)getApplication()).getConnectionManager();
         jManager.initializeService(this);
     }

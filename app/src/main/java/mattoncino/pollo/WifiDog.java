@@ -14,8 +14,7 @@ public class WifiDog extends BroadcastReceiver {
     private static final String TAG = "WIFI_DOG";
     private Intent connManagerServiceIntent;
     private JmDnsManager jmDnsManager;
-    Intent statusUpdater;
-    private static boolean serviceLaunched = false;
+    //Intent statusUpdater;
     private static boolean first_on = true;
     private static boolean first_off = true;
 
@@ -25,14 +24,13 @@ public class WifiDog extends BroadcastReceiver {
         if(intent.getAction() != null && (intent.getAction().equals("android.net.wifi.supplicant.STATE_CHANGE")
         || intent.getAction().equals("android.net.wifi.supplicant.NETWORK_STATE_CHANGED_ACTION")
                 || intent.getAction().equals("android.net.conn.CONNECTIVITY_CHANGE"))) {
-                //WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-                //if(wifiManager.isWifiEnabled()){
+
                 ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo activeInfo = connMgr.getActiveNetworkInfo();
 
                 jmDnsManager = ((MyApplication) context.getApplicationContext()).getConnectionManager();
 
-                statusUpdater = new Intent(context, StatusUpdaterService.class);
+                //statusUpdater = new Intent(context, StatusUpdaterService.class);
                 //Log.d(TAG, "serviceLaunched: " + serviceLaunched);
                 Log.d(TAG, "first_on: " + first_on + " first_off: " + first_off);
                 if (activeInfo != null && activeInfo.isConnected() && activeInfo.getType() == ConnectivityManager.TYPE_WIFI) {

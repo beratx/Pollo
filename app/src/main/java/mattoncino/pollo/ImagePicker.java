@@ -329,7 +329,6 @@ public class ImagePicker {
         }
 
         return file;
-
     }
 
     /* Checks if external storage is available for read and write */
@@ -342,7 +341,7 @@ public class ImagePicker {
     }
 
     /* Checks if external storage is available to at least read */
-    public boolean isExternalStorageReadable() {
+    public static boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state) ||
                 Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {

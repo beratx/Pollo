@@ -169,7 +169,8 @@ public class ClientThreadProcessor implements Runnable{
             act.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    ToastHelper.useLongToast(context, "Can't connect to other devices. Check your connection.");
+                    Toast toast = Toast.makeText(context,  "Can't connect to other devices. Check your connection.", Toast.LENGTH_LONG);
+                    toast.show();
                 }
             });
         } finally {

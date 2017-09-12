@@ -46,6 +46,7 @@ public class JmDnsManager {
                 InetAddress addr = getInetAddress(wifi);
                 //jmdns = JmDNS.create(addr, InetAddress.getLocalHost().getHostName());
                 jmdns = JmDNS.create(addr, InetAddress.getLocalHost().getHostName());
+                //jmdns = JmDNS.create(addr);
                 Log.d(TAG, "JmDNS instance is created");
                 //jmdns.addServiceTypeListener();
                 jmdns.addServiceListener(SERVICE_INFO_TYPE, listener = new ServiceListener() {
@@ -124,7 +125,6 @@ public class JmDnsManager {
         try {
             if(jmdns != null) {
                 //initializeService(MyApplication.getContext());
-
                 addr = jmdns.getInetAddress();
             }
         } catch (IOException e) {
@@ -175,16 +175,18 @@ public class JmDnsManager {
 
     public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, Poll poll) {
         Set<String> ipAddressesSet=null;
-        if (jmdns != null) {
-            ipAddressesSet = getOnlineDevices(context);
-
-            for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
-                String serverIpAddress = (String) iterator.next();
-                ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, type, poll);
-                Thread t = new Thread(clientProcessor);
-                t.start();
-            }
+        if (jmdns == null) {
+            initializeService(context);
         }
+        ipAddressesSet = getOnlineDevices(context);
+
+        for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
+            String serverIpAddress = (String) iterator.next();
+            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(serverIpAddress, context, type, poll);
+            Thread t = new Thread(clientProcessor);
+            t.start();
+        }
+
         return ipAddressesSet;
     }
 
@@ -198,7 +200,7 @@ public class JmDnsManager {
         //ServiceInfo serviceInfo = jmdns.getServiceInfo(SERVICE_INFO_TYPE, SERVICE_INFO_NAME, false);
         ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE);
         String ownDeviceId = ((MyApplication) context.getApplicationContext()).getDeviceId();
-        Log.d(TAG, "serviceInfoList.size() = " + serviceInfoList.length);
+        //Log.d(TAG, "serviceInfoList.size() = " + serviceInfoList.length);
 
         for (int index = 0; index < serviceInfoList.length; index++) {
             String device = serviceInfoList[index].getPropertyString(SERVICE_INFO_PROPERTY_DEVICE);

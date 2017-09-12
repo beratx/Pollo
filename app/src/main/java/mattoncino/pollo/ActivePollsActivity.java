@@ -55,15 +55,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         manager = PollManager.getInstance();
         manager.addObserver(this);
 
-        /*if(savedInstanceState != null){
-            active_polls = savedInstanceState.getParcelableArrayList("pollList");
-            if(active_polls != null) {
-                //restoredBeforeMe = true;
-                Log.d(TAG, "in onCreate() restored from savedInstanceState");
-            }
-        }
-        */
-
         Bundle data = getIntent().getExtras();
         if (data != null) {
             int type = data.getInt(Consts.OWNER);
@@ -87,10 +78,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             }
 
             removeNotification(notfID);
-            /*getIntent().removeExtra(Consts.POLL);
-            getIntent().removeExtra(Consts.OWNER);
-            getIntent().removeExtra("notificationID");
-            if (type == Consts.OTHER) getIntent().removeExtra("hostAddress");*/
         }
 
     }
@@ -119,7 +106,8 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
 
         List<PollData> activePolls = Collections.synchronizedList(PollManager.getInstance().getActivePolls());
 
-        adapter = new PollsCardViewAdapter(manager.getActivePolls());
+        //adapter = new PollsCardViewAdapter(manager.getActivePolls());
+        adapter = new PollsCardViewAdapter(activePolls);
         binding.recyclerView.setAdapter(adapter);
 
         if (myPollRequest) {
@@ -177,9 +165,9 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                         }
                     }
 
-                    /*intent.removeExtra("pollID");
+                    intent.removeExtra("pollID");
                     intent.removeExtra("vote");
-                    intent.removeExtra("hostAddress");*/
+                    intent.removeExtra("hostAddress");
                 }
             }
         };
@@ -256,35 +244,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     protected void onRestart() {
         //Toast.makeText(this, "called onRestart", Toast.LENGTH_LONG).show();
         super.onRestart();
-        //active_polls = PollManager.getActivePolls();
-        /*manager = PollManager.getInstance();
-        manager.addObserver(this);
-
-        Bundle data = getIntent().getExtras();
-        if (data != null) {
-            int type = data.getInt(Consts.OWNER);
-            poll = data.getParcelable(Consts.POLL);
-            int notfID = data.getInt("notificationID");
-
-            if (poll != null) {
-                if (type == Consts.OWN) {
-                    myPollRequest = true;
-                    ownAddress = ((MyApplication) getApplication()).getConnectionManager().getHostAddress();
-                    manager.addPoll(new PollData(poll, ownAddress, type));
-                } else if (type == Consts.OTHER) {
-                    acceptedPollRequest = true;
-                    xhostAddress = data.getString("hostAddress");
-                    manager.addPoll(new PollData(poll, xhostAddress, type));
-                }
-            }
-
-            removeNotification(notfID);
-            getIntent().removeExtra(Consts.POLL);
-            getIntent().removeExtra(Consts.OWNER);
-            getIntent().removeExtra("notificationID");
-            if (type == Consts.OTHER) getIntent().removeExtra("hostAddress");
-        }*/
-
     }
 
     @Override
@@ -293,24 +252,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         //Toast.makeText(this, "called onSaveInstanceState", Toast.LENGTH_LONG).show();
         Log.d(TAG, "called onSaveInstanceState");
         outState.putParcelableArrayList("pollList", active_polls);
-
-
-        /*int cardCount = adapter.getItemCount();
-        for (int i = 0; i < cardCount; i++) {
-            long id = adapter.getItemId(i);
-            int type = adapter.getItemViewType(i);
-
-        }*/
-        //final LinearLayout rLayout = findViewById(R..listItemLayout;
-
-            /*int mViewsCount = 0;
-            for(View view : mViews)
-            {
-                savedInstanceState.putInt("mViewId_" + mViewsCount, view.getId());
-                mViewsCount++;
-            }
-
-            savedInstanceState.putInt("mViewsCount", mViewsCount);*/
     }
 
     @Override
@@ -318,18 +259,8 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         super.onRestoreInstanceState(savedInstanceState, persistentState);
         Log.d(TAG, "called onRestoreInstanceState");
         //Toast.makeText(this, "called onRestoreInstanceState", Toast.LENGTH_LONG).show();
-        //if(!restoredBeforeMe) {
         if (savedInstanceState != null) {
             active_polls = savedInstanceState.getParcelableArrayList("pollList");
-            /*int mViewsCount = savedInstanceState.getInt("mViewsCount");
-
-            for (i = 0; i <= mViewsCount) {
-                View view = mViews.get(i);
-                int viewId = savedInstanceState.getInt("mViewId_" + i);
-                view.setId(viewId);
-                mViewsCount++;
-            }*/
-
         }
     }
 

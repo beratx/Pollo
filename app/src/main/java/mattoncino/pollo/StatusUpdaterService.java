@@ -27,13 +27,13 @@ public class StatusUpdaterService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d(TAG, "Service is handling the intent...");
+        Log.d(TAG, "StatusUpdaterService is handling the intent...");
 
         List<PollData> activePolls = Collections.synchronizedList(PollManager.getInstance().getActivePolls());
 
-            while(true){
+            /*while(true){
                 try {
-                    Thread.sleep(30000);
+                    Thread.sleep(30000);*/
 
                     synchronized(activePolls) {
 
@@ -91,10 +91,10 @@ public class StatusUpdaterService extends IntentService {
                             System.out.println("-------------------No Active Polls-----------------------");
 
                     }
-                } catch (InterruptedException e) {
+                /*} catch (InterruptedException e) {
                     e.printStackTrace();
-                }
-            }
+                 }
+            }*/
 
         }
     //}

@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/**
- * Created by berat on 09.06.2017.
- */
 
 public class ServerThreadProcessor extends Thread{
     public static final int SERVER_PORT = 8700;
@@ -17,7 +14,6 @@ public class ServerThreadProcessor extends Thread{
     private ServerSocket serverSocket = null;
     private Context context;
     private boolean serviceUp = true;
-    //private Thread serverProcessorThread;
 
     public ServerThreadProcessor(Context context) {
         this.context = context;
@@ -38,10 +34,9 @@ public class ServerThreadProcessor extends Thread{
                 }
 
             } catch (IOException e) {
-                e.printStackTrace();
-
+                Log.d(TAG, e.toString());
             } catch (Exception ex) {
-                Log.v(TAG, "thread EXCEPTION : " + ex.toString());
+                Log.v(TAG, ex.toString());
             }
         }
     }

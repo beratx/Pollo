@@ -34,9 +34,9 @@ public class MyApplication extends Application {
 
         manager = new JmDnsManager();
 
-        Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
+        /*Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
         startService(mServiceIntent);
-        Log.d(TAG, "StatusUpdaterService is launched");
+        Log.d(TAG, "StatusUpdaterService is launched");*/
 
     }
 
