@@ -30,7 +30,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private RecyclerView.Adapter adapter;
     private ArrayList<PollData> active_polls;
     private Poll poll;
-    private JmDnsManager connectionManager;
+    private JmDnsManager jmDnsManager;
     private boolean myPollRequest = false;
     private boolean acceptedPollRequest = false;
     private PollManager manager;
@@ -114,19 +114,19 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    connectionManager = ((MyApplication) getApplication()).getConnectionManager();
-                    if (connectionManager == null) {
-                        Log.d(TAG, "connectionManager is null!!!");
+                    jmDnsManager = ((MyApplication) getApplication()).getConnectionManager();
+                    if (jmDnsManager == null) {
+                        Log.d(TAG, "jmDnsManager is null!!!");
                     }
                     else {
                         try {
-                            HashSet<String> contactedDevices = (HashSet<String>) connectionManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, poll);
+                            HashSet<String> contactedDevices = (HashSet<String>) jmDnsManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.POLL_REQUEST, poll);
                             if (contactedDevices.size() != 0)
                                 manager.setContactedDevices(poll.getId(), contactedDevices);
                             else
-                                Log.d(TAG, "connectionManager.sendMessageToAllDevices on device to contact!!!");
+                                Log.d(TAG, "jmDnsManager.sendMessageToAllDevices on device to contact!!!");
                         } catch (NullPointerException e) {
-                            Log.d(TAG, "connectionManager.sendMessageToAllDevices nullPointerException!!!");
+                            Log.d(TAG, "jmDnsManager.sendMessageToAllDevices nullPointerException!!!");
                             return;
                         }
                     }

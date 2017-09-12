@@ -73,6 +73,7 @@ public class JmDnsManager {
                 Log.d(TAG, "JmDNS Service is registered");
                 serverThreadProcessor = new ServerThreadProcessor(context);
                 serverThreadProcessor.start();
+
             }
         } catch (IOException e) {
             e.printStackTrace();

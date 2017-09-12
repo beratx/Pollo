@@ -28,7 +28,6 @@
         private static final int PICK_IMAGE_ID = 87;
         private ActivityMultiOptPollBinding binding;
         private int count = 6;
-        //private List<TextInputLayout> optionsViews = new ArrayList<TextInputLayout>();
         private List<String> options = new ArrayList<String>();
         private boolean hasImage = false;
         private Bitmap bitmap;
@@ -38,7 +37,6 @@
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            //setContentView(R.layout.activity_multi_opt_poll);
             binding = DataBindingUtil.setContentView(this, R.layout.activity_multi_opt_poll);
 
             if (android.os.Build.VERSION.SDK_INT > 9) {
@@ -48,16 +46,12 @@
             }
 
 
-            //optionsViews.add(binding.opt1InputLayout);
-            //optionsViews.add(binding.opt2InputLayout);
-
             binding.addFAB.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
                     rLayout.getChildAt(count++).setVisibility(View.VISIBLE);
                     System.out.println("addFab: count: " + count);
-                    //rLayout.addView(createNewOptionEntry());
 
                     if(count == 9) binding.addFAB.setVisibility(View.GONE);
                 }
@@ -78,11 +72,6 @@
                     Poll poll = createPoll();
 
                     if (poll == null) return;
-
-                    /*if(!presentOnlineDevices()) {
-                        Toast.makeText(MultiOptPollActivity.this, "No device is present", Toast.LENGTH_LONG).show();
-                        return;
-                    }*/
 
                     Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
                             .putExtra(Consts.OWNER, Consts.OWN)
@@ -116,14 +105,6 @@
         }
 
 
-        private boolean presentOnlineDevices(){
-            String deviceId = ((MyApplication)getApplication()).getDeviceId();
-            mattoncino.pollo.JmDnsManager connManager = ((MyApplication)getApplication()).getConnectionManager();
-            final HashSet<String> onlineDevices = (HashSet<String>) connManager.getOnlineDevices(MultiOptPollActivity.this);
-            return onlineDevices.size() != 0;
-        }
-
-
         private Poll createPoll(){
             String name = binding.nameEditText.getText().toString();
             String question = binding.questionEditText.getText().toString();
@@ -141,7 +122,6 @@
                     .setAction("Action", null).show();
                 return null;
             }
-
 
             mattoncino.pollo.JmDnsManager connectionManager = ((MyApplication) getApplication()).getConnectionManager();
             if (connectionManager == null) {
@@ -167,7 +147,4 @@
         {
             startActivity(new Intent(MultiOptPollActivity.this, mattoncino.pollo.MainActivity.class));
         }
-
-
-
     }

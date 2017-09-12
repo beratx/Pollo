@@ -32,9 +32,9 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private JmDnsManager jmDnsManager;
     private BroadcastReceiver wifiReceiver;
-    private AlarmManager alarm;
+    //private AlarmManager alarm;
     //private BroadcastReceiver alarmReceiver;
-    private PendingIntent pintent;
+    //private PendingIntent pintent;
 
 
 
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        setAlarm();
+        //setAlarm();
     }
 
     @Override
@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-    private void setAlarm() {
+    /*private void setAlarm() {
 
         Intent intent = new Intent(MainActivity.this, StatusUpdaterService.class);
         pintent = PendingIntent.getService(MainActivity.this, 0, intent, 0);
@@ -204,11 +204,11 @@ public class MainActivity extends AppCompatActivity {
         //alarm.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, cal.getTimeInMillis(), 30*1000, pintent);
         alarm.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                 SystemClock.elapsedRealtime(), THIRTY_SECONDS, pintent);
-    }
+    }*/
 
     @Override
     protected void onDestroy() {
-        alarm.cancel(pintent);
+        //alarm.cancel(pintent);
         //unregisterReceiver(alarmReceiver);
         super.onDestroy();
     }

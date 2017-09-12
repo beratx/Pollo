@@ -12,8 +12,9 @@ public class ServerThreadProcessor extends Thread{
     public static final int SERVER_PORT = 8700;
     private static String TAG = "SERVER_THREAD_PROCESSOR";
     private ServerSocket serverSocket = null;
+    private static boolean serviceUp = true;
     private Context context;
-    private boolean serviceUp = true;
+
 
     public ServerThreadProcessor(Context context) {
         this.context = context;
@@ -49,6 +50,10 @@ public class ServerThreadProcessor extends Thread{
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean serviceUp(){
+        return serviceUp;
     }
 
 }

@@ -18,6 +18,8 @@ import com.google.android.gms.common.images.ImageManager;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -35,8 +37,8 @@ public class ClientHandler implements Runnable{
     private static String TAG = "CLIENT_HANDLER";
     private Socket socket;
     private Context context;
-    private BufferedReader inputBufferedReader;
-    private PrintWriter outputPrintWriter;
+    private DataOutputStream dataOutputStream;
+    private DataInputStream dataInputStream;
     private Poll poll;
 
 
@@ -49,56 +51,41 @@ public class ClientHandler implements Runnable{
     public void run() {
         try {
 
-            InputStream input = socket.getInputStream();
-            inputBufferedReader = new BufferedReader(
-                                    new InputStreamReader(input));
-
-            outputPrintWriter = new PrintWriter(new BufferedWriter(
-                    new OutputStreamWriter(socket.getOutputStream())), true);
+            dataInputStream = new DataInputStream(socket.getInputStream());
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
             ImageInfo info = null;
 
-            final String message = inputBufferedReader.readLine();
+            final String message = dataInputStream.readUTF();
 
             if (message.equals(Consts.POLL_REQUEST)) {
-                String id = inputBufferedReader.readLine();//poll_id
-                String name = inputBufferedReader.readLine(); //poll_name
-                String question = inputBufferedReader.readLine(); //poll_question
-                int optCount = Integer.parseInt(inputBufferedReader.readLine());
+                String id = dataInputStream.readUTF();//poll_id
+                String name = dataInputStream.readUTF(); //poll_name
+                String question = dataInputStream.readUTF(); //poll_question
+                int optCount = dataInputStream.readInt();
                 List<String> options = new ArrayList<>();
                 for (int i = 0; i < optCount; i++) {
-                    options.add(inputBufferedReader.readLine());
+                    options.add(dataInputStream.readUTF());
                 }
                 final String hostAddress = socket.getInetAddress().getHostAddress();
-                boolean hasImage = Boolean.valueOf(inputBufferedReader.readLine());
+                boolean hasImage = dataInputStream.readBoolean();
                 boolean isCamera = false;
                 if(hasImage) {
-                    isCamera = Boolean.valueOf(inputBufferedReader.readLine());
-                    String imageType = inputBufferedReader.readLine();
+                    isCamera = dataInputStream.readBoolean();
+                    String imageType = dataInputStream.readUTF();
                     File imageFile = ImagePicker.createFile(context, ImagePicker.isExternalStorageWritable(), imageType);
                     if (imageFile != null) {
                         Uri imageUri = Uri.fromFile(imageFile);
                         Log.d(TAG, "imageUri for received image: " + imageUri.toString());
 
-                        BufferedInputStream bufin = null;
-                        FileOutputStream output = null;
+                        int len = dataInputStream.readInt();
+                        byte[] buffer = new byte[len];
+                        dataInputStream.read(buffer, 0, len);
 
-                        try{
-                            bufin = new BufferedInputStream(input);
-                            output = new FileOutputStream(imageFile);
-
-                            byte[] buffer = new byte[1024];
-                            int len;
-                            while((len = bufin.read(buffer)) != -1){
-                                output.write(buffer);
-                                output.flush();
-                            }
-                        } catch(Exception e){
-                            e.printStackTrace();
-                        } finally {
-                            output.close();
-                            bufin.close();
-                        }
+                        FileOutputStream fileOut = new FileOutputStream(imageFile);
+                        fileOut.write(buffer);
+                        fileOut.flush();
+                        fileOut.close();
 
                         Log.d(TAG, "Image is received and saved. File length: " + imageFile.length());
 
@@ -117,12 +104,13 @@ public class ClientHandler implements Runnable{
                 //with a handler!
 
             } else if (message.equals(Consts.ACCEPT)) {
-                String pollID = inputBufferedReader.readLine();
-                String hostAddress = inputBufferedReader.readLine();
+                String pollID = dataInputStream.readUTF();
+                String hostAddress = dataInputStream.readUTF();
 
                 Log.d(TAG, "RECEIVED ACCEPT FROM: " + hostAddress);
 
-                outputPrintWriter.println(Consts.RECEIVED);
+                dataOutputStream.writeUTF(Consts.RECEIVED);
+                dataOutputStream.flush();
 
                 Log.d(TAG, "SENT ACCEPT RECEIVED MSG TO: " + hostAddress);
 
@@ -133,8 +121,8 @@ public class ClientHandler implements Runnable{
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
             } else if (message.equals(Consts.REJECT)){
-                final String id = inputBufferedReader.readLine();
-                final String hostAddress = inputBufferedReader.readLine();
+                final String id = dataInputStream.readUTF();
+                final String hostAddress = dataInputStream.readUTF();
 
                 Intent intent = new Intent("mattoncino.pollo.receive.poll.accept");
                 intent.putExtra("pollID", id);
@@ -143,12 +131,13 @@ public class ClientHandler implements Runnable{
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
             } else if(message.equals(Consts.POLL_VOTE)){
-                final String id = inputBufferedReader.readLine();
-                final int vote = Integer.parseInt(inputBufferedReader.readLine());
+                final String id = dataInputStream.readUTF();
+                final int vote = Integer.parseInt(dataInputStream.readUTF());
                 final String hostAddress = socket.getInetAddress().getHostAddress();
                 Log.d(TAG, "ARRIVED VOTE " + vote + " FROM HOST " + hostAddress);
 
-                outputPrintWriter.println(Consts.RECEIVED);
+                dataOutputStream.writeUTF(Consts.RECEIVED);
+                dataOutputStream.flush();
 
                 Log.d(TAG, "SENT VOTE RECEIVED MSG TO: " + hostAddress);
 
@@ -160,11 +149,11 @@ public class ClientHandler implements Runnable{
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
             }
             else if(message.equals(Consts.RESULT)){
-                final String id = inputBufferedReader.readLine();
-                final int count = Integer.parseInt(inputBufferedReader.readLine());
+                final String id = dataInputStream.readUTF();
+                final int count = dataInputStream.readInt();
                 int[] result = new int[5];
                 for (int i = 0; i < count; i++) {
-                    result[i] = Integer.parseInt(inputBufferedReader.readLine());
+                    result[i] = dataInputStream.readInt();
                 }
 
                 Intent intent = new Intent("mattoncino.pollo.receive.poll.result");
@@ -176,8 +165,8 @@ public class ClientHandler implements Runnable{
             e.printStackTrace();
         } finally {
             try {
-                inputBufferedReader.close();
-                outputPrintWriter.close();
+                dataOutputStream.close();
+                dataInputStream.close();
             } catch(IOException e){
                 e.printStackTrace();
             }

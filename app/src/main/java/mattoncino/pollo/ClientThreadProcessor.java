@@ -12,6 +12,7 @@ import android.widget.Toast;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -71,8 +72,8 @@ public class ClientThreadProcessor implements Runnable{
         } catch (UnknownHostException e1) {
             e1.printStackTrace();
         } catch (IOException e1) {
-            //e1.printStackTrace();
-            Log.d(TAG, "cant connect to other devices. check your connetion");
+            e1.printStackTrace();
+            Log.d(TAG, "getSocket: socket IO Exception!!!");
         }
         return socket;
     }
@@ -109,54 +110,48 @@ public class ClientThreadProcessor implements Runnable{
     }
 
     public void sendPollRequest(Socket socket){
-        PrintWriter output = null;
+
+        DataOutputStream dataOutputStream = null;
 
         try {
-            OutputStream outputStream = socket.getOutputStream();
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-
-            output = new PrintWriter(new BufferedWriter(
-                                        new OutputStreamWriter(outputStream)), true);
-
-
-            //DataOutputStream dout = new DataOutputStream(bout);
-
-            output.println(Consts.POLL_REQUEST);
-            output.println(poll.getId()); //poll_id
-            output.println(poll.getName()); //poll_name
-            output.println(poll.getQuestion()); //poll_question
-            //output.println(poll.get(3)); //device address
-            output.println(poll.getOptions().size());//#options
+            dataOutputStream.writeUTF(Consts.POLL_REQUEST);
+            dataOutputStream.writeUTF(poll.getId()); //poll_id
+            dataOutputStream.writeUTF(poll.getName()); //poll_name
+            dataOutputStream.writeUTF(poll.getQuestion()); //poll_question
+            //dataOutputStream.writeUTF(poll.get(3)); //device address
+            dataOutputStream.writeInt(poll.getOptions().size());//#options
             for (int i = 0; i < poll.getOptions().size(); i++) {
-                output.println(poll.getOptions().get(i));
+                dataOutputStream.writeUTF(poll.getOptions().get(i));
             }
-            output.println(poll.hasImage());
+            dataOutputStream.writeBoolean(poll.hasImage());
             if(poll.hasImage()){
-                output.println(poll.getImageInfo().isCamera());
+                dataOutputStream.writeBoolean(poll.getImageInfo().isCamera());
+
                 Uri imageUri = Uri.parse(poll.getImageInfo().getPath());
                 String mimeType = ImagePicker.getMimeType(context, imageUri);
                 String ext = mimeType.substring(mimeType.lastIndexOf("/") + 1);
-                //Log.d(TAG, "Mime type: " + mimeType + "ext: " + ext);
-                if(ext == null) ext = "bmp";
-                output.println(ext);
-                BufferedOutputStream bout = new BufferedOutputStream(outputStream);
+
+                if(ext == null || ext.length() == 0) ext = "bmp";
+                dataOutputStream.writeUTF(ext);
+
+                Log.d(TAG, "Mime type: " + mimeType + "ext: " + ext);
+
                 String realPath = ImagePicker.getRealPathFromUri(context, imageUri);
-                //if(realPath != null)  Log.d(TAG, "real path: " + realPath);
-                InputStream input = new FileInputStream(realPath);
+                File imageFile = new File(realPath);
+                byte[] byteArray = new byte[(int) imageFile.length()];
 
-                byte[] buffer = new byte[1024];
-                int len;
-                while ((len = input.read(buffer)) != -1) {
-                    bout.write(buffer);
-                }
-                input.close();
-                bout.close();
+                FileInputStream fis = new FileInputStream(imageFile);
+                fis.read(byteArray); //read file into bytes[]
+                fis.close();
+
+                dataOutputStream.writeInt(byteArray.length);
+                dataOutputStream.write(byteArray, 0, byteArray.length);
+
+                dataOutputStream.flush();
+
                 Log.d(TAG, "Image sent over network and stream is closed.");
-            }
-
-            if (output.checkError()) {
-                Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
-                return;
             }
 
             Log.d(TAG, "SENT POLL_REQUEST");
@@ -174,27 +169,32 @@ public class ClientThreadProcessor implements Runnable{
                 }
             });
         } finally {
-            if(output != null)
-            output.close();
+            if(dataOutputStream != null)
+                try {
+                    dataOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         }
     }
 
     public void sendAccept(Socket socket){
-        PrintWriter output = null;
+        DataOutputStream dataOutputStream = null;
+        DataInputStream dataInputStream = null;
 
         try {
-            output = new PrintWriter(new BufferedWriter(
-                    new OutputStreamWriter(socket.getOutputStream())), true);
-            output.println(Consts.ACCEPT);
-            output.println(pollInfo.get(0)); //poll_id
-            output.println(pollInfo.get(1)); //poll_hostAddress
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataOutputStream.writeUTF(Consts.ACCEPT);
+            dataOutputStream.writeUTF(pollInfo.get(0)); //poll_id
+            dataOutputStream.writeUTF(pollInfo.get(1)); //poll_hostAddress
+
+            dataOutputStream.flush();
             //System.out.println("hostIpaddress: " + hostIpAddress + " address in pollInfo: " + pollInfo.get(1));
 
-            if (output.checkError())
-                Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
-
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            final String res = input.readLine();
+            //BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            dataInputStream = new DataInputStream(socket.getInputStream());
+;
+            final String res = dataInputStream.readUTF();
 
             Log.d(TAG, "SENT ACCEPT MSG TO: " + pollInfo.get(1));
 
@@ -203,61 +203,76 @@ public class ClientThreadProcessor implements Runnable{
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if(dataOutputStream != null)
+                try {
+                    dataOutputStream.close();
+                    dataInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         }
     }
 
     public void sendVote(Socket socket){
-        PrintWriter output = null;
+        DataOutputStream dataOutputStream = null;
+        DataInputStream dataInputStream = null;
 
         try {
-            output = new PrintWriter(new BufferedWriter(
-                    new OutputStreamWriter(socket.getOutputStream())), true);
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-            output.println(Consts.POLL_VOTE);
-            output.println(pollInfo.get(0)); //id
-            output.println(pollInfo.get(1)); //vote
-            //output.println(pollInfo.get(2)); //own hostAddress
-            //output.println(socket.getInetAddress().getHostAddress()); //device address
+            dataOutputStream.writeUTF(Consts.POLL_VOTE);
+            dataOutputStream.writeUTF(pollInfo.get(0)); //id
+            dataOutputStream.writeUTF(pollInfo.get(1)); //vote
 
-            if (output.checkError())
-                Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
+            dataOutputStream.flush();
 
             Log.d(TAG, "SENT VOTE");
 
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            final String messageFromClient = input.readLine();
+            dataInputStream = new DataInputStream(socket.getInputStream());
+
+            final String messageFromClient = dataInputStream.readUTF();
 
             if (messageFromClient.equals(Consts.RECEIVED)) {
-                Log.d(TAG, "MY VOTE IS RECEIVED: ");
+                Log.d(TAG, "MY VOTE IS RECEIVED.");
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            output.close();
+        }  finally {
+            if(dataOutputStream != null)
+                try {
+                    dataOutputStream.close();
+                    dataInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         }
 
     }
 
     public void sendResult(Socket socket){
-        PrintWriter output = null;
+        DataOutputStream dataOutputStream = null;
 
         try {
-            output = new PrintWriter(new BufferedWriter(
-                    new OutputStreamWriter(socket.getOutputStream())), true);
-            output.println(Consts.RESULT);
-            output.println(pollID);
-            output.println(result.length);
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataOutputStream.writeUTF(Consts.RESULT);
+            dataOutputStream.writeUTF(pollID);
+            dataOutputStream.writeInt(result.length);
             for (int i = 0; i < result.length; i++) {
-                output.println(result[i]);
+                dataOutputStream.writeInt(result[i]);
             }
 
-            if (output.checkError())
-                Log.d(TAG, "PRINTWRITER ENCOUNTERED AN ERROR");
+            dataOutputStream.flush();
 
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            output.close();
+            if(dataOutputStream != null)
+                try {
+                    dataOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         }
     }
 }
