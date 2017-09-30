@@ -1,9 +1,7 @@
 package mattoncino.pollo;
 
-import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +10,6 @@ import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -165,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     private void showDevicesInNetworkList(Set<String> devices){
         AlertDialog.Builder builderSingle = new AlertDialog.Builder(MainActivity.this);
 
-        builderSingle.setTitle("Devices list");
+        builderSingle.setTitle("Device list: " + devices.size() + "#");
 
         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                 MainActivity.this,

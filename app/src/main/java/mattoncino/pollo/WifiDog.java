@@ -7,14 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.wifi.WifiManager;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 
 public class WifiDog extends BroadcastReceiver {
-    private static final String TAG = "WIFI_DOG";
+    private static final String TAG = "WifiDog";
     final static private long THIRTY_SECONDS = 1000 * 30;
     private Intent connManagerServiceIntent;
     private JmDnsManager jmDnsManager;
@@ -38,9 +37,9 @@ public class WifiDog extends BroadcastReceiver {
 
                 jmDnsManager = ((MyApplication) context.getApplicationContext()).getConnectionManager();
 
-                Intent amIntent = new Intent(context, StatusUpdaterService.class);
+                /*Intent amIntent = new Intent(context, StatusUpdaterService.class);
                 pintent = PendingIntent.getService(context, 0, amIntent, 0);
-                alarm = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+                alarm = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);*/
 
                 //statusUpdater = new Intent(context, StatusUpdaterService.class);
                 //Log.d(TAG, "serviceLaunched: " + serviceLaunched);
@@ -53,7 +52,7 @@ public class WifiDog extends BroadcastReceiver {
                         context.startService(connManagerServiceIntent);
                         Log.d(TAG, "WifiDog launches connManagerServiceIntent");
 
-                        setAlarm(context);
+                        //setAlarm(context);
 
                         /*context.startService(statusUpdater);
                         Log.d(TAG, "WifiDog launches StatusUpdaterService");*/
@@ -71,8 +70,8 @@ public class WifiDog extends BroadcastReceiver {
                             Log.d(TAG, "WifiDog stops jmDNS service");
                         }
 
-                        if(alarm != null)
-                            alarm.cancel(pintent);
+                        /*if(alarm != null)
+                            alarm.cancel(pintent);*/
 
                         /*context.stopService(statusUpdater);
                         Log.d(TAG, "WifiDog stops StatusUpdaterService");*/

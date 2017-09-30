@@ -7,8 +7,8 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
@@ -20,7 +20,8 @@ import javax.jmdns.ServiceListener;
 
 public class JmDnsManager {
     public static int SERVICE_INFO_PORT = 9856;
-    private static final String TAG = "ServiceConnManager";
+    private static final int SERVER_PORT = 8700;
+    private static final String TAG = "JmDNSManager";
     private String SERVICE_INFO_TYPE = "_pollo_jmdns._tcp.local.";
     private String SERVICE_INFO_NAME = "pollo_jmdns_service";
     private String SERVICE_INFO_PROPERTY_IP_VERSION = "ipv4";
@@ -75,6 +76,7 @@ public class JmDnsManager {
                 serverThreadProcessor.start();
 
             }
+            else Log.d(TAG, "JMDNS INSTANCE WAS NOT FULL; SO ITS NOT RESTARTED!...");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -202,15 +204,31 @@ public class JmDnsManager {
         ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE);
         String ownDeviceId = ((MyApplication) context.getApplicationContext()).getDeviceId();
         //Log.d(TAG, "serviceInfoList.size() = " + serviceInfoList.length);
+        int timeout = 1000;
 
         for (int index = 0; index < serviceInfoList.length; index++) {
             String device = serviceInfoList[index].getPropertyString(SERVICE_INFO_PROPERTY_DEVICE);
 
             if (!device.equals(ownDeviceId)) {
-                String serverIpAddress = getIPv4FromServiceInfo(serviceInfoList[index]);
-                ipAddressesSet.add(serverIpAddress);
+                String host = getIPv4FromServiceInfo(serviceInfoList[index]);
+                if(isReachable(host,1000)) {
+                    ipAddressesSet.add(host);
+                    Log.d(TAG, host + " is reachable");
+                }
+                else
+                    Log.d(TAG, host + " is NOT reachable");
             }
         }
         return ipAddressesSet;
+    }
+
+    private static boolean isReachable(String addr, int timeOutMillis) {
+        try {
+            Socket soc = new Socket();
+            soc.connect(new InetSocketAddress(addr, SERVER_PORT), timeOutMillis);
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
     }
 }

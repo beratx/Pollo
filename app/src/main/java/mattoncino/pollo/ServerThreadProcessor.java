@@ -10,7 +10,7 @@ import java.net.Socket;
 
 public class ServerThreadProcessor extends Thread{
     public static final int SERVER_PORT = 8700;
-    private static String TAG = "SERVER_THREAD_PROCESSOR";
+    private static String TAG = "ServerThreadProcessor";
     private ServerSocket serverSocket = null;
     private static boolean serviceUp = true;
     private Context context;

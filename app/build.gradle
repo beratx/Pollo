@@ -8,7 +8,7 @@ android {
     defaultConfig {
         applicationId "mattoncino.pollo"
         minSdkVersion 17
-        targetSdkVersion 25
+        targetSdkVersion 19
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Set;
 
 import mattoncino.pollo.databinding.ActivityActivePollsBinding;
 
@@ -124,7 +123,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                             if (contactedDevices.size() != 0)
                                 manager.setContactedDevices(poll.getId(), contactedDevices);
                             else
-                                Log.d(TAG, "jmDnsManager.sendMessageToAllDevices on device to contact!!!");
+                                Log.d(TAG, "jmDnsManager.sendMessageToAllDevices 0 device to contact!!!");
                         } catch (NullPointerException e) {
                             Log.d(TAG, "jmDnsManager.sendMessageToAllDevices nullPointerException!!!");
                             return;
@@ -141,7 +140,8 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             ArrayList<String> pollInfo = new ArrayList<>();
             pollInfo.add(poll.getId());
             pollInfo.add(ownAddress);
-            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(xhostAddress, ActivePollsActivity.this, Consts.ACCEPT, pollInfo);
+            ClientThreadProcessor clientProcessor = new ClientThreadProcessor(xhostAddress,
+                                                ActivePollsActivity.this, Consts.ACCEPT, pollInfo);
             Thread t = new Thread(clientProcessor);
             t.start();
         }
@@ -153,7 +153,8 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent.getAction() != null && intent.getAction().equals("mattoncino.pollo.receive.poll.vote")) {
+                if(intent.getAction() != null &&
+                        intent.getAction().equals("mattoncino.pollo.receive.poll.vote")) {
                     String pollID = intent.getStringExtra("pollID");
                     boolean isMyVote = intent.getBooleanExtra("myVote", false);
                     if(!isMyVote) {
@@ -200,7 +201,8 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent.getAction() != null && intent.getAction().equals("mattoncino.pollo.receive.poll.result")) {
+                if(intent.getAction() != null &&
+                        intent.getAction().equals("mattoncino.pollo.receive.poll.result")) {
                     String pollID = intent.getStringExtra("pollID");
                     int[] result = (int[]) intent.getSerializableExtra(Consts.RESULT);
 
@@ -220,7 +222,8 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent.getAction() != null && intent.getAction().equals("mattoncino.pollo.receive.poll.remove")) {
+                if(intent.getAction() != null &&
+                        intent.getAction().equals("mattoncino.pollo.receive.poll.remove")) {
                     String pollID = intent.getStringExtra("pollID");
                     manager.removePoll(pollID);
                     intent.removeExtra("pollID");

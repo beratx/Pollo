@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -51,8 +50,8 @@ public class StatusUpdaterService extends IntentService {
                                     HashSet<String> acceptedDevices = (HashSet<String>) pd.getAcceptedDevices();
                                     HashSet<String> votedDevices = (HashSet<String>) pd.getVotedDevices();
 
-                                    if(pd.getPollName().equals("ccc") && votedDevices.size() == 0)
-                                        pd.addVotedDevice("AAAAAAA");
+                                    /*if(pd.getPollName().equals("ccc") && votedDevices.size() == 0)
+                                        pd.addVotedDevice("AAAAAAA");*/
 
                                     for (Iterator<String> i = contactedDevices.iterator(); i.hasNext(); ) {
                                         String dev = i.next();

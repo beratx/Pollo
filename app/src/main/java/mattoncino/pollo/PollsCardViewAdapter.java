@@ -3,9 +3,7 @@ package mattoncino.pollo;
 import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
-import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,8 +17,6 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +28,7 @@ import mattoncino.pollo.databinding.ActivePollsListItemBinding;
 public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdapter.CardViewHolder> {
 
     private List<PollData> activePolls;
-    private final static String TAG = "CARDVIEW_ADAPTER";
+    private final static String TAG = "PollsCardViewAdapter";
     private static final int VIEW_OWN = 1;
     private static final int VIEW_OTHER = 2;
 

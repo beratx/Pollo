@@ -1,29 +1,14 @@
 package mattoncino.pollo;
 
-import android.app.Activity;
 import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
-import android.widget.Toast;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
-import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -32,7 +17,7 @@ import java.util.List;
 
 
 public class ClientThreadProcessor implements Runnable{
-    private static final String TAG = "ClientThreadProcess";
+    private static final String TAG = "ClientThreadProcessor";
     private static final int SERVER_PORT = 8700;
     private Socket socket;
     private Context context;
@@ -65,16 +50,10 @@ public class ClientThreadProcessor implements Runnable{
         this.poll = poll;
     }
 
-    private Socket getSocket(String hostIpAddress) {
-        try {
+    private Socket getSocket(String hostIpAddress) throws IOException {
             InetAddress serverAddr = InetAddress.getByName(hostIpAddress);
             socket = new Socket(serverAddr, SERVER_PORT);
-        } catch (UnknownHostException e1) {
-            e1.printStackTrace();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-            Log.d(TAG, "getSocket: socket IO Exception!!!");
-        }
+
         return socket;
     }
 
@@ -87,22 +66,32 @@ public class ClientThreadProcessor implements Runnable{
         }
     }
 
+    public void serve(String type){
+        switch(type) {
+            case Consts.POLL_REQUEST:
+                sendPollRequest(socket);
+                break;
+            case Consts.ACCEPT:
+                sendAccept(socket);
+                break;
+            case Consts.POLL_VOTE:
+                sendVote(socket);
+                break;
+            case Consts.RESULT:
+                sendResult(socket);
+                break;
+        }
+    }
+
     @Override
     public void run() {
         try {
             socket = getSocket(hostIpAddress);
-
-            if(type.equals(Consts.POLL_REQUEST))
-                sendPollRequest(socket);
-            else if(type.equals(Consts.ACCEPT))
-                sendAccept(socket);
-            else if(type.equals(Consts.POLL_VOTE))
-                sendVote(socket);
-            else if(type.equals(Consts.RESULT))
-                sendResult(socket);
-        } catch (Exception e) {
-            e.printStackTrace();
-            //Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+            serve(type);
+        } catch (UnknownHostException e1) {
+            Log.d(TAG, e1.toString());
+        } catch (IOException e1) {
+            Log.d(TAG, e1.toString());
         } finally {
             closeSocket(socket);
         }
@@ -136,20 +125,21 @@ public class ClientThreadProcessor implements Runnable{
                 if(ext == null || ext.length() == 0) ext = "bmp";
                 dataOutputStream.writeUTF(ext);
 
-                Log.d(TAG, "Mime type: " + mimeType + "ext: " + ext);
-
                 String realPath = ImagePicker.getRealPathFromUri(context, imageUri);
                 File imageFile = new File(realPath);
-                byte[] byteArray = new byte[(int) imageFile.length()];
-
                 FileInputStream fis = new FileInputStream(imageFile);
-                fis.read(byteArray); //read file into bytes[]
+
+                Log.d(TAG, "Image len: " + imageFile.length() +" Mime type: " + mimeType + " ext: " + ext);
+
+                int len;
+                byte[] byteArray = new byte[8192];
+
+                while( (len = fis.read(byteArray)) != -1 ){
+                    dataOutputStream.write(byteArray, 0, len);
+                    dataOutputStream.flush();
+                }
+
                 fis.close();
-
-                dataOutputStream.writeInt(byteArray.length);
-                dataOutputStream.write(byteArray, 0, byteArray.length);
-
-                dataOutputStream.flush();
 
                 Log.d(TAG, "Image sent over network and stream is closed.");
             }
@@ -158,7 +148,7 @@ public class ClientThreadProcessor implements Runnable{
 
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (NullPointerException e) {
+        }/* catch (NullPointerException e) {
             Log.d(TAG, e.toString());
             Activity act = (Activity) context;
             act.runOnUiThread(new Runnable() {
@@ -168,7 +158,7 @@ public class ClientThreadProcessor implements Runnable{
                     toast.show();
                 }
             });
-        } finally {
+        }*/  finally {
             if(dataOutputStream != null)
                 try {
                     dataOutputStream.close();

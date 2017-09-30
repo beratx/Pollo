@@ -6,7 +6,7 @@ import android.util.Log;
 
 
 public class ConnectionManagerIntentService extends IntentService {
-    private static final String TAG = "ConnManagerService";
+    private static final String TAG = "ConnectionManagerIntSrv";
     private JmDnsManager jManager;
 
     public ConnectionManagerIntentService() {
