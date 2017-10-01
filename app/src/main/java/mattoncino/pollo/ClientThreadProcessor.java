@@ -66,7 +66,7 @@ public class ClientThreadProcessor implements Runnable{
         }
     }
 
-    public void serve(String type){
+    public void serve(Socket socket, String type){
         switch(type) {
             case Consts.POLL_REQUEST:
                 sendPollRequest(socket);
@@ -87,11 +87,11 @@ public class ClientThreadProcessor implements Runnable{
     public void run() {
         try {
             socket = getSocket(hostIpAddress);
-            serve(type);
+            serve(socket, type);
         } catch (UnknownHostException e1) {
-            Log.d(TAG, e1.toString());
-        } catch (IOException e1) {
-            Log.d(TAG, e1.toString());
+            Log.wtf(TAG, e1.toString());
+        } catch (IOException e) {
+            Log.wtf(TAG, e.toString());
         } finally {
             closeSocket(socket);
         }

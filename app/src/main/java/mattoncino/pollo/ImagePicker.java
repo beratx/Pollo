@@ -158,7 +158,7 @@ public class ImagePicker {
         }
 
         if(actuallyUsableBitmap == null)
-            Log.d(TAG, "actuallyUsableBitmap is NULL");
+            Log.wtf(TAG, "actuallyUsableBitmap is NULL");
         else
             Log.d(TAG, options.inSampleSize + " sample method bitmap ... " +
                 actuallyUsableBitmap.getWidth() + " " + actuallyUsableBitmap.getHeight());

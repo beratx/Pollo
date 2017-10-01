@@ -1,8 +1,6 @@
     package mattoncino.pollo;
 
-    import android.content.ContentValues;
     import android.content.Intent;
-    import android.database.sqlite.SQLiteDatabase;
     import android.databinding.DataBindingUtil;
     import android.graphics.Bitmap;
     import android.net.Uri;
@@ -15,10 +13,8 @@
     import android.util.Log;
     import android.view.View;
     import android.widget.RelativeLayout;
-    import android.widget.Toast;
 
     import java.util.ArrayList;
-    import java.util.HashSet;
     import java.util.List;
 
     import mattoncino.pollo.databinding.ActivityMultiOptPollBinding;
@@ -28,7 +24,6 @@
         private static final int PICK_IMAGE_ID = 87;
         private ActivityMultiOptPollBinding binding;
         private int count = 6;
-        private List<String> options = new ArrayList<String>();
         private boolean hasImage = false;
         private Bitmap bitmap;
         private ImageInfo imageInfo;
@@ -65,19 +60,35 @@
                 }
             });
 
-            binding.saveButton.setOnClickListener(new View.OnClickListener() {
+            binding.launchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
 
-                    Poll poll = createPoll();
+                    String name = binding.nameEditText.getText().toString();
+                    String question = binding.questionEditText.getText().toString();
 
-                    if (poll == null) return;
+                    final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
+                    List<String> options = new ArrayList<String>();
 
-                    Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
-                            .putExtra(Consts.OWNER, Consts.OWN)
-                            .putExtra(Consts.POLL, (Parcelable) poll);
+                    for (int i = 4; i < count; i++) {
+                        TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
+                        String op = til.getEditText().getText().toString();
+                        options.add(op);
+                    }
 
-                    startActivity(intent);
+                    if(name.isEmpty() || question.isEmpty() || isEmpty(options)){
+                        Snackbar.make(binding.launchButton, "You should fill all fields!", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    }
+                    else{
+                        Poll poll = new Poll(name, question, options, hasImage, imageInfo);
+
+                        Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
+                                .putExtra(Consts.OWNER, Consts.OWN)
+                                .putExtra(Consts.POLL, (Parcelable) poll);
+
+                        startActivity(intent);
+                    }
                 }
             });
         }
@@ -110,6 +121,8 @@
             String question = binding.questionEditText.getText().toString();
 
             final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
+            List<String> options = new ArrayList<String>();
+
 
             for (int i = 4; i < count; i++) {
                 TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
@@ -118,16 +131,16 @@
             }
 
             if(name.isEmpty() || question.isEmpty() || isEmpty(options)){
-                Snackbar.make(binding.saveButton, "You should fill all fields!", Snackbar.LENGTH_LONG)
+                Snackbar.make(binding.launchButton, "You should fill all fields!", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
                 return null;
             }
 
-            mattoncino.pollo.JmDnsManager connectionManager = ((MyApplication) getApplication()).getConnectionManager();
+            /*mattoncino.pollo.JmDnsManager connectionManager = ((MyApplication) getApplication()).getConnectionManager();
             if (connectionManager == null) {
                 Log.d(TAG, "connectionManager is null!!!");
                 return null;
-            }
+            }*/
 
             Poll poll = new Poll(name, question, options, hasImage, imageInfo);
 

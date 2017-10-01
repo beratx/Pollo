@@ -130,10 +130,10 @@ public class PollManager extends Observable {
                 if(accepted)
                     pd.addAcceptedDevice(hostAddress);
                 pd.incrementResponseCount();
-                Log.d(TAG, hostAddress + " poll: " + pd.getPollName() + " accepted? " + accepted);
+                /*Log.d(TAG, hostAddress + " poll: " + pd.getPollName() + " accepted? " + accepted);
                 Log.d(TAG, "current deviceCount: " + pd.getContactedDevices().size());
                 Log.d(TAG, "current responseCount: " + pd.getResponseCount());
-                Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());
+                Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());*/
                 break;
             }
         }
@@ -147,12 +147,12 @@ public class PollManager extends Observable {
             if (pd.getID().equals(pollID)) {
                 pd.addVote(vote);
                 pd.addVotedDevice(hostAddress);
-                Log.d(TAG, "poll " + pd.getID() + " updated with vote: " + vote);
+                //Log.d(TAG, "poll " + pd.getID() + " updated with vote: " + vote);
                 setChanged();
                 notifyObservers();
-                Log.d(TAG, "current deviceCount: " + pd.getContactedDevices().size());
+                /*Log.d(TAG, "current deviceCount: " + pd.getContactedDevices().size());
                 Log.d(TAG, "current responseCount: " + pd.getResponseCount());
-                Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());
+                Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());*/
                 break;
             }
         }

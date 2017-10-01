@@ -79,12 +79,12 @@ public class ClientHandler implements Runnable{
                 info = new ImageInfo(imageUri.toString(), isCamera);
             }
             else
-                Log.d(TAG, "ImagePicker.createFile returns NULL");
+                Log.wtf(TAG, "ImagePicker.createFile returns NULL");
         }
 
         poll = new Poll(id, name, question, options, hasImage, info);
 
-        Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
+        Log.i(TAG, "POLL REQUEST FROM: " + hostAddress);
 
         addNotification(poll, hostAddress);
         //how to update main menu so you can see new polls note?
@@ -182,18 +182,18 @@ public class ClientHandler implements Runnable{
             }
 
         } catch(EOFException e){
-            Log.d(TAG, "it should be isReachable socket connection, so it's ok...");
-            Log.d(TAG, e.toString());
+            Log.w(TAG, "it should be isReachable socket connection, so it's ok...");
+            Log.w(TAG, e.toString());
         } catch(SocketException e) {
-            Log.d(TAG, e.toString());
+            Log.wtf(TAG, e.toString());
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.wtf(TAG, e.toString());
         } finally {
             try {
                 dataOutputStream.close();
                 dataInputStream.close();
             } catch(IOException e){
-                e.printStackTrace();
+                Log.wtf(TAG, e.toString());
             }
         }
     }

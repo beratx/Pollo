@@ -3,6 +3,10 @@ package mattoncino.pollo;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Bundle;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 
 import java.io.IOException;
@@ -36,11 +40,13 @@ public class JmDnsManager {
 
 
 
-    public void initializeService(final Context context) {
+    public void initializeService(final Context context, Messenger messenger) {
+
+        Log.i(TAG, "initializing JmDNS instance...");
 
         WifiManager wifi = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
         changeMultiCastLock(wifi);
-        Log.d(TAG, "Multicast lock is changed");
+        //Log.d(TAG, "Multicast lock is changed");
 
         try {
             if (jmdns == null) {
@@ -48,35 +54,47 @@ public class JmDnsManager {
                 //jmdns = JmDNS.create(addr, InetAddress.getLocalHost().getHostName());
                 jmdns = JmDNS.create(addr, InetAddress.getLocalHost().getHostName());
                 //jmdns = JmDNS.create(addr);
-                Log.d(TAG, "JmDNS instance is created");
+                Log.i(TAG, "JmDNS instance is created");
                 //jmdns.addServiceTypeListener();
                 jmdns.addServiceListener(SERVICE_INFO_TYPE, listener = new ServiceListener() {
                     public void serviceResolved(ServiceEvent ev) {
-                        Log.d(TAG, "service is resolved: " + ev.getInfo());
+                        Log.v(TAG, "service is resolved: " + ev.getInfo());
                     }
 
                     public void serviceRemoved(ServiceEvent ev) {
-                        Log.d(TAG, "service is removed");
+                        Log.v(TAG, "service is removed");
                     }
 
                     public void serviceAdded(ServiceEvent event) {
                         jmdns.requestServiceInfo(event.getType(), event.getName(), true);
-                        Log.d(TAG, "service is added: " + "info: " + event.getInfo() +
+                        Log.v(TAG, "service is added: " + "info: " + event.getInfo() +
                                 "type: " + event.getType() + "name: " + event.getName());
                     }
                 });
-                Log.d(TAG, "JmDNS Service Listener is added");
+                Log.i(TAG, "JmDNS Service Listener is added");
                 Hashtable<String, String> settings = setSettingsHashTable(context);
                 //(String type, String name, int port, int weight, int priority, boolean persistent, Map<String,?> props)
                 serviceInfo = javax.jmdns.ServiceInfo.create(SERVICE_INFO_TYPE, SERVICE_INFO_NAME, SERVICE_INFO_PORT, 0, 0, true, settings);
                 //serviceInfo = javax.jmdns.ServiceInfo.create(SERVICE_INFO_TYPE, SERVICE_INFO_NAME, SERVICE_INFO_PORT, 0, 0, "POLLO SERVICE");
                 jmdns.registerService(serviceInfo);
-                Log.d(TAG, "JmDNS Service is registered");
+                Log.i(TAG, "JmDNS Service is registered");
                 serverThreadProcessor = new ServerThreadProcessor(context);
                 serverThreadProcessor.start();
 
+                if(messenger != null){
+                    Message msg = Message.obtain();
+                    String text = "Pollo";
+                    Bundle msgBundle = new Bundle();
+                    msgBundle.putString("result", text);
+                    msg.setData(msgBundle);
+                    try {
+                        messenger.send(msg);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-            else Log.d(TAG, "JMDNS INSTANCE WAS NOT FULL; SO ITS NOT RESTARTED!...");
+            else Log.wtf(TAG, "JMDNS INSTANCE WAS NOT NULL; SO ITS NOT RESTARTED!...");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -103,21 +121,22 @@ public class JmDnsManager {
         if(serverThreadProcessor != null)
             serverThreadProcessor.terminate();
 
-        if (jmdns != null) {
+        if (initialized()) {
             jmdns.unregisterService(serviceInfo);
-            Log.d(TAG, "JmDNS Service is UNregistered");
+            Log.v(TAG, "JmDNS Service is UNregistered");
             try {
                 jmdns.close();
-                Log.d(TAG, "JmDNS Service is closed.");
+                Log.v(TAG, "JmDNS Service is closed.");
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            //jmdns.removeServiceListener();
             jmdns = null;
         }
         if (multiCastLock != null && multiCastLock.isHeld()) {
             multiCastLock.release();
             multiCastLock = null;
-            Log.d(TAG, "Multicast lock is released.");
+            Log.v(TAG, "Multicast lock is released.");
         }
     }
 
@@ -126,13 +145,13 @@ public class JmDnsManager {
         //String serverIpAddress = getIPv4FromServiceInfo(jmdns.getServiceInfo());
         InetAddress addr = null;
         try {
-            if(jmdns != null) {
+            if(initialized()) {
                 //initializeService(MyApplication.getContext());
                 addr = jmdns.getInetAddress();
             }
         } catch (IOException e) {
             //e.printStackTrace();
-            Log.d(TAG, e.toString());
+            Log.wtf(TAG, e.toString());
         }
         return addr.getHostAddress();
 
@@ -179,7 +198,7 @@ public class JmDnsManager {
     public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, Poll poll) {
         Set<String> ipAddressesSet=null;
         if (jmdns == null) {
-            initializeService(context);
+            initializeService(context, null);
         }
         ipAddressesSet = getOnlineDevices(context);
 
@@ -195,8 +214,8 @@ public class JmDnsManager {
 
      public Set<String> getOnlineDevices(Context context) {
 
-        if (jmdns == null) {
-            initializeService(context);
+        if (!initialized()) {
+            initializeService(context, null);
         }
 
         Set<String> ipAddressesSet = new HashSet<String>();
@@ -204,14 +223,14 @@ public class JmDnsManager {
         ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE);
         String ownDeviceId = ((MyApplication) context.getApplicationContext()).getDeviceId();
         //Log.d(TAG, "serviceInfoList.size() = " + serviceInfoList.length);
-        int timeout = 1000;
+        int timeout = 3000;
 
         for (int index = 0; index < serviceInfoList.length; index++) {
             String device = serviceInfoList[index].getPropertyString(SERVICE_INFO_PROPERTY_DEVICE);
 
             if (!device.equals(ownDeviceId)) {
                 String host = getIPv4FromServiceInfo(serviceInfoList[index]);
-                if(isReachable(host,1000)) {
+                if(isReachable(host,timeout)) {
                     ipAddressesSet.add(host);
                     Log.d(TAG, host + " is reachable");
                 }

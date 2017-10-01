@@ -29,7 +29,7 @@ public class WifiDog extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if(intent.getAction() != null && (intent.getAction().equals("android.net.wifi.supplicant.STATE_CHANGE")
-        || intent.getAction().equals("android.net.wifi.supplicant.NETWORK_STATE_CHANGED_ACTION")
+            || intent.getAction().equals("android.net.wifi.supplicant.NETWORK_STATE_CHANGED_ACTION")
                 || intent.getAction().equals("android.net.conn.CONNECTIVITY_CHANGE"))) {
 
                 ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -46,11 +46,13 @@ public class WifiDog extends BroadcastReceiver {
                 Log.d(TAG, "first_on: " + first_on + " first_off: " + first_off);
                 if (activeInfo != null && activeInfo.isConnected() && activeInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                     if (first_on) {
-                        Log.d(TAG, "WIFI IS ON");
+                        Log.i(TAG, "WIFI IS ON");
 
-                        connManagerServiceIntent = new Intent(context, ConnectionManagerIntentService.class);
-                        context.startService(connManagerServiceIntent);
-                        Log.d(TAG, "WifiDog launches connManagerServiceIntent");
+                        if(!jmDnsManager.initialized()) {
+                            connManagerServiceIntent = new Intent(context, ConnectionManagerIntentService.class);
+                            context.startService(connManagerServiceIntent);
+                            Log.i(TAG, "WifiDog launches connManagerServiceIntent");
+                        }
 
                         //setAlarm(context);
 
@@ -64,10 +66,13 @@ public class WifiDog extends BroadcastReceiver {
                     }
                 } else {
                     if(first_off) {
-                        Log.d(TAG, "WIFI IS OFF");
-                        if(jmDnsManager != null) {
+                        Log.i(TAG, "WIFI IS OFF");
+
+                        updateWifiStat(context, false);
+
+                        if(jmDnsManager.initialized()) {
+                            Log.i(TAG, "WifiDog stops jmDNS service");
                             jmDnsManager.unregisterService();
-                            Log.d(TAG, "WifiDog stops jmDNS service");
                         }
 
                         /*if(alarm != null)
@@ -75,8 +80,6 @@ public class WifiDog extends BroadcastReceiver {
 
                         /*context.stopService(statusUpdater);
                         Log.d(TAG, "WifiDog stops StatusUpdaterService");*/
-
-                        updateWifiStat(context, false);
 
                         first_off = false;
                         first_on = true;
@@ -92,8 +95,6 @@ public class WifiDog extends BroadcastReceiver {
     }
 
     private void setAlarm(Context context) {
-
-
         //alarm.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, cal.getTimeInMillis(), 30*1000, pintent);
         alarm.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                 SystemClock.elapsedRealtime(), THIRTY_SECONDS, pintent);

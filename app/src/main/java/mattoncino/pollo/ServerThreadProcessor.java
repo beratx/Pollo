@@ -6,6 +6,7 @@ import android.util.Log;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 
 public class ServerThreadProcessor extends Thread{
@@ -18,9 +19,12 @@ public class ServerThreadProcessor extends Thread{
 
     public ServerThreadProcessor(Context context) {
         this.context = context;
+        this.serviceUp = true;
     }
 
     public void run() {
+        Log.i(TAG, "ServerThreadProcessor is launched...");
+
         while(serviceUp) {
             Socket socket = null;
             try {
@@ -29,17 +33,20 @@ public class ServerThreadProcessor extends Thread{
                 while (!Thread.currentThread().isInterrupted()) {
 
                     socket = serverSocket.accept();
-                    Log.v(TAG, "socket ACCEPTED");
+                    Log.d(TAG, "A new socket connection ACCEPTED!");
                     Thread tClient = new Thread(new ClientHandler(socket, context));
                     tClient.start();
                 }
 
+            } catch (SocketException e) {
+                Log.wtf(TAG, e.toString());
             } catch (IOException e) {
-                Log.d(TAG, e.toString());
-            } catch (Exception ex) {
-                Log.v(TAG, ex.toString());
+                Log.wtf(TAG, e.toString());
             }
         }
+
+        Log.i(TAG, "ServerThreadProcessor is terminated successfully...");
+
     }
 
     public void terminate() {
@@ -48,8 +55,10 @@ public class ServerThreadProcessor extends Thread{
             if (serverSocket != null)
                 serverSocket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.wtf(TAG, e.toString());
         }
+
+        Log.i(TAG, "ServerThreadProcessor is getting terminated...");
     }
 
     public boolean serviceUp(){

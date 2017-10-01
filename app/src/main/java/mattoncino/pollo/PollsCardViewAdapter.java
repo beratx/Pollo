@@ -90,25 +90,9 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             holder.getBinding().imageView.setVisibility(View.VISIBLE);
             Picasso.with(rLayout.getContext()).
                     load(imageInfo.getPath()).
-                    transform(new CropSquareTransformation()).
+                    fit().centerInside().
+                    //transform(new CropSquareTransformation()).
                     into(holder.getBinding().imageView);
-
-            /*File sdDir = Environment.getExternalStorageDirectory();
-            File file = new File(sdDir + imageInfo.getPath());
-            if(file.exists() || file.canRead()){
-                Log.d(TAG, "FILE EXISTS! file length: " + file.length());
-            }*/
-            //Bitmap bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
-            //try {
-                /*Bitmap bitmap = ImagePicker.getBitmapFromUri(rLayout.getContext(), Uri.parse(imageInfo.getPath()));
-                //Bitmap bitmap = ImagePicker.getBitmapImage( Uri.parse(imageInfo.getPath()), rLayout.getContext(), imageInfo.isCamera());
-                holder.getBinding().imageView.setVisibility(View.VISIBLE);
-                holder.getBinding().imageView.setImageBitmap(bitmap);
-                holder.getBinding().imageView.invalidate();*/
-            /*}catch(IOException e){
-                Log.d(TAG, e.toString());
-                holder.getBinding().imageView.setVisibility(View.GONE);
-            }*/
         }
 
 
@@ -140,11 +124,11 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                     @Override
                     public void onClick(View view) {
                         button.setText(button.getText().toString() + "    " + "\u2713");
+                        pollData.setMyVote(opt);
 
                         if(pollData.getOwner() == Consts.OTHER)
                             sendVote(view, pollData.getID(), opt, pollData.getHostAddress());
                         else {
-                            pollData.setMyVote(opt);
                             sendUpdateBroadcast(button.getContext(), pollData.getID());
                         }
                         setCardDetails(button.getContext(), rLayout, pollData, opt);
