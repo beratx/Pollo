@@ -89,7 +89,7 @@ public class WifiDog extends BroadcastReceiver {
     }
 
     private void updateWifiStat(Context context, boolean stat) {
-        Intent intent = new Intent("mattoncino.pollo.receive.wifi.stat");
+        Intent intent = new Intent(Receivers.WIFI);
         intent.putExtra("wifi", stat);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }

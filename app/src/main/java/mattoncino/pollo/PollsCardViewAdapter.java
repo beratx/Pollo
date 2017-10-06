@@ -169,7 +169,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 //}
                 }
 
-            TextView view = (TextView) holder.getBinding().statsTextView;
+            TextView view = holder.getBinding().statsTextView;
             view.setText(pollData.getVotedDevices().size() + " voted / " + pollData.getAcceptedDevices().size()
                     + " accepted / "  + pollData.getContactedDevices().size() + " received");
             view.setVisibility(View.VISIBLE);
@@ -215,18 +215,17 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     }
 
     private void sendVote(View view, String id, int opt, String hostAddress){
-        ArrayList<String> pollInfo = new ArrayList<String>();
+        ArrayList<String> pollInfo = new ArrayList<>();
         pollInfo.add(id);
-        pollInfo.add(new Integer(opt).toString());
-        //pollInfo.add(hostAddress);
+        pollInfo.add(Integer.toString(opt));
 
         ClientThreadProcessor clientProcessor = new ClientThreadProcessor(hostAddress,
-                view.getContext(), Consts.POLL_VOTE, pollInfo);
+                view.getContext(), Consts.VOTE, pollInfo);
         Thread t = new Thread(clientProcessor);
         t.start();
 
     }
-    //(getContext(), pollData.getID(), pollData.getVotes(), pollData.getAcceptedDevices());
+
     private void sendResultToAllDevices(Context context, String id, int[] result, Set<String> hostAddresses){
         for (java.util.Iterator iterator = hostAddresses.iterator(); iterator.hasNext(); ) {
             String hostAddress = (String) iterator.next();

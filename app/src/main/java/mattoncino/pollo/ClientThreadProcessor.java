@@ -20,6 +20,8 @@ public class ClientThreadProcessor implements Runnable{
     private static final String TAG = "ClientThreadProcessor";
     private static final int SERVER_PORT = 8700;
     private Socket socket;
+    private DataOutputStream dataOutputStream;
+    private DataInputStream dataInputStream;
     private Context context;
     private String hostIpAddress;
     private List<String> pollInfo;
@@ -66,46 +68,48 @@ public class ClientThreadProcessor implements Runnable{
         }
     }
 
-    public void serve(Socket socket, String type){
-        switch(type) {
-            case Consts.POLL_REQUEST:
-                sendPollRequest(socket);
-                break;
-            case Consts.ACCEPT:
-                sendAccept(socket);
-                break;
-            case Consts.POLL_VOTE:
-                sendVote(socket);
-                break;
-            case Consts.RESULT:
-                sendResult(socket);
-                break;
-        }
-    }
 
     @Override
     public void run() {
         try {
             socket = getSocket(hostIpAddress);
-            serve(socket, type);
+
+            dataInputStream = new DataInputStream(socket.getInputStream());
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+            switch(type) {
+                case Consts.REQUEST:
+                    sendPollRequest();
+                    break;
+                case Consts.ACCEPT:
+                    sendAccept();
+                    break;
+                case Consts.VOTE:
+                    sendVote();
+                    break;
+                case Consts.RESULT:
+                    sendResult();
+                    break;
+            }
         } catch (UnknownHostException e1) {
             Log.wtf(TAG, e1.toString());
         } catch (IOException e) {
             Log.wtf(TAG, e.toString());
         } finally {
             closeSocket(socket);
+            try {
+                dataOutputStream.close();
+                dataInputStream.close();
+            } catch (NullPointerException e) {
+                Log.wtf(TAG, e.toString());
+            } catch (IOException e) {
+                Log.wtf(TAG, e.toString());
+            }
         }
-
     }
 
-    public void sendPollRequest(Socket socket){
-
-        DataOutputStream dataOutputStream = null;
-
-        try {
-            dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
-            dataOutputStream.writeUTF(Consts.POLL_REQUEST);
+    public void sendPollRequest() throws IOException {
+            dataOutputStream.writeUTF(Consts.REQUEST);
             dataOutputStream.writeUTF(poll.getId()); //poll_id
             dataOutputStream.writeUTF(poll.getName()); //poll_name
             dataOutputStream.writeUTF(poll.getQuestion()); //poll_question
@@ -122,7 +126,7 @@ public class ClientThreadProcessor implements Runnable{
                 String mimeType = ImagePicker.getMimeType(context, imageUri);
                 String ext = mimeType.substring(mimeType.lastIndexOf("/") + 1);
 
-                if(ext == null || ext.length() == 0) ext = "bmp";
+                if(ext.length() == 0) ext = "bmp";
                 dataOutputStream.writeUTF(ext);
 
                 String realPath = ImagePicker.getRealPathFromUri(context, imageUri);
@@ -145,35 +149,9 @@ public class ClientThreadProcessor implements Runnable{
             }
 
             Log.d(TAG, "SENT POLL_REQUEST");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }/* catch (NullPointerException e) {
-            Log.d(TAG, e.toString());
-            Activity act = (Activity) context;
-            act.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast toast = Toast.makeText(context,  "Can't connect to other devices. Check your connection.", Toast.LENGTH_LONG);
-                    toast.show();
-                }
-            });
-        }*/  finally {
-            if(dataOutputStream != null)
-                try {
-                    dataOutputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        }
     }
 
-    public void sendAccept(Socket socket){
-        DataOutputStream dataOutputStream = null;
-        DataInputStream dataInputStream = null;
-
-        try {
-            dataOutputStream = new DataOutputStream(socket.getOutputStream());
+    public void sendAccept() throws IOException {
             dataOutputStream.writeUTF(Consts.ACCEPT);
             dataOutputStream.writeUTF(pollInfo.get(0)); //poll_id
             dataOutputStream.writeUTF(pollInfo.get(1)); //poll_hostAddress
@@ -183,35 +161,17 @@ public class ClientThreadProcessor implements Runnable{
 
             //BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             dataInputStream = new DataInputStream(socket.getInputStream());
-;
+
             final String res = dataInputStream.readUTF();
 
             Log.d(TAG, "SENT ACCEPT MSG TO: " + pollInfo.get(1));
 
             if(res.equals(Consts.RECEIVED))
                 Log.d(TAG, "DEVICE " + pollInfo.get(1) + " RECEIVED MY ACCEPT: ");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if(dataOutputStream != null)
-                try {
-                    dataOutputStream.close();
-                    dataInputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        }
     }
 
-    public void sendVote(Socket socket){
-        DataOutputStream dataOutputStream = null;
-        DataInputStream dataInputStream = null;
-
-        try {
-            dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
-            dataOutputStream.writeUTF(Consts.POLL_VOTE);
+    public void sendVote() throws IOException {
+            dataOutputStream.writeUTF(Consts.VOTE);
             dataOutputStream.writeUTF(pollInfo.get(0)); //id
             dataOutputStream.writeUTF(pollInfo.get(1)); //vote
 
@@ -223,28 +183,11 @@ public class ClientThreadProcessor implements Runnable{
 
             final String messageFromClient = dataInputStream.readUTF();
 
-            if (messageFromClient.equals(Consts.RECEIVED)) {
+            if (messageFromClient.equals(Consts.RECEIVED))
                 Log.d(TAG, "MY VOTE IS RECEIVED.");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }  finally {
-            if(dataOutputStream != null)
-                try {
-                    dataOutputStream.close();
-                    dataInputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        }
-
     }
 
-    public void sendResult(Socket socket){
-        DataOutputStream dataOutputStream = null;
-
-        try {
-            dataOutputStream = new DataOutputStream(socket.getOutputStream());
+    public void sendResult() throws IOException {
             dataOutputStream.writeUTF(Consts.RESULT);
             dataOutputStream.writeUTF(pollID);
             dataOutputStream.writeInt(result.length);
@@ -253,16 +196,5 @@ public class ClientThreadProcessor implements Runnable{
             }
 
             dataOutputStream.flush();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if(dataOutputStream != null)
-                try {
-                    dataOutputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        }
     }
 }

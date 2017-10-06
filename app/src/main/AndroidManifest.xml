@@ -44,10 +44,7 @@
         <service
             android:name=".ConnectionManagerIntentService"
             android:exported="false" />
-        <service
-            android:name=".StatusUpdaterService"
-            android:exported="false"></service>
-            <receiver android:name="mattoncino.pollo.WifiDog">
+        <receiver android:name="mattoncino.pollo.WifiDog">
             <intent-filter>
                 <action android:name="android.net.wifi.supplicant.STATE_CHANGE"/>
             </intent-filter>

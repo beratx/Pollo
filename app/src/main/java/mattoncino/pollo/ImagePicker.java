@@ -21,9 +21,12 @@ import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -292,43 +295,42 @@ public class ImagePicker {
         return image;
     }
 
+    public static File createTempFile(Context context, boolean external, String ext) {
+        String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+        return external ? new File(context.getExternalCacheDir(), "pollo_" + timestamp + "." + ext)
+                        : new File(context.getCacheDir() , "pollo_" + timestamp + "." + ext);
+    }
+
+    public static File createTempFile2(Context context, boolean external, String ext) throws IOException {
+        return external ? File.createTempFile("pollo", ext, context.getExternalCacheDir())
+                        : File.createTempFile("pollo", ext, context.getCacheDir());
+    }
+
     public static File createFile(Context context, boolean external, String ext) {
-        File direct;
+        String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
-        if(external)
-            direct = new File(Environment.getExternalStorageDirectory() + "/pollo_images");
-        else
-            direct = new File(context.getFilesDir() + "/pollo_images");
+        if(ext.isEmpty())  ext = "bmp";
 
+        File dir = external ? new File(Environment.getExternalStorageDirectory() + "/pollo_images")
+                            : new File(context.getFilesDir() + "/pollo_images");
 
-        if (!direct.exists()) {
-            File imagesDir;
-            if(external)
-                imagesDir = new File("/sdcard/pollo_images/");
-            else
-                imagesDir = new File("/pollo_images");
-
+        if (!dir.exists()) {
+            File imagesDir = external ? new File("/sdcard/pollo_images/") : new File("/pollo_images");
             imagesDir.mkdirs();
         }
 
-        String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
-        File file = null;
+        //file = new File(direct, "pollo_" + timestamp + ".jpg");
+        //file = new File(new File("/sdcard/pollo_images/"), "pollo_" + timestamp);
+        //file = new File(new File("/pollo_images/"), "pollo_" + timestamp);
+
         try {
-            if(external) {
-                //file = new File(direct, "pollo_" + timestamp + ".jpg");
-                //file = new File(new File("/sdcard/pollo_images/"), "pollo_" + timestamp);
-                file = File.createTempFile("pollo_" + timestamp, "." + ext, direct);
-            }
-            else {
-                //file = new File(new File("/pollo_images/"), "pollo_" + timestamp);
-                file = File.createTempFile("pollo_" + timestamp, "." + ext, direct);
-            }
+            return File.createTempFile("pollo_" + timestamp, "." + ext, dir);
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
-
-        return file;
     }
 
     /* Checks if external storage is available for read and write */
@@ -371,5 +373,24 @@ public class ImagePicker {
                     fileExtension.toLowerCase());
         }
         return mimeType;
+    }
+
+    public static void savePermanently(File src, File dst) throws IOException {
+        InputStream in = new FileInputStream(src);
+        try {
+            OutputStream out = new FileOutputStream(dst);
+            try {
+                // Transfer bytes from in to out
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
+        }
     }
 }

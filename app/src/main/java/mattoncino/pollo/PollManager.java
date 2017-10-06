@@ -14,56 +14,35 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
-import java.util.Set;
 
 
 public class PollManager extends Observable {
     public static final String TAG = "PollManager";
+    private static final String SHARED_PREFS_FILE = "polloSharedPrefs";
     private static final Type LIST_TYPE = new TypeToken<List<PollData>>() {}.getType();
     private static ArrayList<PollData> active_polls;
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
-    private Context context;
-
 
     private PollManager(){
-        this.context = MyApplication.getContext();
-        this.pref = context.getSharedPreferences(Consts.SHARED_PREFS_FILE, Context.MODE_PRIVATE);
+        this.pref = (MyApplication.getContext()).getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
         this.active_polls = new Gson().fromJson(pref.getString(Consts.POLL_LIST, null), LIST_TYPE);
-        if(this.active_polls == null)   this.active_polls = new ArrayList<PollData>();
+        if(this.active_polls == null)   this.active_polls = new ArrayList<>();
      }
 
     private static class PollManagerHelper{
         private static final PollManager INSTANCE = new PollManager();
     }
 
+
     public static PollManager getInstance(){
         return PollManagerHelper.INSTANCE;
     }
 
+
     public static ArrayList<PollData> getActivePolls(){
         return active_polls;
     }
-
-    /*public synchronized PollData getPollData(String pollID){
-        for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
-            PollData pd = i.next();
-            if (pd.getID().equals(pollID))
-                return pd;
-        }
-        return null;
-    }*/
-
-
-    /*public synchronized int[] getVotes(String pollID){
-        for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
-            PollData pd = i.next();
-            if (pd.getID().equals(pollID)) {
-                return pd.getVotes();
-            }
-        }
-        return new int[5];
-    }*/
 
 
     public synchronized void setVotes(String pollID, int[] votes){
@@ -74,7 +53,7 @@ public class PollManager extends Observable {
                 pd.setTerminated(true);
                 setChanged();
                 notifyObservers();
-                Log.d(TAG, "poll: " +  pd.getID() + "result: "  + pd.getVotes());
+                //Log.d(TAG, "poll: " +  pd.getID() + "result: "  + pd.getVotes());
                 break;
             }
         }
@@ -159,19 +138,19 @@ public class PollManager extends Observable {
     }
 
 
-    public Set<String> getVotedDevices(String pollID){
+    /*public Set<String> getVotedDevices(String pollID){
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
             PollData pd = i.next();
             if (pd.getID().equals(pollID))
                 return pd.getVotedDevices();
         }
         return null;
-    }
+    }*/
 
 
     public synchronized void savePollsPermanently(){
         editor = pref.edit();
-        editor.putString(Consts.POLL_LIST, new Gson().toJson(new ArrayList<PollData>(active_polls)));
+        editor.putString(Consts.POLL_LIST, new Gson().toJson(new ArrayList<>(active_polls)));
         editor.commit();
     }
 

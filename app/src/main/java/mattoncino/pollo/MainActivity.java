@@ -25,6 +25,16 @@ import java.util.Set;
 
 import mattoncino.pollo.databinding.ActivityMainBinding;
 
+
+/**
+ * Pollo is a simple polling application designed to
+ * be used between devices in the same LAN.
+ *
+ * @author  Berat
+ * @version 1.0
+ * @since   2017-06-01
+ */
+
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MainActivity";
@@ -95,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void connectForDataTransferring(){
-        Handler handler = new Handler() {
+         Handler handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 Bundle reply = msg.getData();
@@ -138,6 +148,10 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    /**
+     *
+     * @return true if device is connected to a wifi.
+     */
 
     private boolean wifiConnected() {
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -154,6 +168,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * Gets online devices list and show them as
+     */
     public void onShowOnlineDevicesListDialogPress(){
         Runnable runnable = new Runnable() {
             @Override
@@ -180,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
         builderSingle.setTitle("Device list: " + "(" + devices.size() + ")");
 
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
                 MainActivity.this,
                 android.R.layout.simple_list_item_1);
 
@@ -189,30 +206,31 @@ public class MainActivity extends AppCompatActivity {
         builderSingle.show();
     }
 
+    /**
+     * Enables/disables buttons
+     * @param b This is the boolean value
+     */
     private void enableButtons(boolean b){
         binding.createPollActivityButton.setEnabled(b);
         binding.activePollsActivityButton.setEnabled(b);
         binding.showDeviceListButton.setEnabled(b);
     }
 
+    /**
+     * Creates a Broadcast Listener for changes in Wifi status
+     * @return BroadcastReceiver This returns a Broadcast Receiver
+     */
     private BroadcastReceiver createWifiBroadcastReceiver() {
         Log.v(TAG, "received wifi broadcast");
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent.getAction() != null
-                        && intent.getAction().equals("mattoncino.pollo.receive.wifi.stat")) {
+                if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
                     boolean stat = intent.getBooleanExtra("wifi", false);
                     enableButtons(stat);
                     setTitle(stat ? "Pollo" : "Connecting...");
                 }
             }
         };
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 }

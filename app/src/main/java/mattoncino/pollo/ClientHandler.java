@@ -38,6 +38,50 @@ public class ClientHandler implements Runnable{
         this.context = context;
     }
 
+    @Override
+    public void run() {
+        try {
+
+            dataInputStream = new DataInputStream(socket.getInputStream());
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+            final String message = dataInputStream.readUTF();
+
+            switch(message){
+                case Consts.REQUEST:
+                    serveRequestMessage();
+                    break;
+                case Consts.ACCEPT:
+                    serveAcceptMessage();
+                    break;
+                case Consts.REJECT:
+                    serveRejectMessage();
+                    break;
+                case Consts.VOTE:
+                    serveVoteMessage();
+                    break;
+                case Consts.RESULT:
+                    serveResultMessage();
+                    break;
+            }
+
+        } catch(EOFException e){
+            Log.w(TAG, "it should be isReachable socket connection, so it's ok...");
+            Log.w(TAG, e.toString());
+        } catch(SocketException e) {
+            Log.wtf(TAG, e.toString());
+        } catch (IOException e) {
+            Log.wtf(TAG, e.toString());
+        } finally {
+            try {
+                dataOutputStream.close();
+                dataInputStream.close();
+            } catch(IOException e){
+                Log.wtf(TAG, e.toString());
+            }
+        }
+    }
+
     public void serveRequestMessage() throws IOException {
         ImageInfo info = null;
 
@@ -58,7 +102,8 @@ public class ClientHandler implements Runnable{
         if(hasImage) {
             isCamera = dataInputStream.readBoolean();
             String imageType = dataInputStream.readUTF();
-            File imageFile = ImagePicker.createFile(context, ImagePicker.isExternalStorageWritable(), imageType);
+            //TODO first save it to cache then if user accepts, save it permanently
+            File imageFile = ImagePicker.createTempFile(context, ImagePicker.isExternalStorageWritable(), imageType);
             if (imageFile != null) {
                 Uri imageUri = Uri.fromFile(imageFile);
                 Log.d(TAG, "imageUri for received image: " + imageUri.toString());
@@ -84,7 +129,7 @@ public class ClientHandler implements Runnable{
 
         poll = new Poll(id, name, question, options, hasImage, info);
 
-        Log.i(TAG, "POLL REQUEST FROM: " + hostAddress);
+        Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
 
         addNotification(poll, hostAddress);
         //how to update main menu so you can see new polls note?
@@ -102,7 +147,7 @@ public class ClientHandler implements Runnable{
 
         Log.d(TAG, "SENT ACCEPT RECEIVED MSG TO: " + hostAddress);
 
-        Intent intent = new Intent("mattoncino.pollo.receive.poll.accept");
+        Intent intent = new Intent(Receivers.ACCEPT);
         intent.putExtra("pollID", pollID);
         intent.putExtra("hostAddress", hostAddress);
         intent.putExtra("accepted", true);
@@ -113,7 +158,9 @@ public class ClientHandler implements Runnable{
         final String id = dataInputStream.readUTF();
         final String hostAddress = dataInputStream.readUTF();
 
-        Intent intent = new Intent("mattoncino.pollo.receive.poll.accept");
+        Log.d(TAG, "RECEIVED REJECT FROM: " + hostAddress);
+
+        Intent intent = new Intent(Receivers.ACCEPT);
         intent.putExtra("pollID", id);
         intent.putExtra("hostAddress", hostAddress);
         intent.putExtra("accepted", false);
@@ -131,7 +178,7 @@ public class ClientHandler implements Runnable{
 
         Log.d(TAG, "SENT VOTE RECEIVED MSG TO: " + hostAddress);
 
-        Intent intent = new Intent("mattoncino.pollo.receive.poll.vote");
+        Intent intent = new Intent(Receivers.VOTE);
         intent.putExtra("pollID", id);
         intent.putExtra("myVote", false);
         intent.putExtra("vote", vote);
@@ -147,56 +194,14 @@ public class ClientHandler implements Runnable{
             result[i] = dataInputStream.readInt();
         }
 
-        Intent intent = new Intent("mattoncino.pollo.receive.poll.result");
+        Intent intent = new Intent(Receivers.RESULT);
         intent.putExtra("pollID", id);
         intent.putExtra(Consts.RESULT, result);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
 
-    @Override
-    public void run() {
-        try {
 
-            dataInputStream = new DataInputStream(socket.getInputStream());
-            dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
-            final String message = dataInputStream.readUTF();
-
-            switch(message){
-                case Consts.POLL_REQUEST:
-                    serveRequestMessage();
-                    break;
-                case Consts.ACCEPT:
-                    serveAcceptMessage();
-                    break;
-                case Consts.REJECT:
-                    serveRejectMessage();
-                    break;
-                case Consts.POLL_VOTE:
-                    serveVoteMessage();
-                    break;
-                case Consts.RESULT:
-                    serveResultMessage();
-                    break;
-            }
-
-        } catch(EOFException e){
-            Log.w(TAG, "it should be isReachable socket connection, so it's ok...");
-            Log.w(TAG, e.toString());
-        } catch(SocketException e) {
-            Log.wtf(TAG, e.toString());
-        } catch (IOException e) {
-            Log.wtf(TAG, e.toString());
-        } finally {
-            try {
-                dataOutputStream.close();
-                dataInputStream.close();
-            } catch(IOException e){
-                Log.wtf(TAG, e.toString());
-            }
-        }
-    }
 
     private void addNotification(Poll poll, String hostAddress){
         Random randomGenerator = new Random();

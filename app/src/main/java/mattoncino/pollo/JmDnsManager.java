@@ -30,8 +30,6 @@ public class JmDnsManager {
     private String SERVICE_INFO_NAME = "pollo_jmdns_service";
     private String SERVICE_INFO_PROPERTY_IP_VERSION = "ipv4";
     private String SERVICE_INFO_PROPERTY_DEVICE = "device";
-
-
     private JmDNS jmdns = null;
     private ServiceListener listener = null;
     private ServiceInfo serviceInfo;
@@ -39,7 +37,11 @@ public class JmDnsManager {
     private ServerThreadProcessor serverThreadProcessor;
 
 
-
+    /**
+     *
+     * @param context
+     * @param messenger
+     */
     public void initializeService(final Context context, Messenger messenger) {
 
         Log.i(TAG, "initializing JmDNS instance...");
@@ -223,7 +225,7 @@ public class JmDnsManager {
         ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE);
         String ownDeviceId = ((MyApplication) context.getApplicationContext()).getDeviceId();
         //Log.d(TAG, "serviceInfoList.size() = " + serviceInfoList.length);
-        int timeout = 3000;
+        int timeout = 2000;
 
         for (int index = 0; index < serviceInfoList.length; index++) {
             String device = serviceInfoList[index].getPropertyString(SERVICE_INFO_PROPERTY_DEVICE);
