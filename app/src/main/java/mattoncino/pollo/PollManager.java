@@ -53,7 +53,6 @@ public class PollManager extends Observable {
                 pd.setTerminated(true);
                 setChanged();
                 notifyObservers();
-                //Log.d(TAG, "poll: " +  pd.getID() + "result: "  + pd.getVotes());
                 break;
             }
         }
@@ -76,7 +75,6 @@ public class PollManager extends Observable {
                 active_polls.add(0, pd);
                 setChanged();
                 notifyObservers();
-                //Log.d(TAG, "called addPoll-> setChanged -> notifyObservers");
             }
     }
 
@@ -89,7 +87,7 @@ public class PollManager extends Observable {
                     String imagePath = pd.getImageInfo().getPath();
                     File image = new File(imagePath);
                     boolean r = image.delete();
-                    Log.d(TAG, imagePath + " is deleted successfully");
+                    if(r) Log.d(TAG, imagePath + " is deleted successfully");
                 }
                 i.remove();
                 setChanged();
@@ -102,17 +100,12 @@ public class PollManager extends Observable {
 
 
     public synchronized void updateAcceptedDeviceList(String pollID, String hostAddress, boolean accepted){
-        //Log.d(TAG, "gets in updateAcceptedDeviceList... to add hostAddress: " + hostAddress);
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
             PollData pd = i.next();
             if (pd.getID().equals(pollID)) {
                 if(accepted)
                     pd.addAcceptedDevice(hostAddress);
                 pd.incrementResponseCount();
-                /*Log.d(TAG, hostAddress + " poll: " + pd.getPollName() + " accepted? " + accepted);
-                Log.d(TAG, "current deviceCount: " + pd.getContactedDevices().size());
-                Log.d(TAG, "current responseCount: " + pd.getResponseCount());
-                Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());*/
                 break;
             }
         }
@@ -120,18 +113,13 @@ public class PollManager extends Observable {
 
 
     public synchronized void updatePoll(String pollID, String hostAddress, int vote){
-        //Log.d(TAG, "gets in updatePoll... to add hostAddress: " + hostAddress);
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
             PollData pd = i.next();
             if (pd.getID().equals(pollID)) {
                 pd.addVote(vote);
                 pd.addVotedDevice(hostAddress);
-                //Log.d(TAG, "poll " + pd.getID() + " updated with vote: " + vote);
                 setChanged();
                 notifyObservers();
-                /*Log.d(TAG, "current deviceCount: " + pd.getContactedDevices().size());
-                Log.d(TAG, "current responseCount: " + pd.getResponseCount());
-                Log.d(TAG, "current votedDevices.size(): " + pd.getVotedDevices().size());*/
                 break;
             }
         }

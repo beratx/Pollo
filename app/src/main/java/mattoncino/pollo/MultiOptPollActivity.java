@@ -27,6 +27,7 @@
         private boolean hasImage = false;
         private Bitmap bitmap;
         private ImageInfo imageInfo;
+        private String ownAddress;
 
 
         @Override
@@ -79,19 +80,20 @@
                     if(name.isEmpty() || question.isEmpty() || isEmpty(options)){
                         Snackbar.make(binding.launchButton, "You should fill all fields!", Snackbar.LENGTH_LONG)
                                 .setAction("Action", null).show();
+                        return;
                     }
-                    else{
-                        Poll poll = new Poll(name, question, options, hasImage, imageInfo);
 
-                        Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
-                                .putExtra(Consts.OWNER, Consts.OWN)
-                                .putExtra(Consts.POLL, (Parcelable) poll);
+                    Poll poll = new Poll(name, question, options, hasImage, imageInfo);
 
-                        startActivity(intent);
-                    }
+                    Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
+                            .putExtra(Consts.OWNER, Consts.OWN)
+                            .putExtra(Consts.POLL, (Parcelable) poll);
+
+                    startActivity(intent);
                 }
             });
         }
+
 
         @Override
         protected void onActivityResult(int requestCode, int resultCode, Intent data) {

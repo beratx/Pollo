@@ -123,9 +123,9 @@ public class ClientThreadProcessor implements Runnable{
                 dataOutputStream.writeBoolean(poll.getImageInfo().isCamera());
 
                 Uri imageUri = Uri.parse(poll.getImageInfo().getPath());
-                String mimeType = ImagePicker.getMimeType(context, imageUri);
-                String ext = mimeType.substring(mimeType.lastIndexOf("/") + 1);
-
+                //String mimeType = ImagePicker.getMimeType(context, imageUri);
+                //String ext = mimeType.substring(mimeType.lastIndexOf("/") + 1);
+                String ext = ImagePicker.getImageType(context, imageUri);
                 if(ext.length() == 0) ext = "bmp";
                 dataOutputStream.writeUTF(ext);
 
@@ -133,7 +133,7 @@ public class ClientThreadProcessor implements Runnable{
                 File imageFile = new File(realPath);
                 FileInputStream fis = new FileInputStream(imageFile);
 
-                Log.d(TAG, "Image len: " + imageFile.length() +" Mime type: " + mimeType + " ext: " + ext);
+                Log.d(TAG, "Image len: " + imageFile.length() + " ext: " + ext);
 
                 int len;
                 byte[] byteArray = new byte[8192];
@@ -154,8 +154,7 @@ public class ClientThreadProcessor implements Runnable{
     public void sendAccept() throws IOException {
             dataOutputStream.writeUTF(Consts.ACCEPT);
             dataOutputStream.writeUTF(pollInfo.get(0)); //poll_id
-            dataOutputStream.writeUTF(pollInfo.get(1)); //poll_hostAddress
-
+            //dataOutputStream.writeUTF(pollInfo.get(1)); //poll_hostAddress
             dataOutputStream.flush();
             //System.out.println("hostIpaddress: " + hostIpAddress + " address in pollInfo: " + pollInfo.get(1));
 
@@ -164,10 +163,10 @@ public class ClientThreadProcessor implements Runnable{
 
             final String res = dataInputStream.readUTF();
 
-            Log.d(TAG, "SENT ACCEPT MSG TO: " + pollInfo.get(1));
+            Log.d(TAG, "SENT ACCEPT MSG TO: " + hostIpAddress);
 
             if(res.equals(Consts.RECEIVED))
-                Log.d(TAG, "DEVICE " + pollInfo.get(1) + " RECEIVED MY ACCEPT: ");
+                Log.d(TAG, "DEVICE " + hostIpAddress + " RECEIVED MY ACCEPT: ");
     }
 
     public void sendVote() throws IOException {

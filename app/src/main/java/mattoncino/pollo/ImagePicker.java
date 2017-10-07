@@ -362,7 +362,7 @@ public class ImagePicker {
     }
 
     public static String getMimeType(Context context, Uri uri) {
-        String mimeType = null;
+        String mimeType;
         if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
             ContentResolver cr = context.getContentResolver();
             mimeType = cr.getType(uri);
@@ -373,6 +373,11 @@ public class ImagePicker {
                     fileExtension.toLowerCase());
         }
         return mimeType;
+    }
+
+    public static String getImageType(Context context, Uri uri){
+        String mimeType = ImagePicker.getMimeType(context, uri);
+        return mimeType.substring(mimeType.lastIndexOf("/") + 1);
     }
 
     public static void savePermanently(File src, File dst) throws IOException {

@@ -102,7 +102,6 @@ public class ClientHandler implements Runnable{
         if(hasImage) {
             isCamera = dataInputStream.readBoolean();
             String imageType = dataInputStream.readUTF();
-            //TODO first save it to cache then if user accepts, save it permanently
             File imageFile = ImagePicker.createTempFile(context, ImagePicker.isExternalStorageWritable(), imageType);
             if (imageFile != null) {
                 Uri imageUri = Uri.fromFile(imageFile);
@@ -132,13 +131,12 @@ public class ClientHandler implements Runnable{
         Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
 
         addNotification(poll, hostAddress);
-        //how to update main menu so you can see new polls note?
-        //with a handler!
     }
 
     public void serveAcceptMessage() throws IOException {
         String pollID = dataInputStream.readUTF();
-        String hostAddress = dataInputStream.readUTF();
+        //String hostAddress = dataInputStream.readUTF();
+        String hostAddress = socket.getInetAddress().getHostAddress();
 
         Log.d(TAG, "RECEIVED ACCEPT FROM: " + hostAddress);
 
@@ -201,8 +199,6 @@ public class ClientHandler implements Runnable{
     }
 
 
-
-
     private void addNotification(Poll poll, String hostAddress){
         Random randomGenerator = new Random();
         int NOTIFICATION_ID;
@@ -214,12 +210,12 @@ public class ClientHandler implements Runnable{
         while((requestCode = randomGenerator.nextInt()) == 0)
             ;
 
-
         Intent notificationIntent = new Intent(context, ActivePollsActivity.class)
                 .putExtra(Consts.OWNER, Consts.OTHER)
                 .putExtra(Consts.POLL, (Parcelable) poll)
                 .putExtra("hostAddress", hostAddress)
-                .putExtra("notificationID", NOTIFICATION_ID);
+                .putExtra("notificationID", NOTIFICATION_ID)
+                .putExtra(Consts.ACCEPT, true);
 
 
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
@@ -229,11 +225,26 @@ public class ClientHandler implements Runnable{
         PendingIntent acceptedPendingIntent =  PendingIntent.getActivity(context, requestCode,
                 notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent startMain = new Intent(context, MainActivity.class)
-                .putExtra("notificationID", NOTIFICATION_ID);
+        while((requestCode = randomGenerator.nextInt()) == 0)
+            ;
 
-        PendingIntent rejectedPendingIntent = PendingIntent.getActivity(context, requestCode,
-                startMain, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent notificationIntent2 = new Intent(context, ActivePollsActivity.class)
+                .putExtra(Consts.OWNER, Consts.OTHER)
+                .putExtra(Consts.POLL, (Parcelable) poll)
+                .putExtra("hostAddress", hostAddress)
+                .putExtra("notificationID", NOTIFICATION_ID)
+                .putExtra(Consts.ACCEPT, false);
+
+        //stackBuilder.addNextIntent(notificationIntent2);
+
+        PendingIntent rejectedPendingIntent =  PendingIntent.getActivity(context, requestCode,
+                notificationIntent2, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        //Intent startMain = new Intent(context, MainActivity.class)
+        //.putExtra("notificationID", NOTIFICATION_ID);
+
+        //PendingIntent rejectedPendingIntent = PendingIntent.getActivity(context, requestCode,
+        //        startMain, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
         /*stackBuilder.getPendingIntent(

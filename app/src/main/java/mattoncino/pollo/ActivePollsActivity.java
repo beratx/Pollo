@@ -9,6 +9,7 @@ import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -40,10 +41,11 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private BroadcastReceiver acceptReceiver;
     private BroadcastReceiver resultReceiver;
     private BroadcastReceiver removeReceiver;
+    private BroadcastReceiver wifiReceiver;
     private String xhostAddress;
-    private String ownAddress;
+    //private String ownAddress;
 
-
+    //TODO : Change it back to getting ownAddress from jmDNs manager. Dont get it at creating phase.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,64 +55,80 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_active_polls);
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        jmDnsManager = ((MyApplication) getApplication()).getConnectionManager();
+        if(jmDnsManager == null) setTitle("Connecting...");
+
         manager = PollManager.getInstance();
         manager.addObserver(this);
+
 
         final Bundle data = getIntent().getExtras();
         if (data != null) {
             final int type = data.getInt(Consts.OWNER);
             poll = data.getParcelable(Consts.POLL);
             int notfID = data.getInt("notificationID");
-            try {
-                ownAddress = ((MyApplication) getApplication()).getConnectionManager().getHostAddress();
 
-                if (poll != null) {
-                    if (type == Consts.OWN) {
-                        myPollRequest = true;
-                        manager.addPoll(new PollData(poll, ownAddress, type));
-                    } else if (type == Consts.OTHER) {
+            switch (type) {
+                case Consts.OWN:
+                    myPollRequest = true;
+                    String ownAddress = jmDnsManager.getHostAddress();
+                    manager.addPoll(new PollData(poll, ownAddress, type));
+                    break;
+                case Consts.OTHER:
+                    boolean accepted = data.getBoolean(Consts.ACCEPT, true);
+                    if(accepted) {
                         acceptedPollRequest = true;
                         xhostAddress = data.getString("hostAddress");
-                        if(poll.hasImage()) {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    File temp = new File(poll.getImageInfo().getPath());
-                                    Uri tempUri = Uri.fromFile(temp);
-                                    String mimeType = ImagePicker.getMimeType(ActivePollsActivity.this, tempUri);
-                                    String ext = mimeType.substring(mimeType.lastIndexOf("/") + 1);
-
-                                    File perm = ImagePicker.createFile(ActivePollsActivity.this,
-                                                    ImagePicker.isExternalStorageWritable(), ext);
-                                    try {
-                                        ImagePicker.savePermanently(temp, perm);
-                                        Uri permUri = Uri.fromFile(perm);
-                                        poll.getImageInfo().setPath(permUri.toString());
-                                        manager.addPoll(new PollData(poll, xhostAddress, type));
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-
-                                }
-                            }).start();
-                        }
-                        else
-                            manager.addPoll(new PollData(poll, xhostAddress, type));
-
+                        manager.addPoll(new PollData(poll, xhostAddress, type));
+                        if (poll.hasImage())
+                            saveImagePermanently();
+                    } else {
+                        if(poll.hasImage())
+                            removeImageFromCache();
+                        data.remove(Consts.POLL);
                     }
-                }
-            } catch (NullPointerException e){
-                Log.w(TAG, e.toString());
+                    break;
             }
-
             removeNotification(notfID);
         }
+    }
 
+    private void removeImageFromCache(){
+        String imagePath = poll.getImageInfo().getPath();
+        File image = new File(imagePath);
+        boolean r = image.delete();
+        if (r) Log.d(TAG, "image in cache is deleted.");
+    }
+
+    private void saveImagePermanently(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File temp = new File(poll.getImageInfo().getPath());
+                Uri tempUri = Uri.fromFile(temp);
+                String ext = ImagePicker.getImageType(ActivePollsActivity.this, tempUri);
+
+                File perm = ImagePicker.createFile(ActivePollsActivity.this,
+                        ImagePicker.isExternalStorageWritable(), ext);
+                try {
+                    ImagePicker.savePermanently(temp, perm);
+                    Uri permUri = Uri.fromFile(perm);
+                    poll.getImageInfo().setPath(permUri.toString());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }).start();
     }
 
     @Override
     protected void onStart(){
         super.onStart();
+        //Toast.makeText(this, "called onStart", Toast.LENGTH_LONG).show();
+        wifiReceiver = createWifiBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter(Receivers.WIFI));
+
         acceptReceiver = createAcceptBroadcastReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(acceptReceiver, new IntentFilter(Receivers.ACCEPT));
 
@@ -128,6 +146,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     @Override
     protected void onResume() {
         super.onResume();
+        //Toast.makeText(this, "called onResume", Toast.LENGTH_LONG).show();
 
         List<PollData> activePolls = Collections.synchronizedList(PollManager.getInstance().getActivePolls());
 
@@ -135,38 +154,65 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         adapter = new PollsCardViewAdapter(activePolls);
         binding.recyclerView.setAdapter(adapter);
 
+
         if (myPollRequest) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    jmDnsManager = ((MyApplication) getApplication()).getConnectionManager();
                     try {
-                        HashSet<String> contactedDevices = (HashSet<String>) jmDnsManager.sendMessageToAllDevicesInNetwork(ActivePollsActivity.this, Consts.REQUEST, poll);
-                        if (contactedDevices.size() != 0)
-                            manager.setContactedDevices(poll.getId(), contactedDevices);
-                        else
-                            Log.d(TAG, "jmDnsManager.sendMessageToAllDevices 0 device to contact!!!");
+                        HashSet<String> contactedDevices = (HashSet<String>) jmDnsManager.sendMessageToAllDevicesInNetwork(
+                                                                                ActivePollsActivity.this, Consts.REQUEST, poll);
+                        manager.setContactedDevices(poll.getId(), contactedDevices);
+                        Log.d(TAG, "jmDnsManager.sendMessageToAllDevices: " + contactedDevices + "device(s) to contact!!!");
                     } catch (NullPointerException e) {
-                        Log.wtf(TAG, e.toString());
+                        Log.wtf(TAG, "jmDnsManager.sendMessageToAllDevicesInNetwork: " + e.toString());
+                        ToastHelper.doInUIThread("Pollo works only under LAN. Please activate " +
+                                "your wifi and connect to an Access Point", ActivePollsActivity.this);
                     }
 
                     myPollRequest = false;
                 }
             }).start();
-
-
-
         } else if (acceptedPollRequest) {
-            //Log.i(TAG, "onResume(): acceptedPollReq");
-            acceptedPollRequest = false;
             ArrayList<String> pollInfo = new ArrayList<>();
             pollInfo.add(poll.getId());
-            pollInfo.add(ownAddress);
+
             ClientThreadProcessor clientProcessor = new ClientThreadProcessor(xhostAddress,
-                                                ActivePollsActivity.this, Consts.ACCEPT, pollInfo);
+                    ActivePollsActivity.this, Consts.ACCEPT, pollInfo);
             Thread t = new Thread(clientProcessor);
             t.start();
+
+            acceptedPollRequest = false;
+
+            /*} catch (NullPointerException e) {
+                Log.wtf(TAG, "jmDnsManager.getHostAddress(): " + e.toString());
+                Toast.makeText(this,
+                    "Pollo works only under LAN. Please activate " +
+                            "your wifi and connect to an Access Point",
+                    Toast.LENGTH_LONG).show();
+            }*/
         }
+    }
+
+    private BroadcastReceiver createWifiBroadcastReceiver() {
+        Log.v(TAG, "received wifi broadcast");
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
+                    boolean connected = intent.getBooleanExtra("wifi", false);
+                    if(connected)
+                        setTitle("Active Polls");
+                    else {
+                        setTitle("Connecting...");
+                        Snackbar.make(binding.activityActivePolls,
+                                "No active Wifi connection. Please connect to an Access Point",
+                                Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    }
+                }
+            }
+        };
     }
 
 
@@ -174,13 +220,11 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent.getAction() != null &&
-                        intent.getAction().equals("mattoncino.pollo.receive.poll.vote")) {
+                if(intent.getAction() != null && intent.getAction().equals(Receivers.VOTE)) {
                     Log.v(TAG, "received update broadcast");
                     String pollID = intent.getStringExtra("pollID");
                     boolean isMyVote = intent.getBooleanExtra("myVote", false);
                     if(!isMyVote) {
-                        //Log.d(TAG, "poll " + pollID + "received NOT MY vote...");
                         int vote = intent.getIntExtra("vote", -1);
                         if (vote != -1) {
                             String hostAddress = intent.getStringExtra("hostAddress");
@@ -188,10 +232,10 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                         }
                     }
 
+                    adapter.notifyDataSetChanged();
                     intent.removeExtra("pollID");
                     intent.removeExtra("vote");
                     intent.removeExtra("hostAddress");
-                    adapter.notifyDataSetChanged();
                 }
             }
         };
@@ -222,8 +266,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent.getAction() != null &&
-                        intent.getAction().equals("mattoncino.pollo.receive.poll.result")) {
+                if(intent.getAction() != null && intent.getAction().equals(Receivers.RESULT)) {
                     Log.v(TAG, "received result broadcast");
                     String pollID = intent.getStringExtra("pollID");
                     int[] result = (int[]) intent.getSerializableExtra(Consts.RESULT);

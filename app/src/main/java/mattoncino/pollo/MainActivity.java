@@ -13,12 +13,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -84,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //setAlarm();
+        enableButtons(true);
+
     }
 
     @Override
@@ -92,9 +93,19 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if(wifiConnected()) {
             connectForDataTransferring();
-            enableButtons(true);
+            //enableButtons(true);
+        } else {
+            setTitle("Connecting...");
+            Snackbar.make(binding.activityMain,
+                    "No active Wifi connection. Please connect to an Access Point",
+                    Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+            /*Toast.makeText(this,
+                    "Pollo works only under LAN. Please " +
+                            "activate your wifi and connect to an Access Point",
+                    Toast.LENGTH_LONG).show();*/
         }
-        else enableButtons(false);
+        //else enableButtons(false);
 
     }
 
@@ -159,12 +170,10 @@ public class MainActivity extends AppCompatActivity {
         if (activeInfo != null && activeInfo.isConnected() && activeInfo.getType() == ConnectivityManager.TYPE_WIFI) {
             Log.i(TAG, getString(R.string.wifi_connection));
             return true;
-        } else {
-            Log.i(TAG, getString(R.string.mobile_connection) + " or " + R.string.no_wifi_or_mobile);
-            Toast.makeText(this, "Pollo works only under LAN. Please activate your wifi and connect to an Access Point",
-                    Toast.LENGTH_LONG).show();
-            return false;
         }
+
+        Log.i(TAG, getString(R.string.mobile_connection) + " or " + R.string.no_wifi_or_mobile);
+        return false;
     }
 
 
@@ -172,10 +181,10 @@ public class MainActivity extends AppCompatActivity {
      * Gets online devices list and show them as
      */
     public void onShowOnlineDevicesListDialogPress(){
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if(jmDnsManager.initialized()) {
+        if(jmDnsManager != null) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
                     final HashSet<String> onlineDevices = (HashSet<String>) jmDnsManager.getOnlineDevices(MainActivity.this);
 
                     MainActivity.this.runOnUiThread(new Runnable() {
@@ -185,12 +194,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
-            }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();
-
+            };
+            Thread thread = new Thread(runnable);
+            thread.start();
+        }
     }
+
 
     private void showDevicesInNetworkList(Set<String> devices){
         AlertDialog.Builder builderSingle = new AlertDialog.Builder(MainActivity.this);
@@ -227,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
                     boolean stat = intent.getBooleanExtra("wifi", false);
-                    enableButtons(stat);
+                    //enableButtons(stat);
                     setTitle(stat ? "Pollo" : "Connecting...");
                 }
             }

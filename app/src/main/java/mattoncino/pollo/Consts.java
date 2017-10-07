@@ -10,6 +10,7 @@ public final class Consts {
     public static final String POLL = "poll";
     public static final String OWNER = "owner";
     public static final String RESULT = "result";
+    public static final String ADDRESS = "hostAddress";
     public static final int OWN = 10;
     public static final int OTHER = 20;
 }
