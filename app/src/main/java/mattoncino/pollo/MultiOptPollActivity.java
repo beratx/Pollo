@@ -27,7 +27,6 @@
         private boolean hasImage = false;
         private Bitmap bitmap;
         private ImageInfo imageInfo;
-        private String ownAddress;
 
 
         @Override
@@ -69,7 +68,7 @@
                     String question = binding.questionEditText.getText().toString();
 
                     final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
-                    List<String> options = new ArrayList<String>();
+                    List<String> options = new ArrayList<>();
 
                     for (int i = 4; i < count; i++) {
                         TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
@@ -123,7 +122,7 @@
             String question = binding.questionEditText.getText().toString();
 
             final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
-            List<String> options = new ArrayList<String>();
+            List<String> options = new ArrayList<>();
 
 
             for (int i = 4; i < count; i++) {
@@ -144,9 +143,7 @@
                 return null;
             }*/
 
-            Poll poll = new Poll(name, question, options, hasImage, imageInfo);
-
-            return poll;
+            return new Poll(name, question, options, hasImage, imageInfo);
         }
 
         private boolean isEmpty(List<String> options){

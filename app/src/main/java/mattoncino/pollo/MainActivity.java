@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -96,16 +95,10 @@ public class MainActivity extends AppCompatActivity {
             //enableButtons(true);
         } else {
             setTitle("Connecting...");
-            Snackbar.make(binding.activityMain,
-                    "No active Wifi connection. Please connect to an Access Point",
-                    Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
-            /*Toast.makeText(this,
-                    "Pollo works only under LAN. Please " +
-                            "activate your wifi and connect to an Access Point",
-                    Toast.LENGTH_LONG).show();*/
+            ToastHelper.showSnackBar(MainActivity.this, binding.activityMain,
+                    "No active Wifi connection. Please connect to an Access Point");
+            //enableButtons(false);
         }
-        //else enableButtons(false);
 
     }
 
@@ -116,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void connectForDataTransferring(){
+        //TODO make it static!!!!
          Handler handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -180,8 +174,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Gets online devices list and show them as
      */
-    public void onShowOnlineDevicesListDialogPress(){
-        if(jmDnsManager != null) {
+    public void onShowOnlineDevicesListDialogPress() {
+        if(jmDnsManager != null){
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
@@ -197,22 +191,29 @@ public class MainActivity extends AppCompatActivity {
             };
             Thread thread = new Thread(runnable);
             thread.start();
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("No connection, no devices :)");
+            builder.setCancelable(true);
+            builder.show();
         }
     }
 
 
     private void showDevicesInNetworkList(Set<String> devices){
-        AlertDialog.Builder builderSingle = new AlertDialog.Builder(MainActivity.this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 
-        builderSingle.setTitle("Device list: " + "(" + devices.size() + ")");
+        builder.setTitle("Device list: " + "(" + devices.size() + ")");
 
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
-                MainActivity.this,
-                android.R.layout.simple_list_item_1);
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(MainActivity.this,
+                                                    android.R.layout.simple_list_item_1,
+                                                    devices.toArray(new String[devices.size()]));
 
-        arrayAdapter.addAll(devices);
-        builderSingle.setAdapter(arrayAdapter, null);
-        builderSingle.show();
+        //APILEVEL REQ 11!!!
+        //arrayAdapter.addAll(devices);
+        builder.setAdapter(arrayAdapter, null);
+        builder.setCancelable(true);
+        builder.show();
     }
 
     /**
@@ -235,9 +236,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
-                    boolean stat = intent.getBooleanExtra("wifi", false);
+                    boolean stat = intent.getBooleanExtra("wifi", true);
                     //enableButtons(stat);
                     setTitle(stat ? "Pollo" : "Connecting...");
+                    if(!stat)
+                        ToastHelper.showSnackBar(MainActivity.this, binding.activityMain,
+                                "No active Wifi connection. Please connect to an Access Point");
                 }
             }
         };

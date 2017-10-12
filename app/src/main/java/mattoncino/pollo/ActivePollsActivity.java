@@ -9,7 +9,6 @@ import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -30,22 +29,21 @@ import mattoncino.pollo.databinding.ActivityActivePollsBinding;
 public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private static final String TAG = "ActivePollsActivity";
     private ActivityActivePollsBinding binding;
-    private RecyclerView.Adapter adapter;
-    private ArrayList<PollData> active_polls;
-    private Poll poll;
-    private JmDnsManager jmDnsManager;
-    private boolean myPollRequest = false;
-    private boolean acceptedPollRequest = false;
-    private PollManager manager;
     private BroadcastReceiver updateReceiver;
     private BroadcastReceiver acceptReceiver;
     private BroadcastReceiver resultReceiver;
     private BroadcastReceiver removeReceiver;
     private BroadcastReceiver wifiReceiver;
+    private ArrayList<PollData> active_polls;
+    private RecyclerView.Adapter adapter;
+    private JmDnsManager jmDnsManager;
+    private PollManager manager;
+    private Poll poll;
+    private boolean myPollRequest = false;
+    private boolean acceptedPollRequest = false;
+    private boolean connected = true;
     private String xhostAddress;
-    //private String ownAddress;
 
-    //TODO : Change it back to getting ownAddress from jmDNs manager. Dont get it at creating phase.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +54,10 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         jmDnsManager = ((MyApplication) getApplication()).getConnectionManager();
-        if(jmDnsManager == null) setTitle("Connecting...");
+        if(jmDnsManager == null || !jmDnsManager.initialized()){
+            setTitle("Connecting...");
+            connected = false;
+        }
 
         manager = PollManager.getInstance();
         manager.addObserver(this);
@@ -70,23 +71,35 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
 
             switch (type) {
                 case Consts.OWN:
-                    myPollRequest = true;
-                    String ownAddress = jmDnsManager.getHostAddress();
+                    String ownAddress = null;
+                    try {
+                        ownAddress = jmDnsManager.getHostAddress();
+                    } catch(NullPointerException e){
+                        Log.e(TAG, e.toString() + " jmdnsManager is not initialized");
+                        ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                                "No active Wifi connection. Failed to send poll.");
+                    }
                     manager.addPoll(new PollData(poll, ownAddress, type));
+                    myPollRequest = true;
                     break;
                 case Consts.OTHER:
+                    //TODO: dont remove the notification if there is no connection
                     boolean accepted = data.getBoolean(Consts.ACCEPT, true);
-                    if(accepted) {
-                        acceptedPollRequest = true;
+                    if(!connected) {
+                        ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                                "No active Wifi connection. Failed to receive poll.");
+                    } else if (accepted) {
                         xhostAddress = data.getString("hostAddress");
                         manager.addPoll(new PollData(poll, xhostAddress, type));
+                        acceptedPollRequest = true;
                         if (poll.hasImage())
                             saveImagePermanently();
-                    } else {
-                        if(poll.hasImage())
+                    } else { //not accepted
+                        if (poll.hasImage())
                             removeImageFromCache();
                         data.remove(Consts.POLL);
                     }
+
                     break;
             }
             removeNotification(notfID);
@@ -160,19 +173,22 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                 @Override
                 public void run() {
                     try {
-                        HashSet<String> contactedDevices = (HashSet<String>) jmDnsManager.sendMessageToAllDevicesInNetwork(
-                                                                                ActivePollsActivity.this, Consts.REQUEST, poll);
+                        HashSet<String> contactedDevices =
+                                (HashSet<String>) jmDnsManager.sendMessageToAllDevicesInNetwork(
+                                                    ActivePollsActivity.this, Consts.REQUEST, poll);
+
                         manager.setContactedDevices(poll.getId(), contactedDevices);
-                        Log.d(TAG, "jmDnsManager.sendMessageToAllDevices: " + contactedDevices + "device(s) to contact!!!");
+
+                        Log.d(TAG, "jmDnsManager.sendMessageToAllDevices: " + contactedDevices.size() + " device(s) to contact!!!");
                     } catch (NullPointerException e) {
                         Log.wtf(TAG, "jmDnsManager.sendMessageToAllDevicesInNetwork: " + e.toString());
-                        ToastHelper.doInUIThread("Pollo works only under LAN. Please activate " +
-                                "your wifi and connect to an Access Point", ActivePollsActivity.this);
                     }
 
                     myPollRequest = false;
+
                 }
             }).start();
+
         } else if (acceptedPollRequest) {
             ArrayList<String> pollInfo = new ArrayList<>();
             pollInfo.add(poll.getId());
@@ -183,14 +199,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             t.start();
 
             acceptedPollRequest = false;
-
-            /*} catch (NullPointerException e) {
-                Log.wtf(TAG, "jmDnsManager.getHostAddress(): " + e.toString());
-                Toast.makeText(this,
-                    "Pollo works only under LAN. Please activate " +
-                            "your wifi and connect to an Access Point",
-                    Toast.LENGTH_LONG).show();
-            }*/
         }
     }
 
@@ -201,15 +209,12 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
                     boolean connected = intent.getBooleanExtra("wifi", false);
-                    if(connected)
-                        setTitle("Active Polls");
-                    else {
+                    if(!connected){
                         setTitle("Connecting...");
-                        Snackbar.make(binding.activityActivePolls,
-                                "No active Wifi connection. Please connect to an Access Point",
-                                Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
+                        ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                                "No active Wifi connection. Please connect to an Access Point.");
                     }
+                    else setTitle("Active Polls");
                 }
             }
         };
@@ -248,10 +253,10 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.ACCEPT)) {
                     Log.d(TAG, "received accept broadcast");
                     String pollID = intent.getStringExtra("pollID");
-                    xhostAddress = intent.getStringExtra("hostAddress");
+                    String hostAddress = intent.getStringExtra("hostAddress");
                     boolean accepted = intent.getBooleanExtra("accepted", false);
 
-                    manager.updateAcceptedDeviceList(pollID, xhostAddress, accepted);
+                    manager.updateAcceptedDeviceList(pollID, hostAddress, accepted);
 
                     intent.removeExtra("pollID");
                     intent.removeExtra("hostAddress");
@@ -270,13 +275,12 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     Log.v(TAG, "received result broadcast");
                     String pollID = intent.getStringExtra("pollID");
                     int[] result = (int[]) intent.getSerializableExtra(Consts.RESULT);
-
                     //inside sets also terminated flag
                     manager.setVotes(pollID, result);
+                    adapter.notifyDataSetChanged();
 
                     intent.removeExtra("pollID");
                     intent.removeExtra(Consts.RESULT);
-                    adapter.notifyDataSetChanged();
                 }
             }
         };

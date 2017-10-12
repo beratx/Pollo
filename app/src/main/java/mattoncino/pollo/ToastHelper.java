@@ -2,11 +2,16 @@ package mattoncino.pollo;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
+import android.provider.Settings;
+import android.support.design.widget.Snackbar;
+import android.view.View;
 import android.widget.Toast;
 
 
 public class ToastHelper {
+
     public static void useLongToast(Context context, String message) {
         Toast toast = Toast.makeText(context, message, Toast.LENGTH_LONG);
         toast.show();
@@ -44,5 +49,16 @@ public class ToastHelper {
                 useLongToast(context, message);
             }
         });
+    }
+
+    public static void showSnackBar(final Context context, View view, final String message){
+        Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                .setAction("Wi-Fi", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        context.startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+                    }
+                }).show();
+
     }
 }

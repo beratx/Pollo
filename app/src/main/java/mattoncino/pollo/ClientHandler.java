@@ -2,7 +2,6 @@ package mattoncino.pollo;
 
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -82,7 +81,7 @@ public class ClientHandler implements Runnable{
         }
     }
 
-    public void serveRequestMessage() throws IOException {
+    private void serveRequestMessage() throws IOException {
         ImageInfo info = null;
 
         String id = dataInputStream.readUTF();//poll_id
@@ -98,7 +97,7 @@ public class ClientHandler implements Runnable{
         final String hostAddress = socket.getInetAddress().getHostAddress();
 
         boolean hasImage = dataInputStream.readBoolean();
-        boolean isCamera = false;
+        boolean isCamera;
         if(hasImage) {
             isCamera = dataInputStream.readBoolean();
             String imageType = dataInputStream.readUTF();
@@ -133,7 +132,7 @@ public class ClientHandler implements Runnable{
         addNotification(poll, hostAddress);
     }
 
-    public void serveAcceptMessage() throws IOException {
+    private void serveAcceptMessage() throws IOException {
         String pollID = dataInputStream.readUTF();
         //String hostAddress = dataInputStream.readUTF();
         String hostAddress = socket.getInetAddress().getHostAddress();
@@ -152,7 +151,7 @@ public class ClientHandler implements Runnable{
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    public void serveRejectMessage() throws IOException {
+    private void serveRejectMessage() throws IOException {
         final String id = dataInputStream.readUTF();
         final String hostAddress = dataInputStream.readUTF();
 
@@ -165,7 +164,7 @@ public class ClientHandler implements Runnable{
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    public void serveVoteMessage() throws IOException {
+    private void serveVoteMessage() throws IOException {
         final String id = dataInputStream.readUTF();
         final int vote = Integer.parseInt(dataInputStream.readUTF());
         final String hostAddress = socket.getInetAddress().getHostAddress();
@@ -184,7 +183,7 @@ public class ClientHandler implements Runnable{
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    public void serveResultMessage() throws IOException {
+    private void serveResultMessage() throws IOException {
         final String id = dataInputStream.readUTF();
         final int count = dataInputStream.readInt();
         int[] result = new int[5];
@@ -218,10 +217,6 @@ public class ClientHandler implements Runnable{
                 .putExtra(Consts.ACCEPT, true);
 
 
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-        stackBuilder.addParentStack(ActivePollsActivity.class);
-        stackBuilder.addNextIntent(notificationIntent);
-
         PendingIntent acceptedPendingIntent =  PendingIntent.getActivity(context, requestCode,
                 notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -235,20 +230,10 @@ public class ClientHandler implements Runnable{
                 .putExtra("notificationID", NOTIFICATION_ID)
                 .putExtra(Consts.ACCEPT, false);
 
-        //stackBuilder.addNextIntent(notificationIntent2);
 
         PendingIntent rejectedPendingIntent =  PendingIntent.getActivity(context, requestCode,
                 notificationIntent2, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        //Intent startMain = new Intent(context, MainActivity.class)
-        //.putExtra("notificationID", NOTIFICATION_ID);
-
-        //PendingIntent rejectedPendingIntent = PendingIntent.getActivity(context, requestCode,
-        //        startMain, PendingIntent.FLAG_UPDATE_CURRENT);
-
-
-        /*stackBuilder.getPendingIntent(
-         0, PendingIntent.FLAG_UPDATE_CURRENT);*/
 
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context)

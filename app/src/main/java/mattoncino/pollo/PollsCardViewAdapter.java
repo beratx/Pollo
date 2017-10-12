@@ -76,23 +76,22 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(final PollsCardViewAdapter.CardViewHolder holder, final int position) {
-        holder.getBinding().messageTextView.setVisibility(View.GONE);
-        holder.getBinding().imageView.setVisibility(View.GONE);
-        holder.getBinding().statsTextView.setVisibility(View.GONE);
-        holder.getBinding().terminateButton.setEnabled(false);
+        final ActivePollsListItemBinding  binding = holder.getBinding();
         final PollData pollData = activePolls.get(position);
         final Poll poll = pollData.getPoll();
-        final LinearLayout rLayout = holder.getBinding().listItemLayout;
+        final LinearLayout rLayout = binding.listItemLayout;
+
+        //TODO remove extra options
+        resetHolder(binding);
 
         if(pollData.hasImage()){
             ImageInfo imageInfo = pollData.getImageInfo();
             Log.d(TAG, "imagePath: " + Uri.parse(imageInfo.getPath()));
-            holder.getBinding().imageView.setVisibility(View.VISIBLE);
+            binding.imageView.setVisibility(View.VISIBLE);
             Picasso.with(rLayout.getContext()).
                     load(imageInfo.getPath()).
                     fit().centerInside().
-                    //transform(new CropSquareTransformation()).
-                    into(holder.getBinding().imageView);
+                    into(binding.imageView);
         }
 
 
@@ -131,8 +130,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                         else {
                             sendUpdateBroadcast(button.getContext(), pollData.getID());
                         }
-                        setCardDetails(button.getContext(), rLayout, pollData, opt);
-                        holder.getBinding().ownerLayout.getChildAt(0).setEnabled(false);
+                        setCardDetails(rLayout, pollData, opt);
+                        binding.ownerLayout.getChildAt(0).setEnabled(false);
                     }
                 });
             }
@@ -140,10 +139,10 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         }
 
         if(pollData.getOwner() == Consts.OTHER && pollData.isDisabled() && !pollData.isTerminated())
-            holder.getBinding().messageTextView.setVisibility(View.VISIBLE);
+            binding.messageTextView.setVisibility(View.VISIBLE);
 
         if(pollData.getOwner() == Consts.OWN) {
-                final Button button = (Button) holder.getBinding().ownerLayout.getChildAt(0);
+                final Button button = (Button) binding.ownerLayout.getChildAt(0);
                 button.setVisibility(View.VISIBLE);
 
                 if(!pollData.isTerminated()){
@@ -169,24 +168,35 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 //}
                 }
 
-            TextView view = holder.getBinding().statsTextView;
+            TextView view = binding.statsTextView;
             view.setText(pollData.getVotedDevices().size() + " voted / " + pollData.getAcceptedDevices().size()
                     + " accepted / "  + pollData.getContactedDevices().size() + " received");
             view.setVisibility(View.VISIBLE);
         }
 
-        holder.getBinding().removeButton.setOnClickListener(new View.OnClickListener() {
+        binding.removeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 sendRemoveBroadcast(rLayout.getContext(), pollData.getID());
             }
         });
 
-        holder.getBinding().setVariable(BR.poll, poll);
-        holder.getBinding().executePendingBindings();
+        binding.setVariable(BR.poll, poll);
+        binding.executePendingBindings();
     }
 
-    private void setCardDetails(final Context context, final LinearLayout lLayout, final PollData pd, final int opt){
+
+    private void resetHolder(ActivePollsListItemBinding binding){
+        binding.opt3Button.setVisibility(View.GONE);
+        binding.opt4Button.setVisibility(View.GONE);
+        binding.opt5Button.setVisibility(View.GONE);
+        binding.messageTextView.setVisibility(View.GONE);
+        binding.imageView.setVisibility(View.GONE);
+        binding.statsTextView.setVisibility(View.GONE);
+        binding.terminateButton.setEnabled(false);
+    }
+
+    private void setCardDetails(final LinearLayout lLayout, final PollData pd, final int opt){
         pd.setDisabled(true);
         disableOptionButtons(lLayout);
 
@@ -240,7 +250,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     private void disableOptionButtons(ViewGroup layout){
         for (int i = 0; i < layout.getChildCount() - 1; i++) {
             View child = layout.getChildAt(i);
-            if(child.hasOnClickListeners())
+            //if(child.hasOnClickListeners())
+            if(child.isClickable())
                 child.setEnabled(false);
         }
     }

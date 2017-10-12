@@ -43,7 +43,7 @@ public class ImagePicker {
     private static final String TAG = "ImagePicker";
     private static final String TEMP_IMAGE_NAME = "tempImage";
 
-    public static int minWidthQuality = DEFAULT_MIN_WIDTH_QUALITY;
+    private static int minWidthQuality = DEFAULT_MIN_WIDTH_QUALITY;
 
 
     public static Intent getPickImageIntent(Context context) {
@@ -128,11 +128,14 @@ public class ImagePicker {
 
     public static File getTempFile(Context context) {
         File imageFile;
+
         if(isExternalStorageWritable())
             imageFile = new File(context.getExternalCacheDir(), TEMP_IMAGE_NAME);
         else
             imageFile = new File(context.getCacheDir(), TEMP_IMAGE_NAME);
+
         imageFile.getParentFile().mkdirs();
+
         return imageFile;
     }
 
@@ -151,7 +154,7 @@ public class ImagePicker {
                 fileDescriptor.getFileDescriptor(), null, options);
 
         if(actuallyUsableBitmap == null) {
-            InputStream imgFile = null;
+            InputStream imgFile;
             try {
                 imgFile = context.getAssets().open(theUri.toString());
                 actuallyUsableBitmap = BitmapFactory.decodeStream(imgFile, null, options);
@@ -173,7 +176,7 @@ public class ImagePicker {
      * Resize to avoid using too much memory loading big images (e.g.: 2560*1920)
      **/
     private static Bitmap getImageResized(Context context, Uri selectedImage) {
-        Bitmap bm = null;
+        Bitmap bm;
         int[] sampleSizes = new int[]{5, 3, 2, 1};
         int i = 0;
         do {
@@ -316,14 +319,10 @@ public class ImagePicker {
                             : new File(context.getFilesDir() + "/pollo_images");
 
         if (!dir.exists()) {
+            //TODO : replace /sdcard/ with Environment.getExternalStorageDirectory().getPath();
             File imagesDir = external ? new File("/sdcard/pollo_images/") : new File("/pollo_images");
             imagesDir.mkdirs();
         }
-
-
-        //file = new File(direct, "pollo_" + timestamp + ".jpg");
-        //file = new File(new File("/sdcard/pollo_images/"), "pollo_" + timestamp);
-        //file = new File(new File("/pollo_images/"), "pollo_" + timestamp);
 
         try {
             return File.createTempFile("pollo_" + timestamp, "." + ext, dir);
@@ -336,9 +335,8 @@ public class ImagePicker {
     /* Checks if external storage is available for read and write */
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
+        if (Environment.MEDIA_MOUNTED.equals(state))
             return true;
-        }
         return false;
     }
 
@@ -346,9 +344,9 @@ public class ImagePicker {
     public static boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state))
             return true;
-        }
+
         return false;
     }
 
@@ -380,7 +378,7 @@ public class ImagePicker {
         return mimeType.substring(mimeType.lastIndexOf("/") + 1);
     }
 
-    public static void savePermanently(File src, File dst) throws IOException {
+    /*public static void savePermanently(File src, File dst) throws IOException {
         InputStream in = new FileInputStream(src);
         try {
             OutputStream out = new FileOutputStream(dst);
@@ -395,6 +393,25 @@ public class ImagePicker {
                 out.close();
             }
         } finally {
+            in.close();
+        }
+    }*/
+
+    public static void savePermanently(File src, File dst) throws IOException {
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = new FileInputStream(src);
+            out = new FileOutputStream(dst);
+
+                // Transfer bytes from in to out
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+        } finally {
+            out.close();
             in.close();
         }
     }
