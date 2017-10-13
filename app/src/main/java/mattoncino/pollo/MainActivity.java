@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Toast.makeText(MainActivity.this, "called onCreate()", Toast.LENGTH_SHORT).show();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         setTitle("Pollo");
 
@@ -90,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+        //Toast.makeText(MainActivity.this, "called onResume()", Toast.LENGTH_SHORT).show();
         if(wifiConnected()) {
             connectForDataTransferring();
             //enableButtons(true);
@@ -105,7 +107,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
+        //Toast.makeText(this, "called onStop", Toast.LENGTH_SHORT).show();
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
     }
 
     private void connectForDataTransferring(){
@@ -130,18 +133,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*@Override
+    @Override
     public void onPause(){
         super.onPause();
-        Toast.makeText(this, "called onPause", Toast.LENGTH_SHORT).show();
-    }*/
+        //Toast.makeText(this, "called onPause", Toast.LENGTH_SHORT).show();
+    }
 
     @Override
     protected void onStart() {
-        //Toast.makeText(this, "called onStart", Toast.LENGTH_SHORT).show();
         super.onStart();
+        //Toast.makeText(this, "called onStart", Toast.LENGTH_SHORT).show();
         wifiReceiver = createWifiBroadcastReceiver();
-        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter("mattoncino.pollo.receive.wifi.stat"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter(Receivers.WIFI));
     }
 
 
@@ -175,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
      * Gets online devices list and show them as
      */
     public void onShowOnlineDevicesListDialogPress() {
-        if(jmDnsManager != null){
+        if(jmDnsManager != null && jmDnsManager.initialized()){
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
@@ -194,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle("No connection, no devices :)");
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
             builder.setCancelable(true);
             builder.show();
         }

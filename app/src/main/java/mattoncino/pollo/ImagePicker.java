@@ -378,7 +378,7 @@ public class ImagePicker {
         return mimeType.substring(mimeType.lastIndexOf("/") + 1);
     }
 
-    /*public static void savePermanently(File src, File dst) throws IOException {
+    public static void savePermanently(File src, File dst) throws IOException {
         InputStream in = new FileInputStream(src);
         try {
             OutputStream out = new FileOutputStream(dst);
@@ -393,25 +393,6 @@ public class ImagePicker {
                 out.close();
             }
         } finally {
-            in.close();
-        }
-    }*/
-
-    public static void savePermanently(File src, File dst) throws IOException {
-        InputStream in = null;
-        OutputStream out = null;
-        try {
-            in = new FileInputStream(src);
-            out = new FileOutputStream(dst);
-
-                // Transfer bytes from in to out
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
-                }
-        } finally {
-            out.close();
             in.close();
         }
     }

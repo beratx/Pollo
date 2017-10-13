@@ -23,10 +23,12 @@
         private static final String TAG = "MultiOptPollActivity";
         private static final int PICK_IMAGE_ID = 87;
         private ActivityMultiOptPollBinding binding;
-        private int count = 6;
-        private boolean hasImage = false;
         private Bitmap bitmap;
         private ImageInfo imageInfo;
+        private boolean hasImage = false;
+        private int count = 6;
+
+
 
 
         @Override

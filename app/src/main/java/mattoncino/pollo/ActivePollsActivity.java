@@ -104,6 +104,9 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             }
             removeNotification(notfID);
         }
+        else if(!connected)
+            ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                    "No active Wifi connection. Please connect to an Access Point.");
     }
 
     private void removeImageFromCache(){
