@@ -58,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //wifiReceiver = createWifiBroadcastReceiver();
-        //LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter("mattoncino.pollo.receive.wifi.stat"));
+        //LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver,
+        // new IntentFilter("mattoncino.pollo.receive.wifi.stat"));
 
 
         binding.createPollActivityButton.setOnClickListener(new View.OnClickListener(){

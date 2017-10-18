@@ -29,7 +29,29 @@
         private int count = 6;
 
 
+        @Override
+        public void onSaveInstanceState(Bundle savedInstanceState){
+            super.onSaveInstanceState(savedInstanceState);
+            if(imageInfo != null) {
+                savedInstanceState.putString("imagePath", imageInfo.getPath());
+                savedInstanceState.putBoolean("isCamera", imageInfo.isCamera());
+            }
+        }
 
+        @Override
+        protected void onRestoreInstanceState(Bundle savedInstanceState){
+            if(savedInstanceState != null) {
+                super.onRestoreInstanceState(savedInstanceState);
+                imageInfo = new ImageInfo(savedInstanceState.getString("imagePath"), savedInstanceState.getBoolean("isCamera"));
+                if(imageInfo.getPath() != null) {
+                    bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), MultiOptPollActivity.this, imageInfo.isCamera());
+                    binding.imageView.setVisibility(View.VISIBLE);
+                    binding.imageView.setImageBitmap(bitmap);
+                    binding.imageView.invalidate();
+                    hasImage = true;
+                }
+            }
+        }
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +96,7 @@
 
                     for (int i = 4; i < count; i++) {
                         TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
+                        //getText May produce Null pointer exception
                         String op = til.getEditText().getText().toString();
                         options.add(op);
                     }
@@ -103,6 +126,7 @@
                     if(resultCode == RESULT_OK){
                         Log.d(TAG, "RESULT IS OK");
                         imageInfo = ImagePicker.getImageFromResult(this, resultCode, data);
+                        //getPath may result null pointer expcetion
                         bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), MultiOptPollActivity.this, imageInfo.isCamera());
                         binding.imageView.setVisibility(View.VISIBLE);
                         binding.imageView.setImageBitmap(bitmap);
@@ -129,6 +153,7 @@
 
             for (int i = 4; i < count; i++) {
                 TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
+                //getText may result NullPointerExpcetion
                 String op = til.getEditText().getText().toString();
                 options.add(op);
             }

@@ -150,6 +150,7 @@ public class ImagePicker {
             e.printStackTrace();
         }
 
+        //TODO getFileDescriptor may produce NUllPointerException
         Bitmap actuallyUsableBitmap = BitmapFactory.decodeFileDescriptor(
                 fileDescriptor.getFileDescriptor(), null, options);
 
@@ -262,6 +263,7 @@ public class ImagePicker {
         try {
             String[] proj = { MediaStore.Images.Media.DATA };
             cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+            //Can launch NUllPointerException
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             cursor.moveToFirst();
             return cursor.getString(column_index);
@@ -320,7 +322,8 @@ public class ImagePicker {
 
         if (!dir.exists()) {
             //TODO : replace /sdcard/ with Environment.getExternalStorageDirectory().getPath();
-            File imagesDir = external ? new File("/sdcard/pollo_images/") : new File("/pollo_images");
+            File imagesDir = external ? new File("/sdcard/pollo_images/") : new File("/pollo_images/");
+            //File imagesDir = new File("/pollo_images");
             imagesDir.mkdirs();
         }
 
@@ -373,6 +376,7 @@ public class ImagePicker {
         return mimeType;
     }
 
+    //TODO gives null pointer exception controt it!!!
     public static String getImageType(Context context, Uri uri){
         String mimeType = ImagePicker.getMimeType(context, uri);
         return mimeType.substring(mimeType.lastIndexOf("/") + 1);

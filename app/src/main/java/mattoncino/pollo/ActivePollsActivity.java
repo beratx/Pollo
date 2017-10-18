@@ -131,6 +131,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     Uri permUri = Uri.fromFile(perm);
                     poll.getImageInfo().setPath(permUri.toString());
                 } catch (IOException e) {
+                    Log.d(TAG, "ImagePicker.savePermanently(): " + e.toString());
                     e.printStackTrace();
                 }
 

@@ -23,7 +23,7 @@ import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
 public class JmDnsManager {
-    public static int SERVICE_INFO_PORT = 9856;
+    private static int SERVICE_INFO_PORT = 9856;
     private static final int SERVER_PORT = 8700;
     private static final String TAG = "JmDNSManager";
     private String SERVICE_INFO_TYPE = "_pollo_jmdns._tcp.local.";
@@ -37,27 +37,19 @@ public class JmDnsManager {
     private ServerThreadProcessor serverThreadProcessor;
 
 
-    /**
-     *
-     * @param context
-     * @param messenger
-     */
+
     public void initializeService(final Context context, Messenger messenger) {
 
         Log.i(TAG, "initializing JmDNS instance...");
 
         WifiManager wifi = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
         changeMultiCastLock(wifi);
-        //Log.d(TAG, "Multicast lock is changed");
 
         try {
             if (jmdns == null) {
                 InetAddress addr = getInetAddress(wifi);
-                //jmdns = JmDNS.create(addr, InetAddress.getLocalHost().getHostName());
                 jmdns = JmDNS.create(addr, InetAddress.getLocalHost().getHostName());
-                //jmdns = JmDNS.create(addr);
                 Log.i(TAG, "JmDNS instance is created");
-                //jmdns.addServiceTypeListener();
                 jmdns.addServiceListener(SERVICE_INFO_TYPE, listener = new ServiceListener() {
                     public void serviceResolved(ServiceEvent ev) {
                         Log.v(TAG, "service is resolved: " + ev.getInfo());
@@ -143,16 +135,14 @@ public class JmDnsManager {
     }
 
 
+    //TODO getHostAddress may produce NUllPointerException
     public String getHostAddress() {
-        //String serverIpAddress = getIPv4FromServiceInfo(jmdns.getServiceInfo());
         InetAddress addr = null;
         try {
             if(initialized()) {
-                //initializeService(MyApplication.getContext());
                 addr = jmdns.getInetAddress();
             }
         } catch (IOException e) {
-            //e.printStackTrace();
             Log.wtf(TAG, e.toString());
         }
         return addr.getHostAddress();
@@ -169,9 +159,8 @@ public class JmDnsManager {
                 (byte) (addrIntIp >> 16 & 0xff),
                 (byte) (addrIntIp >> 24 & 0xff)
         };
-        InetAddress addr = InetAddress.getByAddress(byteaddr);
 
-        return addr;
+        return InetAddress.getByAddress(byteaddr);
     }
 
     private void changeMultiCastLock(WifiManager wifiManager) {
@@ -187,7 +176,7 @@ public class JmDnsManager {
     }
 
     private Hashtable<String, String> setSettingsHashTable(Context context) {
-        Hashtable<String, String> settings = new Hashtable<String, String>();
+        Hashtable<String, String> settings = new Hashtable<>();
         settings.put(SERVICE_INFO_PROPERTY_DEVICE, ((MyApplication) context.getApplicationContext()).getDeviceId());
         settings.put(SERVICE_INFO_PROPERTY_IP_VERSION, IPUtils.getLocalIpAddress(context));
         return settings;
@@ -198,7 +187,7 @@ public class JmDnsManager {
     }
 
     public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, Poll poll) {
-        Set<String> ipAddressesSet=null;
+        Set<String> ipAddressesSet;
         if (jmdns == null) {
             initializeService(context, null);
         }
@@ -220,11 +209,9 @@ public class JmDnsManager {
             initializeService(context, null);
         }
 
-        Set<String> ipAddressesSet = new HashSet<String>();
-        //ServiceInfo serviceInfo = jmdns.getServiceInfo(SERVICE_INFO_TYPE, SERVICE_INFO_NAME, false);
+        Set<String> ipAddressesSet = new HashSet<>();
         ServiceInfo[] serviceInfoList = jmdns.list(SERVICE_INFO_TYPE);
         String ownDeviceId = ((MyApplication) context.getApplicationContext()).getDeviceId();
-        //Log.d(TAG, "serviceInfoList.size() = " + serviceInfoList.length);
         int timeout = 2000;
 
         for (int index = 0; index < serviceInfoList.length; index++) {

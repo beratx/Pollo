@@ -80,6 +80,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         final PollData pollData = activePolls.get(position);
         final Poll poll = pollData.getPoll();
         final LinearLayout rLayout = binding.listItemLayout;
+        //holder.rLayout.removeAllViews();
 
         //TODO remove extra options
         resetHolder(binding);
@@ -91,8 +92,11 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             Picasso.with(rLayout.getContext()).
                     load(imageInfo.getPath()).
                     fit().centerInside().
+                    //.memoryPolicy(MemoryPolicy.NO_CACHE )
+                    //.networkPolicy(NetworkPolicy.NO_CACHE)
                     into(binding.imageView);
         }
+        else binding.imageView.setImageDrawable(null);
 
 
         for (int i = 0; i < poll.getOptions().size(); i++) {
@@ -191,6 +195,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         binding.opt4Button.setVisibility(View.GONE);
         binding.opt5Button.setVisibility(View.GONE);
         binding.messageTextView.setVisibility(View.GONE);
+        binding.imageView.setImageDrawable(null);
         binding.imageView.setVisibility(View.GONE);
         binding.statsTextView.setVisibility(View.GONE);
         binding.terminateButton.setEnabled(false);

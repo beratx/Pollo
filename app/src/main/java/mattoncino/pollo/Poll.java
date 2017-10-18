@@ -2,7 +2,6 @@ package mattoncino.pollo;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
-import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -114,7 +113,7 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         id         = parcel.readString();
         name       = parcel.readString();
         question   = parcel.readString();
-        options = new ArrayList<String>();
+        options = new ArrayList<>();
         parcel.readStringList(options);
         hasImage = parcel.readByte() != 0;
         if(hasImage)

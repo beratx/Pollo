@@ -7,7 +7,6 @@ import android.os.Parcelable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +16,6 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     private Set<String> contactedDevices; /* devices that i sent request */
     private Set<String> acceptedDevices; /* devices which sent accept response, we hold this set to send them result */
     private Set<String> votedDevices; /* devices which sent accept and voted */
-    //private int deviceCount; /* #devices that i sent request */
     private int responseCount; /* #devices that sent accept/reject response */
     private int[] votes;
     private int myVote;
@@ -148,30 +146,6 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         responseCount++;
     }
 
-    public void decrementResponseCount() { responseCount--; }
-
-    /*
-    public int getDeviceCount() {
-        return deviceCount;
-    }
-
-    public void setDeviceCount(int count) {
-        this.deviceCount = count;
-    }
-    */
-    /*public double getVotesFor(int opt) {
-        int count = 0;
-
-        for (Integer vote : votes) {
-            if (vote == opt)
-                count++;
-        }
-
-        System.out.println("pollname: " + poll.getName() + " votes: " + votes.toString());
-
-        return count;
-    }*/
-
     public boolean hasImage(){
         return poll.hasImage();
     }
@@ -181,7 +155,7 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     }
 
     public int getVotesFor(int opt) {
-        System.out.println("pollname: " + poll.getName() + " votes: " + Arrays.toString(votes));
+        //System.out.println("pollname: " + poll.getName() + " votes: " + Arrays.toString(votes));
         return votes[opt - 1];
     }
 
@@ -224,9 +198,9 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         parcel.writeParcelable(poll,i);
         parcel.writeString(hostAddress);
         parcel.writeByte((byte) (disabled ? 1 : 0));
-        parcel.writeStringList(new ArrayList<String>(contactedDevices));
-        parcel.writeStringList(new ArrayList<String>(acceptedDevices));
-        parcel.writeStringList(new ArrayList<String>(votedDevices));
+        parcel.writeStringList(new ArrayList<>(contactedDevices));
+        parcel.writeStringList(new ArrayList<>(acceptedDevices));
+        parcel.writeStringList(new ArrayList<>(votedDevices));
         parcel.writeIntArray(votes);
         //parcel.writeString(hostAddress);
         //votes = Collections.synchronizedList(new ArrayList());
@@ -252,15 +226,15 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
 
         ArrayList<String> list3 = new ArrayList<>();
         parcel.readStringList(list3);
-        contactedDevices = new HashSet<String>(list3);
+        contactedDevices = new HashSet<>(list3);
 
         ArrayList<String> list2 = new ArrayList<>();
         parcel.readStringList(list2);
-        acceptedDevices = new HashSet<String>(list2);
+        acceptedDevices = new HashSet<>(list2);
 
         ArrayList<String> list = new ArrayList<>();
         parcel.readStringList(list);
-        votedDevices = new HashSet<String>(list);
+        votedDevices = new HashSet<>(list);
 
         votes = parcel.createIntArray();
 
