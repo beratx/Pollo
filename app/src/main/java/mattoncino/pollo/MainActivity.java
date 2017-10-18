@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 
+import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private JmDnsManager jmDnsManager;
     private BroadcastReceiver wifiReceiver;
+    private MyHandler handler;
 
 
     @Override
@@ -56,10 +58,6 @@ public class MainActivity extends AppCompatActivity {
             notificationManager.cancel(notfID);
             getIntent().removeExtra("notificationID");
         }
-
-        //wifiReceiver = createWifiBroadcastReceiver();
-        //LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver,
-        // new IntentFilter("mattoncino.pollo.receive.wifi.stat"));
 
 
         binding.createPollActivityButton.setOnClickListener(new View.OnClickListener(){
@@ -113,14 +111,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void connectForDataTransferring(){
-        //TODO make it static!!!!
-         Handler handler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                Bundle reply = msg.getData();
-                setTitle(reply.getString("result"));
-            }
-        };
+        handler = new MyHandler(this);
 
         jmDnsManager = ((MyApplication)getApplication()).getConnectionManager();
 
@@ -250,5 +241,22 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+    }
+
+
+    private static class MyHandler extends Handler{
+        private final WeakReference<MainActivity> currentActivity;
+
+        public MyHandler(MainActivity activity){
+            currentActivity = new WeakReference<MainActivity>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            Bundle reply = msg.getData();
+            MainActivity activity = currentActivity.get();
+            if (activity!= null)
+                activity.setTitle(reply.getString("result"));
+        }
     }
 }
