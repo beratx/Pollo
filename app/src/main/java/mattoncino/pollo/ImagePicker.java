@@ -45,7 +45,6 @@ public class ImagePicker {
 
     private static int minWidthQuality = DEFAULT_MIN_WIDTH_QUALITY;
 
-
     public static Intent getPickImageIntent(Context context) {
         Intent chooserIntent = null;
 
@@ -89,7 +88,7 @@ public class ImagePicker {
 
 
     public static ImageInfo getImageFromResult(Context context, int resultCode,
-                                            Intent imageReturnedIntent) {
+                                               Intent imageReturnedIntent) {
         Log.d(TAG, "getImageFromResult, resultCode: " + resultCode);
         //Bitmap bm = null;
         File imageFile = getTempFile(context);
@@ -125,6 +124,18 @@ public class ImagePicker {
         return bm;
     }
 
+    /*public static File getTempFile(Context context) {
+        File imageFile;
+
+        if(isExternalStorageWritable())
+            imageFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), TEMP_IMAGE_NAME);
+        else
+            imageFile = new File(context.getFilesDir(), TEMP_IMAGE_NAME);
+
+        imageFile.getParentFile().mkdirs();
+
+        return imageFile;
+    }*/
 
     public static File getTempFile(Context context) {
         File imageFile;
@@ -138,6 +149,7 @@ public class ImagePicker {
 
         return imageFile;
     }
+
 
     private static Bitmap decodeBitmap(Context context, Uri theUri, int sampleSize) {
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -168,7 +180,7 @@ public class ImagePicker {
             Log.wtf(TAG, "actuallyUsableBitmap is NULL");
         else
             Log.d(TAG, options.inSampleSize + " sample method bitmap ... " +
-                actuallyUsableBitmap.getWidth() + " " + actuallyUsableBitmap.getHeight());
+                    actuallyUsableBitmap.getWidth() + " " + actuallyUsableBitmap.getHeight());
 
         return actuallyUsableBitmap;
     }
@@ -300,20 +312,24 @@ public class ImagePicker {
         return image;
     }
 
-    public static File createTempFile(Context context, boolean external, String ext) {
+    public static File createTempFile(Context context, String ext) {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
-        return external ? new File(context.getExternalCacheDir(), "pollo_" + timestamp + "." + ext)
-                        : new File(context.getCacheDir() , "pollo_" + timestamp + "." + ext);
+        return isExternalStorageWritable()
+                    ? new File(context.getExternalCacheDir(), "pollo_" + timestamp + "." + ext)
+                    : new File(context.getCacheDir() , "pollo_" + timestamp + "." + ext);
     }
 
-    public static File createTempFile2(Context context, boolean external, String ext) throws IOException {
-        return external ? File.createTempFile("pollo", ext, context.getExternalCacheDir())
-                        : File.createTempFile("pollo", ext, context.getCacheDir());
+    public static File createTempFile2(Context context, String ext) throws IOException {
+        return isExternalStorageWritable()
+                    ? File.createTempFile("pollo", ext, context.getExternalCacheDir())
+                    : File.createTempFile("pollo", ext, context.getCacheDir());
     }
 
-    public static File createFile(Context context, boolean external, String ext) {
+    public static File createFile(Context context, String ext) throws IOException {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+        boolean external = isExternalStorageWritable();
 
         if(ext.isEmpty())  ext = "bmp";
 
@@ -327,12 +343,8 @@ public class ImagePicker {
             imagesDir.mkdirs();
         }
 
-        try {
-            return File.createTempFile("pollo_" + timestamp, "." + ext, dir);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return File.createTempFile("pollo_" + timestamp, "." + ext, dir);
+
     }
 
     /* Checks if external storage is available for read and write */

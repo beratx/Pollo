@@ -1,6 +1,7 @@
 package mattoncino.pollo;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
@@ -108,28 +109,48 @@ public class ClientThreadProcessor implements Runnable{
         }
     }
 
+    private void galleryAddPic(String currentPath) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(currentPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        context.sendBroadcast(mediaScanIntent);
+    }
+
     public void sendPollRequest() throws IOException {
             dataOutputStream.writeUTF(Consts.REQUEST);
             dataOutputStream.writeUTF(poll.getId()); //poll_id
             dataOutputStream.writeUTF(poll.getName()); //poll_name
             dataOutputStream.writeUTF(poll.getQuestion()); //poll_question
-            //dataOutputStream.writeUTF(poll.get(3)); //device address
             dataOutputStream.writeInt(poll.getOptions().size());//#options
             for (int i = 0; i < poll.getOptions().size(); i++) {
                 dataOutputStream.writeUTF(poll.getOptions().get(i));
             }
+
             dataOutputStream.writeBoolean(poll.hasImage());
+
             if(poll.hasImage()){
+
                 dataOutputStream.writeBoolean(poll.getImageInfo().isCamera());
 
                 Uri imageUri = Uri.parse(poll.getImageInfo().getPath());
-                //String mimeType = ImagePicker.getMimeType(context, imageUri);
-                //String ext = mimeType.substring(mimeType.lastIndexOf("/") + 1);
-                String ext = ImagePicker.getImageType(context, imageUri);
-                if(ext.length() == 0) ext = "bmp";
+                Log.d(TAG, "imagePath: " + poll.getImageInfo().getPath());
+                String realPath;
+                String ext;
+
+                if(poll.getImageInfo().isCamera()){
+                    realPath = poll.getImageInfo().getPath().substring(7);
+                    ext = "jpg";
+                }
+                else {
+                    realPath = ImagePicker.getRealPathFromUri(context, imageUri);
+                    ext = ImagePicker.getImageType(context, imageUri);
+                    if(ext.length() == 0) ext = "bmp";
+                }
+                Log.d(TAG, "realPath: " + realPath);
+
                 dataOutputStream.writeUTF(ext);
 
-                String realPath = ImagePicker.getRealPathFromUri(context, imageUri);
                 File imageFile = new File(realPath);
                 FileInputStream fis = new FileInputStream(imageFile);
 

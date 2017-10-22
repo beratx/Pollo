@@ -120,14 +120,18 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                File temp = new File(poll.getImageInfo().getPath());
+                String tempPath = poll.getImageInfo().getPath().substring(7);
+                File temp = new File(tempPath);
                 Uri tempUri = Uri.fromFile(temp);
                 String ext = ImagePicker.getImageType(ActivePollsActivity.this, tempUri);
+                Log.d(TAG, "temp.path: " + temp.getPath());
 
-                File perm = ImagePicker.createFile(ActivePollsActivity.this,
-                        ImagePicker.isExternalStorageWritable(), ext);
                 try {
+                    File perm = ImagePicker.createFile(ActivePollsActivity.this, ext);
+                    Log.d(TAG, "perm.path: " + perm.getPath());
+
                     ImagePicker.savePermanently(temp, perm);
+
                     Uri permUri = Uri.fromFile(perm);
                     poll.getImageInfo().setPath(permUri.toString());
                 } catch (IOException e) {

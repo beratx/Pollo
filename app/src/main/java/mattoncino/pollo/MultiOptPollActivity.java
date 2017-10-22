@@ -14,6 +14,8 @@
     import android.view.View;
     import android.widget.RelativeLayout;
 
+    import java.io.File;
+    import java.io.IOException;
     import java.util.ArrayList;
     import java.util.List;
 
@@ -52,6 +54,7 @@
                 }
             }
         }
+
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +99,6 @@
 
                     for (int i = 4; i < count; i++) {
                         TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
-                        //getText May produce Null pointer exception
                         String op = til.getEditText().getText().toString();
                         options.add(op);
                     }
@@ -105,6 +107,20 @@
                         Snackbar.make(binding.launchButton, "You should fill all fields!", Snackbar.LENGTH_LONG)
                                 .setAction("Action", null).show();
                         return;
+                    }
+
+
+                    if(imageInfo != null && imageInfo.isCamera()){
+                        String tempPath = imageInfo.getPath().substring(7);
+                        File temp = new File(tempPath);
+                        try {
+                            File perm = ImagePicker.createFile(MultiOptPollActivity.this, "jpg");
+                            boolean r = temp.renameTo(perm);
+                            String realPath = perm.getPath();
+                            imageInfo.setPath("file://" + realPath);
+                        } catch(IOException e){
+                            e.printStackTrace();
+                        }
                     }
 
                     Poll poll = new Poll(name, question, options, hasImage, imageInfo);
@@ -126,7 +142,6 @@
                     if(resultCode == RESULT_OK){
                         Log.d(TAG, "RESULT IS OK");
                         imageInfo = ImagePicker.getImageFromResult(this, resultCode, data);
-                        //getPath may result null pointer expcetion
                         bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), MultiOptPollActivity.this, imageInfo.isCamera());
                         binding.imageView.setVisibility(View.VISIBLE);
                         binding.imageView.setImageBitmap(bitmap);
@@ -140,37 +155,6 @@
                     super.onActivityResult(requestCode, resultCode, data);
                     break;
             }
-        }
-
-
-        private Poll createPoll(){
-            String name = binding.nameEditText.getText().toString();
-            String question = binding.questionEditText.getText().toString();
-
-            final RelativeLayout rLayout = (RelativeLayout) findViewById(R.id.activity_multi_opt_poll);
-            List<String> options = new ArrayList<>();
-
-
-            for (int i = 4; i < count; i++) {
-                TextInputLayout til = (TextInputLayout) rLayout.getChildAt(i);
-                //getText may result NullPointerExpcetion
-                String op = til.getEditText().getText().toString();
-                options.add(op);
-            }
-
-            if(name.isEmpty() || question.isEmpty() || isEmpty(options)){
-                Snackbar.make(binding.launchButton, "You should fill all fields!", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
-                return null;
-            }
-
-            /*mattoncino.pollo.JmDnsManager connectionManager = ((MyApplication) getApplication()).getConnectionManager();
-            if (connectionManager == null) {
-                Log.d(TAG, "connectionManager is null!!!");
-                return null;
-            }*/
-
-            return new Poll(name, question, options, hasImage, imageInfo);
         }
 
         private boolean isEmpty(List<String> options){

@@ -101,7 +101,7 @@ public class ClientHandler implements Runnable{
         if(hasImage) {
             isCamera = dataInputStream.readBoolean();
             String imageType = dataInputStream.readUTF();
-            File imageFile = ImagePicker.createTempFile(context, ImagePicker.isExternalStorageWritable(), imageType);
+            File imageFile = ImagePicker.createTempFile(context, imageType);
             if (imageFile != null) {
                 Uri imageUri = Uri.fromFile(imageFile);
                 Log.d(TAG, "imageUri for received image: " + imageUri.toString());
