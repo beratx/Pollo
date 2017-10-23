@@ -29,6 +29,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
     private List<PollData> activePolls;
     private final static String TAG = "PollsCardViewAdapter";
+    private final static int VIEW_COUNT = 4;
     private static final int VIEW_OWN = 1;
     private static final int VIEW_OTHER = 2;
 
@@ -80,6 +81,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         final PollData pollData = activePolls.get(position);
         final Poll poll = pollData.getPoll();
         final LinearLayout rLayout = binding.listItemLayout;
+        final SoundRecord record;
         //holder.rLayout.removeAllViews();
 
         //TODO remove extra options
@@ -98,11 +100,36 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         }
         else binding.imageView.setImageDrawable(null);
 
+        if(pollData.hasRecord()){
+            String recordPath = pollData.getRecordPath();
+            Log.d(TAG, "recordPath: " + recordPath);
+            record = new SoundRecord(recordPath);
+
+            binding.recordCardView.setVisibility(View.VISIBLE);
+
+            binding.playFAB.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (record.isPlay()) {
+                        Log.d(TAG, "Record is stopped.");
+                        binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+                        record.stopPlaying();
+                    } else {
+                        Log.d(TAG, "Record is playing...");
+                        binding.playFAB.setImageResource(android.R.drawable.ic_media_pause);
+                        record.startPlaying();
+                        binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+                    }
+                    record.setPlay();
+                }
+            });
+        }
+
 
         for (int i = 0; i < poll.getOptions().size(); i++) {
-            final Button button = (Button) rLayout.getChildAt(i+3);
-            final int opt = i+1;
+            final Button button = (Button) rLayout.getChildAt(i + VIEW_COUNT);
             button.setVisibility(View.VISIBLE);
+            final int opt = i+1;
 
             //button.setEnabled(!pollData.isDisabled() && !pollData.isTerminated());
 
@@ -159,7 +186,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                             button.invalidate();
 
                             for (int i = 0; i < poll.getOptions().size(); i++) {
-                                Button option = (Button) rLayout.getChildAt(i + 3);
+                                Button option = (Button) rLayout.getChildAt(i + VIEW_COUNT);
                                 option.setEnabled(false);
                             }
 
@@ -199,6 +226,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         binding.imageView.setVisibility(View.GONE);
         binding.statsTextView.setVisibility(View.GONE);
         binding.terminateButton.setEnabled(false);
+        binding.recordCardView.setVisibility(View.GONE);
     }
 
     private void setCardDetails(final LinearLayout lLayout, final PollData pd, final int opt){

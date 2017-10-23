@@ -118,68 +118,92 @@ public class ClientThreadProcessor implements Runnable{
     }
 
     public void sendPollRequest() throws IOException {
-            dataOutputStream.writeUTF(Consts.REQUEST);
-            dataOutputStream.writeUTF(poll.getId()); //poll_id
-            dataOutputStream.writeUTF(poll.getName()); //poll_name
-            dataOutputStream.writeUTF(poll.getQuestion()); //poll_question
-            dataOutputStream.writeInt(poll.getOptions().size());//#options
-            for (int i = 0; i < poll.getOptions().size(); i++) {
-                dataOutputStream.writeUTF(poll.getOptions().get(i));
+        dataOutputStream.writeUTF(Consts.REQUEST);
+        dataOutputStream.writeUTF(poll.getId()); //poll_id
+        dataOutputStream.writeUTF(poll.getName()); //poll_name
+        dataOutputStream.writeUTF(poll.getQuestion()); //poll_question
+
+        dataOutputStream.writeInt(poll.getOptions().size());//#options
+        for (int i = 0; i < poll.getOptions().size(); i++) {
+            dataOutputStream.writeUTF(poll.getOptions().get(i));
+        }
+
+        dataOutputStream.writeBoolean(poll.hasRecord());
+
+        if(poll.hasRecord()){
+            File recordFile = new File(poll.getRecordPath());
+            long length = recordFile.length();
+            dataOutputStream.writeLong(length);
+
+            FileInputStream fis = new FileInputStream(recordFile);
+
+            Log.d(TAG, "Record len: " + recordFile.length());
+
+            int len;
+            byte[] byteArray = new byte[2048];
+
+            while (length > 0 && (len = fis.read(byteArray, 0, (int)Math.min(byteArray.length, length))) != -1)
+            {
+                dataOutputStream.write(byteArray, 0, len);
+                dataOutputStream.flush();
+                length -= len;
             }
+            fis.close();
+            Log.d(TAG, "Record sent over network and stream is closed.");
+        }
 
-            dataOutputStream.writeBoolean(poll.hasImage());
+        dataOutputStream.writeBoolean(poll.hasImage());
 
-            if(poll.hasImage()){
+        if(poll.hasImage()){
+            String realPath;
+            String ext;
 
-                dataOutputStream.writeBoolean(poll.getImageInfo().isCamera());
+            dataOutputStream.writeBoolean(poll.getImageInfo().isCamera());
 
+            if(poll.getImageInfo().isCamera()){
+                realPath = poll.getImageInfo().getPath().substring(7);
+                ext = "jpg";
+            }
+            else {
                 Uri imageUri = Uri.parse(poll.getImageInfo().getPath());
-                Log.d(TAG, "imagePath: " + poll.getImageInfo().getPath());
-                String realPath;
-                String ext;
+                realPath = ImagePicker.getRealPathFromUri(context, imageUri);
+                ext = ImagePicker.getImageType(context, imageUri);
+                if(ext.length() == 0) ext = "bmp";
+            }
+            Log.d(TAG, "imagePath: " + poll.getImageInfo().getPath());
+            Log.d(TAG, "realPath: " + realPath);
 
-                if(poll.getImageInfo().isCamera()){
-                    realPath = poll.getImageInfo().getPath().substring(7);
-                    ext = "jpg";
-                }
-                else {
-                    realPath = ImagePicker.getRealPathFromUri(context, imageUri);
-                    ext = ImagePicker.getImageType(context, imageUri);
-                    if(ext.length() == 0) ext = "bmp";
-                }
-                Log.d(TAG, "realPath: " + realPath);
+            dataOutputStream.writeUTF(ext);
 
-                dataOutputStream.writeUTF(ext);
+            File imageFile = new File(realPath);
 
-                File imageFile = new File(realPath);
-                FileInputStream fis = new FileInputStream(imageFile);
+            long length = imageFile.length();
+            dataOutputStream.writeLong(length);
 
-                Log.d(TAG, "Image len: " + imageFile.length() + " ext: " + ext);
+            FileInputStream fis = new FileInputStream(imageFile);
 
-                int len;
-                byte[] byteArray = new byte[8192];
+            Log.d(TAG, "Image len: " + imageFile.length() + " ext: " + ext);
 
-                while( (len = fis.read(byteArray)) != -1 ){
-                    dataOutputStream.write(byteArray, 0, len);
-                    dataOutputStream.flush();
-                }
+            int len;
+            byte[] byteArray = new byte[8192];
 
-                fis.close();
-
-                Log.d(TAG, "Image sent over network and stream is closed.");
+            while( (len = fis.read(byteArray)) != -1 ){
+                dataOutputStream.write(byteArray, 0, len);
+                dataOutputStream.flush();
             }
 
-            Log.d(TAG, "SENT POLL_REQUEST");
+            fis.close();
+            Log.d(TAG, "Image sent over network and stream is closed.");
+        }
+
+        Log.d(TAG, "SENT POLL_REQUEST");
     }
 
     public void sendAccept() throws IOException {
             dataOutputStream.writeUTF(Consts.ACCEPT);
             dataOutputStream.writeUTF(pollInfo.get(0)); //poll_id
-            //dataOutputStream.writeUTF(pollInfo.get(1)); //poll_hostAddress
             dataOutputStream.flush();
-            //System.out.println("hostIpaddress: " + hostIpAddress + " address in pollInfo: " + pollInfo.get(1));
 
-            //BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             dataInputStream = new DataInputStream(socket.getInputStream());
 
             final String res = dataInputStream.readUTF();

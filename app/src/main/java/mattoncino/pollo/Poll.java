@@ -19,18 +19,22 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     private List<String> options;
     private ImageInfo imageInfo;
     private boolean hasImage;
+    private String recordPath;
+    private boolean hasRecord;
 
-    public Poll(String id, String name, String question, List<String> options, boolean hasImage, ImageInfo info) {
+    public Poll(String id, String name, String question, List<String> options, boolean hasImage, ImageInfo info, String recordPath) {
         this.id = id;
         this.name = name;
         this.question = question;
         this.options = options;
         this.hasImage = hasImage;
         this.imageInfo = (hasImage) ? info : null;
+        this.recordPath = recordPath;
+        this.hasRecord = recordPath != null;
     }
 
-    public Poll(String name, String question, List<String> options, boolean hasImage, ImageInfo info) {
-        this(UUID.randomUUID().toString(), name, question, options, hasImage, info);
+    public Poll(String name, String question, List<String> options, boolean hasImage, ImageInfo info, String recordPath) {
+        this(UUID.randomUUID().toString(), name, question, options, hasImage, info, recordPath);
     }
 
     public String getId() {
@@ -61,18 +65,30 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         return question;
     }
 
-    public ImageInfo getImageInfo() {
-        return imageInfo;
-    }
-
     @Bindable
     public List<String> getOptions(){
         return options;
     }
 
+    public ImageInfo getImageInfo() {
+        return imageInfo;
+    }
 
     public boolean hasImage() {
         return hasImage;
+    }
+
+    public boolean hasRecord() {
+        return hasRecord;
+    }
+
+    @Bindable
+    public String getRecordPath() {
+        return recordPath;
+    }
+
+    public void setRecordPath(String recordPath) {
+        this.recordPath = recordPath;
     }
 
 
@@ -87,10 +103,14 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         parcel.writeString(name);
         parcel.writeString(question);
         parcel.writeStringList(options);
+
         parcel.writeByte((byte) (hasImage ? 1 : 0));
         if(hasImage)
             parcel.writeParcelable(imageInfo,i);
         else parcel.writeValue(imageInfo);
+
+        parcel.writeByte((byte) (hasRecord ? 1 : 0));
+        parcel.writeString(recordPath);
 
         //parcel.writeString(hostAddress);
         //votes = Collections.synchronizedList(new ArrayList());
@@ -120,6 +140,9 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
             imageInfo = parcel.readParcelable(ImageInfo.class.getClassLoader());
         else
             imageInfo = (ImageInfo) parcel.readValue(ImageInfo.class.getClassLoader());
+
+        hasRecord  = parcel.readByte() != 0;
+        recordPath = parcel.readString();
 
 
         //imageUri = Uri.CREATOR.createFromParcel(parcel);

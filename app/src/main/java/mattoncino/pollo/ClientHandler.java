@@ -82,11 +82,9 @@ public class ClientHandler implements Runnable{
     }
 
     private void serveRequestMessage() throws IOException {
-        ImageInfo info = null;
-
-        String id = dataInputStream.readUTF();//poll_id
-        String name = dataInputStream.readUTF(); //poll_name
-        String question = dataInputStream.readUTF(); //poll_question
+        String id = dataInputStream.readUTF();
+        String name = dataInputStream.readUTF();
+        String question = dataInputStream.readUTF();
 
         int optCount = dataInputStream.readInt();
         List<String> options = new ArrayList<>();
@@ -96,28 +94,63 @@ public class ClientHandler implements Runnable{
 
         final String hostAddress = socket.getInetAddress().getHostAddress();
 
+        boolean hasRecord = dataInputStream.readBoolean();
+        String recordPath = null;
+
+        if(hasRecord){
+            recordPath = SoundRecord.createTempFile(context, "3gp");
+            FileOutputStream fileOut = new FileOutputStream(recordPath);
+
+            long fileLength = dataInputStream.readLong();
+
+            byte[] buffer = new byte[2048];
+            long sum = 0;
+            int len;
+
+            while(sum < fileLength){
+                len = dataInputStream.read(buffer, 0, (int)Math.min(buffer.length, fileLength - sum));
+                fileOut.write(buffer, 0, len);
+                fileOut.flush();
+                sum += len;
+            }
+
+            fileOut.close();
+
+            Log.d(TAG, "Record is received and saved.");
+        }
+
         boolean hasImage = dataInputStream.readBoolean();
-        boolean isCamera;
+
+        ImageInfo info = null;
+
         if(hasImage) {
-            isCamera = dataInputStream.readBoolean();
-            String imageType = dataInputStream.readUTF();
-            File imageFile = ImagePicker.createTempFile(context, imageType);
+            boolean isCamera = dataInputStream.readBoolean();
+
+            String ext = dataInputStream.readUTF();
+            File imageFile = ImagePicker.createTempFile(context, ext);
+
             if (imageFile != null) {
+
+                long fileLength = dataInputStream.readLong();
+
                 Uri imageUri = Uri.fromFile(imageFile);
                 Log.d(TAG, "imageUri for received image: " + imageUri.toString());
                 FileOutputStream fileOut = new FileOutputStream(imageFile);
 
                 int len;
+                long sum = 0;
                 byte[] buffer = new byte[8192];
 
-                while((len = dataInputStream.read(buffer, 0, 8192)) != -1){
+                while(sum < fileLength){
+                    len = dataInputStream.read(buffer, 0, 8192);
                     fileOut.write(buffer, 0, len);
                     fileOut.flush();
+                    sum += len;
                 }
 
                 fileOut.close();
 
-                Log.d(TAG, "Image is received and saved. image length: " + imageFile.length() + " ext: " + imageType);
+                Log.d(TAG, "Image is received and saved. image length: " + imageFile.length() + " ext: " + ext);
 
                 info = new ImageInfo(imageUri.toString(), isCamera);
             }
@@ -125,7 +158,7 @@ public class ClientHandler implements Runnable{
                 Log.wtf(TAG, "ImagePicker.createFile returns NULL");
         }
 
-        poll = new Poll(id, name, question, options, hasImage, info);
+        poll = new Poll(id, name, question, options, hasImage, info, recordPath);
 
         Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
 

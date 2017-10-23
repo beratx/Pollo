@@ -14,7 +14,7 @@ import java.util.Set;
 public class PollData extends BaseObservable implements Parcelable, Serializable {
     private Poll poll;
     private Set<String> contactedDevices; /* devices that i sent request */
-    private Set<String> acceptedDevices; /* devices which sent accept response, we hold this set to send them result */
+    private Set<String> acceptedDevices; /* devices which sent accept response */
     private Set<String> votedDevices; /* devices which sent accept and voted */
     private int responseCount; /* #devices that sent accept/reject response */
     private int[] votes;
@@ -152,6 +152,14 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
 
     public ImageInfo getImageInfo(){
         return poll.getImageInfo();
+    }
+
+    public boolean hasRecord(){
+        return poll.hasRecord();
+    }
+
+    public String getRecordPath(){
+        return poll.getRecordPath();
     }
 
     public int getVotesFor(int opt) {

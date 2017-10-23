@@ -83,18 +83,22 @@ public class PollManager extends Observable {
         for (Iterator<PollData> i = active_polls.iterator(); i.hasNext(); ) {
             PollData pd = i.next();
             if (pd.getID().equals(pollID)) {
-                if(pd.hasImage()) {
-                    String imagePath = pd.getImageInfo().getPath();
-                    File image = new File(imagePath);
-                    boolean r = image.delete();
-                    if(r) Log.d(TAG, imagePath + " is deleted successfully");
-                }
+                if(pd.hasImage())
+                    removeFile(pd.getImageInfo().getPath());
+                if(pd.hasRecord())
+                    removeFile(pd.getRecordPath());
                 i.remove();
                 setChanged();
                 notifyObservers();
                 break;
             }
         }
+    }
+
+    private void removeFile(String path){
+        File file = new File(path);
+        boolean r = file.delete();
+        if(r) Log.d(TAG, path + " is deleted successfully");
     }
 
 

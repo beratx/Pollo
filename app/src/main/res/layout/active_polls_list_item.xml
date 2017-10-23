@@ -46,6 +46,29 @@
                 android:adjustViewBounds="true"
                 android:visibility="gone" />
 
+            <android.support.v7.widget.CardView
+                android:id="@+id/recordCardView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/playFAB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        card_view:fabSize="mini"
+                        card_view:srcCompat="@android:drawable/ic_media_play"
+                        android:layout_weight="1" />
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
             <Button
                 android:id="@+id/opt1Button"
                 android:layout_width="match_parent"
@@ -100,46 +123,46 @@
                 android:visibility="gone"/>
 
 
-        <LinearLayout
-            android:id="@+id/ownerLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:weightSum="2"
-            android:padding="5dp">
+            <LinearLayout
+                android:id="@+id/ownerLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                android:padding="5dp">
 
-            <Button
-                android:id="@+id/terminateButton"
-                android:layout_width="0px"
-                android:layout_weight="1"
+                <Button
+                    android:id="@+id/terminateButton"
+                    android:layout_width="0px"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:textAllCaps="false"
+                    android:text="Terminate"
+                    android:enabled="false"
+                    android:visibility="gone"/>
+
+
+                <Button
+                    android:id="@+id/removeButton"
+                    android:layout_width="0px"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:textAllCaps="false"
+                    android:text="Remove" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/statsTextView"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textAllCaps="false"
-                android:text="Terminate"
-                android:enabled="false"
-                android:visibility="gone"/>
-
-
-            <Button
-                android:id="@+id/removeButton"
-                android:layout_width="0px"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textAllCaps="false"
-                android:text="Remove" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/statsTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:visibility="gone"
-            android:textAlignment="center"
-            android:text="0 voted / 0 accepted / 0 sent"/>
+                android:layout_gravity="center_horizontal"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:textAlignment="center"
+                android:text="0 voted / 0 accepted / 0 sent"/>
 
         </LinearLayout>
     </android.support.v7.widget.CardView>

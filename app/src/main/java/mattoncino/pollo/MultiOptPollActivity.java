@@ -1,16 +1,22 @@
     package mattoncino.pollo;
 
+    import android.Manifest;
     import android.content.Intent;
+    import android.content.pm.PackageManager;
     import android.databinding.DataBindingUtil;
     import android.graphics.Bitmap;
     import android.net.Uri;
     import android.os.Bundle;
     import android.os.Parcelable;
     import android.os.StrictMode;
+    import android.support.annotation.NonNull;
+    import android.support.design.widget.FloatingActionButton;
     import android.support.design.widget.Snackbar;
     import android.support.design.widget.TextInputLayout;
+    import android.support.v4.app.ActivityCompat;
     import android.support.v7.app.AppCompatActivity;
     import android.util.Log;
+    import android.view.MotionEvent;
     import android.view.View;
     import android.widget.RelativeLayout;
 
@@ -23,12 +29,23 @@
 
     public class MultiOptPollActivity extends AppCompatActivity {
         private static final String TAG = "MultiOptPollActivity";
+        private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
         private static final int PICK_IMAGE_ID = 87;
+        private static int VIEW_MAX = 12;
+        private static int FIRST_CHILD = 4;
         private ActivityMultiOptPollBinding binding;
         private Bitmap bitmap;
         private ImageInfo imageInfo;
         private boolean hasImage = false;
-        private int count = 6;
+        private int count = FIRST_CHILD + 2;
+        private SoundRecord record;
+        private String recordPath;
+        private boolean hasRecord = false;
+
+        // Requesting permission to RECORD_AUDIO
+        private boolean permissionToRecordAccepted = false;
+        private String [] permissions = {Manifest.permission.RECORD_AUDIO};
+
 
 
         @Override
@@ -56,10 +73,30 @@
         }
 
 
+
+        @Override
+        public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            switch (requestCode){
+                case REQUEST_RECORD_AUDIO_PERMISSION:
+                    permissionToRecordAccepted  = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                    //recordPath = getExternalCacheDir().getAbsolutePath();
+                    //recordPath += "/audiorecordtest.3gp";
+                    //TODO check file extension for more adapt one
+                    recordPath = SoundRecord.createFile2(MultiOptPollActivity.this, "3gp");
+                    record = new SoundRecord(recordPath);
+                    break;
+            }
+            if (!permissionToRecordAccepted ) finish();
+
+        }
+
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             binding = DataBindingUtil.setContentView(this, R.layout.activity_multi_opt_poll);
+
+            ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
 
             if (android.os.Build.VERSION.SDK_INT > 9) {
                 StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
@@ -75,7 +112,7 @@
                     rLayout.getChildAt(count++).setVisibility(View.VISIBLE);
                     System.out.println("addFab: count: " + count);
 
-                    if(count == 9) binding.addFAB.setVisibility(View.GONE);
+                    if(count == VIEW_MAX) binding.addFAB.setVisibility(View.GONE);
                 }
             });
 
@@ -84,6 +121,45 @@
                 public void onClick(View view) {
                     Intent chooseImageIntent = ImagePicker.getPickImageIntent(MultiOptPollActivity.this);
                     startActivityForResult(chooseImageIntent, PICK_IMAGE_ID);
+                }
+            });
+
+
+            binding.recordFAB.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent event) {
+                    switch(event.getAction()){
+                        case MotionEvent.ACTION_DOWN:
+                            Log.d(TAG, "Start Recording...");
+                            binding.recordFAB.setSize(FloatingActionButton.SIZE_NORMAL);
+                            record.startRecording();
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            Log.d(TAG, "Stop Recording...");
+                            binding.recordFAB.setSize(FloatingActionButton.SIZE_MINI);
+                            record.stopRecording();
+                            hasRecord = true;
+                            break;
+                    }
+                    return false;
+                }
+            });
+
+            binding.playFAB.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (record.isPlay()) {
+                        Log.d(TAG, "Record is stopped.");
+                        record.stopPlaying();
+                        binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+
+                    } else {
+                        Log.d(TAG, "Record is playing...");
+                        record.startPlaying();
+                        binding.playFAB.setImageResource(android.R.drawable.ic_media_pause);
+
+                    }
+                    record.setPlay();
                 }
             });
 
@@ -123,7 +199,9 @@
                         }
                     }
 
-                    Poll poll = new Poll(name, question, options, hasImage, imageInfo);
+                    if(!hasRecord) recordPath = null;
+
+                    Poll poll = new Poll(name, question, options, hasImage, imageInfo, recordPath);
 
                     Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
                             .putExtra(Consts.OWNER, Consts.OWN)
