@@ -275,8 +275,10 @@ public class ClientHandler implements Runnable{
                         .setContentText(poll.getName())
                         .setAutoCancel(true)
                         .setPriority(Notification.PRIORITY_MAX)
+                        .setVibrate(new long[] { 0, 1000, 1000, 1000, 1000 })
                         .addAction(R.mipmap.ic_launcher, "Accept", acceptedPendingIntent)
                         .addAction(R.mipmap.ic_launcher, "Reject", rejectedPendingIntent);
+                        //.setLights(Color.RED, 3000, 3000);
 
         builder.setContentIntent(acceptedPendingIntent);
 

@@ -6,6 +6,7 @@ import android.media.MediaRecorder;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,23 +17,56 @@ public class SoundRecord {
     private MediaRecorder mRecorder = null;
     private MediaPlayer mPlayer = null;
     private String recordPath = null;
-    private boolean isPlaying = false;
+    private static final String TEMP_RECORD = "tempRecord";
+    private boolean startPlaying = true;
 
     public SoundRecord(String recordPath){
         this.recordPath = recordPath;
     }
 
     public boolean isPlay(){
-        return isPlaying;
+        return startPlaying;
     }
 
     public void setPlay(){
-        isPlaying = !isPlaying;
+        startPlaying = !startPlaying;
     }
+
+    public void onPlay(){
+        if (startPlaying) {
+            startPlaying();
+        } else {
+            stopPlaying();
+        }
+    }
+
+    public int getDuration() throws IOException {
+        if(mPlayer == null) {
+            mPlayer = new MediaPlayer();
+            mPlayer.setDataSource(recordPath);
+            mPlayer.prepare();
+        }
+
+        int duration = mPlayer.getDuration();
+
+        mPlayer.release();
+        mPlayer = null;
+
+        return duration;
+    }
+
+    /*public int getDuration2(){
+        Uri uri = Uri.parse(recordPath);
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(AppContext.getAppContext(),uri);
+        String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        int millSecond = Integer.parseInt(durationStr);
+    }*/
 
     public void startPlaying() {
         mPlayer = new MediaPlayer();
         try {
+            //mPlayer.reset()?
             mPlayer.setDataSource(recordPath);
             mPlayer.prepare();
             mPlayer.start();
@@ -41,17 +75,21 @@ public class SoundRecord {
         }
     }
 
+    public void setCompletionListener( MediaPlayer.OnCompletionListener listener) {
+        mPlayer.setOnCompletionListener(listener);
+    }
+
     public void stopPlaying() {
         mPlayer.release();
         mPlayer = null;
     }
 
     public void startRecording() {
-        mRecorder = new MediaRecorder();
-        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mRecorder.setOutputFile(recordPath);
-        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        this.mRecorder = new MediaRecorder();
+        this.mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        this.mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        this.mRecorder.setOutputFile(recordPath);
+        this.mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
         try {
             mRecorder.prepare();
@@ -81,15 +119,20 @@ public class SoundRecord {
     }
 
     public static String createTempFile(Context context, String ext) {
-        String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File recordFile;
+
         boolean external = ImagePicker.isExternalStorageWritable();
 
-        String recordPath =  external ? context.getExternalCacheDir().getAbsolutePath() + "/" + timestamp + "." + ext
-                                      : context.getCacheDir().getAbsolutePath() + "/" + timestamp + "." + ext;
+        recordFile =  external ? new File(context.getExternalCacheDir().getAbsolutePath()
+                                                        + File.separator + TEMP_RECORD + "." + ext)
+                               : new File(context.getCacheDir().getAbsolutePath()
+                                                        + File.separator + TEMP_RECORD + "." + ext);
 
-        Log.d(TAG, "record file path: " + recordPath);
+        recordFile.getParentFile().mkdirs();
 
-        return recordPath;
+        Log.d(TAG, "record file path: " + recordFile.getPath());
+
+        return recordFile.getPath();
     }
 
     public static String createFile2(Context context, String ext) {
@@ -105,8 +148,10 @@ public class SoundRecord {
             recordDir.mkdirs();
         }*/
 
-        String recordPath =  external ? Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + timestamp + "." + ext
-                                      : context.getFilesDir().getAbsolutePath() + "/" + timestamp + "." + ext;
+        String recordPath =  external ? Environment.getExternalStorageDirectory().getAbsolutePath()
+                                        + File.separator + timestamp + "." + ext
+                                      : context.getFilesDir().getAbsolutePath() + File.separator +
+                                        timestamp + "." + ext;
 
         Log.d(TAG, "record file path: " + recordPath);
 

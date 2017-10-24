@@ -5,10 +5,12 @@
     import android.content.pm.PackageManager;
     import android.databinding.DataBindingUtil;
     import android.graphics.Bitmap;
+    import android.media.MediaPlayer;
     import android.net.Uri;
     import android.os.Bundle;
     import android.os.Parcelable;
     import android.os.StrictMode;
+    import android.os.SystemClock;
     import android.support.annotation.NonNull;
     import android.support.design.widget.FloatingActionButton;
     import android.support.design.widget.Snackbar;
@@ -16,8 +18,10 @@
     import android.support.v4.app.ActivityCompat;
     import android.support.v7.app.AppCompatActivity;
     import android.util.Log;
+    import android.view.HapticFeedbackConstants;
     import android.view.MotionEvent;
     import android.view.View;
+    import android.view.ViewGroup;
     import android.widget.RelativeLayout;
 
     import java.io.File;
@@ -64,6 +68,11 @@
                 imageInfo = new ImageInfo(savedInstanceState.getString("imagePath"), savedInstanceState.getBoolean("isCamera"));
                 if(imageInfo.getPath() != null) {
                     bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), MultiOptPollActivity.this, imageInfo.isCamera());
+
+                    ViewGroup.LayoutParams params = binding.imageCardView.getLayoutParams();
+                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    binding.imageCardView.setLayoutParams(params);
+
                     binding.imageView.setVisibility(View.VISIBLE);
                     binding.imageView.setImageBitmap(bitmap);
                     binding.imageView.invalidate();
@@ -80,9 +89,7 @@
             switch (requestCode){
                 case REQUEST_RECORD_AUDIO_PERMISSION:
                     permissionToRecordAccepted  = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                    //recordPath = getExternalCacheDir().getAbsolutePath();
-                    //recordPath += "/audiorecordtest.3gp";
-                    //TODO check file extension for more adapt one
+                    //TODO check for a better file extension
                     recordPath = SoundRecord.createFile2(MultiOptPollActivity.this, "3gp");
                     record = new SoundRecord(recordPath);
                     break;
@@ -95,6 +102,7 @@
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             binding = DataBindingUtil.setContentView(this, R.layout.activity_multi_opt_poll);
+            setTitle("Create Poll");
 
             ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
 
@@ -132,12 +140,16 @@
                         case MotionEvent.ACTION_DOWN:
                             Log.d(TAG, "Start Recording...");
                             binding.recordFAB.setSize(FloatingActionButton.SIZE_NORMAL);
+                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                             record.startRecording();
+                            binding.chronometer.setBase(SystemClock.elapsedRealtime());
+                            binding.chronometer.start();
                             break;
                         case MotionEvent.ACTION_UP:
                             Log.d(TAG, "Stop Recording...");
                             binding.recordFAB.setSize(FloatingActionButton.SIZE_MINI);
                             record.stopRecording();
+                            binding.chronometer.stop();
                             hasRecord = true;
                             break;
                     }
@@ -148,20 +160,37 @@
             binding.playFAB.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (record.isPlay()) {
-                        Log.d(TAG, "Record is stopped.");
-                        record.stopPlaying();
-                        binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+                    if(hasRecord) {
+                        if (record.isPlay()) {
+                            Log.d(TAG, "Record is playing...");
+                            record.startPlaying();
+                            record.setCompletionListener(new playCompletionListener());
+                            binding.chronometer.setBase(SystemClock.elapsedRealtime());
+                            binding.chronometer.start();
+                            binding.playFAB.setImageResource(android.R.drawable.ic_media_pause);
+                            //binding.chronometer.stop();
+                        } else {
+                            record.stopPlaying();
+                            Log.d(TAG, "Record is stopped.");
+                            binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+                        }
 
-                    } else {
-                        Log.d(TAG, "Record is playing...");
-                        record.startPlaying();
-                        binding.playFAB.setImageResource(android.R.drawable.ic_media_pause);
-
+                        record.setPlay();
                     }
-                    record.setPlay();
                 }
             });
+
+            binding.removeFAB.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(hasRecord) {
+                        binding.chronometer.setBase(SystemClock.elapsedRealtime());
+                        hasRecord = false;
+                    }
+                }
+            });
+
+
 
             binding.launchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -192,14 +221,30 @@
                         try {
                             File perm = ImagePicker.createFile(MultiOptPollActivity.this, "jpg");
                             boolean r = temp.renameTo(perm);
-                            String realPath = perm.getPath();
-                            imageInfo.setPath("file://" + realPath);
+                            if(r) {
+                                String realPath = perm.getPath();
+                                imageInfo.setPath("file://" + realPath);
+                                Log.v(TAG, "image file renamed successfully");
+                            } else Log.wtf(TAG, "can't rename image file");
                         } catch(IOException e){
                             e.printStackTrace();
                         }
                     }
 
-                    if(!hasRecord) recordPath = null;
+                    if(hasRecord){
+                        File temp = new File(recordPath);
+                        try {
+                            File perm = ImagePicker.createFile(MultiOptPollActivity.this, "3gp");
+                            boolean r = temp.renameTo(perm);
+                            if(r) {
+                                recordPath = perm.getPath();
+                                Log.v(TAG, "record file renamed successfully");
+                            } else Log.wtf(TAG, "can't rename record file");
+                        } catch(IOException e){
+                            e.printStackTrace();
+                        }
+
+                    } else recordPath = null;
 
                     Poll poll = new Poll(name, question, options, hasImage, imageInfo, recordPath);
 
@@ -221,6 +266,11 @@
                         Log.d(TAG, "RESULT IS OK");
                         imageInfo = ImagePicker.getImageFromResult(this, resultCode, data);
                         bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), MultiOptPollActivity.this, imageInfo.isCamera());
+
+                        ViewGroup.LayoutParams params = binding.imageCardView.getLayoutParams();
+                        params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                        binding.imageCardView.setLayoutParams(params);
+
                         binding.imageView.setVisibility(View.VISIBLE);
                         binding.imageView.setImageBitmap(bitmap);
                         binding.imageView.invalidate();
@@ -247,5 +297,14 @@
         public void onBackPressed()
         {
             startActivity(new Intent(MultiOptPollActivity.this, mattoncino.pollo.MainActivity.class));
+        }
+
+        private class playCompletionListener implements MediaPlayer.OnCompletionListener {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+                binding.chronometer.stop();
+                record.setPlay();
+            }
         }
     }

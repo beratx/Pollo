@@ -90,7 +90,6 @@ public class ImagePicker {
     public static ImageInfo getImageFromResult(Context context, int resultCode,
                                                Intent imageReturnedIntent) {
         Log.d(TAG, "getImageFromResult, resultCode: " + resultCode);
-        //Bitmap bm = null;
         File imageFile = getTempFile(context);
 
         if (resultCode == Activity.RESULT_OK) {
@@ -106,14 +105,9 @@ public class ImagePicker {
             }
             Log.d(TAG, "selectedImage: " + selectedImage);
 
-            /*bm = getImageResized(context, selectedImage);
-            int rotation = getRotation(context, selectedImage, isCamera);
-            bm = rotate(bm, rotation);*/
-            //return new ImageInfo(selectedImage, isCamera);
             return new ImageInfo(selectedImage.toString(), isCamera);
         }
 
-        //return bm
         return null;
     }
 
@@ -124,18 +118,6 @@ public class ImagePicker {
         return bm;
     }
 
-    /*public static File getTempFile(Context context) {
-        File imageFile;
-
-        if(isExternalStorageWritable())
-            imageFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), TEMP_IMAGE_NAME);
-        else
-            imageFile = new File(context.getFilesDir(), TEMP_IMAGE_NAME);
-
-        imageFile.getParentFile().mkdirs();
-
-        return imageFile;
-    }*/
 
     public static File getTempFile(Context context) {
         File imageFile;
@@ -162,7 +144,6 @@ public class ImagePicker {
             e.printStackTrace();
         }
 
-        //TODO getFileDescriptor may produce NUllPointerException
         Bitmap actuallyUsableBitmap = BitmapFactory.decodeFileDescriptor(
                 fileDescriptor.getFileDescriptor(), null, options);
 
@@ -286,31 +267,6 @@ public class ImagePicker {
         }
     }
 
-    public static File getPictureStorageDir(Context context, String albumName) {
-        // Get the directory for the app's private pictures directory.
-        File file = new File(context.getExternalFilesDir(
-                Environment.DIRECTORY_PICTURES), albumName);
-        if (!file.mkdirs()) {
-            Log.e(TAG, "Directory not created");
-        }
-        return file;
-    }
-
-    public static File createImageFile(Context context) throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".bmp",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        //String absolutePathPath = image.getAbsolutePath();
-        return image;
-    }
 
     public static File createTempFile(Context context, String ext) {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -388,7 +344,6 @@ public class ImagePicker {
         return mimeType;
     }
 
-    //TODO gives null pointer exception controt it!!!
     public static String getImageType(Context context, Uri uri){
         String mimeType = ImagePicker.getMimeType(context, uri);
         return mimeType.substring(mimeType.lastIndexOf("/") + 1);
@@ -399,7 +354,6 @@ public class ImagePicker {
         try {
             OutputStream out = new FileOutputStream(dst);
             try {
-                // Transfer bytes from in to out
                 byte[] buf = new byte[1024];
                 int len;
                 while ((len = in.read(buf)) > 0) {

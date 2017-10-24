@@ -94,9 +94,13 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                         acceptedPollRequest = true;
                         if (poll.hasImage())
                             saveImagePermanently();
+                        if(poll.hasRecord())
+                            saveRecordPermanently();
                     } else { //not accepted
                         if (poll.hasImage())
-                            removeImageFromCache();
+                            removeFromCache(poll.getImageInfo().getPath().substring(7));
+                        if(poll.hasRecord())
+                            removeFromCache(poll.getRecordPath());
                         data.remove(Consts.POLL);
                     }
 
@@ -109,11 +113,37 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     "No active Wifi connection. Please connect to an Access Point.");
     }
 
-    private void removeImageFromCache(){
+
+    private void removeFromCache(String path){
+        File file = new File(path);
+        boolean r = file.delete();
+        if (r) Log.d(TAG, "image in cache is deleted.");
+    }
+
+    /*private void removeImageFromCache(){
         String imagePath = poll.getImageInfo().getPath();
         File image = new File(imagePath);
         boolean r = image.delete();
         if (r) Log.d(TAG, "image in cache is deleted.");
+    }*/
+
+    private void saveRecordPermanently(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File temp = new File(poll.getRecordPath().substring(7));
+                File perm = new File(SoundRecord.createFile2(ActivePollsActivity.this, "3gp"));
+
+                try {
+                    ImagePicker.savePermanently(temp, perm);
+                    Uri permUri = Uri.fromFile(perm);
+                    poll.setRecordPath(permUri.toString());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }).start();
     }
 
     private void saveImagePermanently(){

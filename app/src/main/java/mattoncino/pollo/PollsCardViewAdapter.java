@@ -3,8 +3,10 @@ package mattoncino.pollo;
 import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -17,6 +19,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -105,22 +108,36 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             Log.d(TAG, "recordPath: " + recordPath);
             record = new SoundRecord(recordPath);
 
+            int duration;
+            try {
+                duration = record.getDuration() % 1000;
+                binding.chronometer.setBase(duration);
+            } catch(IOException e){
+                duration = 0;
+                e.printStackTrace();
+            }
+
             binding.recordCardView.setVisibility(View.VISIBLE);
 
             binding.playFAB.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     if (record.isPlay()) {
+                        Log.d(TAG, "Record is playing...");
+                        record.startPlaying();
+                        record.setCompletionListener(new playCompletionListener(binding));
+                        binding.chronometer.setBase(SystemClock.elapsedRealtime());
+                        binding.chronometer.start();
+                        binding.playFAB.setImageResource(android.R.drawable.ic_media_pause);
+                        //binding.chronometer.stop();
+                    } else {
+                        record.stopPlaying();
                         Log.d(TAG, "Record is stopped.");
                         binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
-                        record.stopPlaying();
-                    } else {
-                        Log.d(TAG, "Record is playing...");
-                        binding.playFAB.setImageResource(android.R.drawable.ic_media_pause);
-                        record.startPlaying();
-                        binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
                     }
+
                     record.setPlay();
+
                 }
             });
         }
@@ -294,6 +311,19 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         return activePolls.size();
     }
 
+    private class playCompletionListener implements MediaPlayer.OnCompletionListener {
+        final ActivePollsListItemBinding binding;
 
+        public playCompletionListener(final ActivePollsListItemBinding binding ) {
+            this.binding = binding;
+        }
+
+        @Override
+        public void onCompletion(MediaPlayer mediaPlayer) {
+            binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+            binding.chronometer.stop();
+            //record.setPlay();
+        }
+    }
 
 }

@@ -50,39 +50,43 @@
                 android:layout_height="wrap_content"
                 app:cardElevation="4dp" >
 
-                <LinearLayout
-                    android:id="@+id/imageitemLayout"
+
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
+                    android:layout_height="match_parent">
 
                     <TextView
                         android:id="@+id/addImageTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textAllCaps="false"
-                        android:textAlignment="center"
-                        android:text="Add an image for your question..."
-                        android:paddingTop="16dp"/>
+                        android:layout_alignParentLeft="true"
+                        android:text="Add an image or record a sound for your question..."
+                        android:paddingTop="16dp"
+                        android:paddingLeft="8dp"
+                        android:paddingRight="30dp" />
 
                     <ImageButton
                         android:id="@+id/addImageButton"
                         app:srcCompat="@android:drawable/ic_menu_gallery"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
                         android:textAllCaps="false"
-                        android:text="Pick Image" />
-                </LinearLayout>
+                        android:text="Pick Image"
+                        android:visibility="visible"/>
 
-                <ImageView
-                    android:id="@+id/imageView"
-                    android:layout_below="@id/imageitemLayout"
-                    android:src="@android:drawable/ic_menu_gallery"
-                    android:layout_width="300dp"
-                    android:layout_height="300dp"
-                    android:visibility="gone"
-                    android:layout_weight="1" />
+                    <ImageView
+                        android:id="@+id/imageView"
+                        android:src="@android:drawable/ic_menu_gallery"
+                        android:layout_width="300dp"
+                        android:layout_height="300dp"
+                        android:layout_centerHorizontal="true"
+                        android:layout_below="@+id/addImageTextView"
+                        android:visibility="gone"
+                        android:layout_gravity="center_horizontal" />
 
+                </RelativeLayout>
             </android.support.v7.widget.CardView>
 
 
@@ -90,15 +94,14 @@
                 android:id="@+id/recordCardView"
                 android:layout_below="@+id/imageCardView"
                 android:layout_width="match_parent"
-                android:layout_height="80dp"
+                android:layout_height="wrap_content"
                 app:cardElevation="4dp" >
 
                 <LinearLayout
                     android:id="@+id/recordItemLayout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:paddingLeft="10dp">
+                    android:orientation="horizontal">
 
                     <android.support.design.widget.FloatingActionButton
                         android:id="@+id/recordFAB"
@@ -106,8 +109,7 @@
                         android:layout_height="wrap_content"
                         android:clickable="true"
                         app:fabSize="mini"
-                        app:srcCompat="@android:drawable/ic_btn_speak_now"
-                        android:layout_marginRight="15dp" />
+                        app:srcCompat="@android:drawable/ic_btn_speak_now" />
 
                     <android.support.design.widget.FloatingActionButton
                         android:id="@+id/playFAB"
@@ -115,16 +117,26 @@
                         android:layout_height="wrap_content"
                         android:clickable="true"
                         app:fabSize="mini"
-                        app:srcCompat="@android:drawable/ic_media_play"
-                        android:layout_marginRight="15dp" />
+                        app:srcCompat="@android:drawable/ic_media_play" />
 
-                    <TextView
+                    <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/removeFAB"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAllCaps="false"
-                        android:textAlignment="textStart"
-                        android:layout_gravity="start|center"
-                        android:text="... or add a vocal!" />
+                        android:clickable="true"
+                        app:fabSize="mini"
+                        app:srcCompat="@android:drawable/ic_menu_delete" />
+
+
+                    <Chronometer
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/chronometer"
+                        android:visibility="visible"
+                        android:countDown="true"
+                        android:layout_gravity="center_vertical"
+                        android:textSize="25sp" />
+
                 </LinearLayout>
             </android.support.v7.widget.CardView>
 
