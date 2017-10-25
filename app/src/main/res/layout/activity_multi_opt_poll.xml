@@ -48,6 +48,7 @@
                 android:layout_below="@+id/questionInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:cardUseCompatPadding="true"
                 app:cardElevation="4dp" >
 
 
@@ -95,6 +96,7 @@
                 android:layout_below="@+id/imageCardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:cardUseCompatPadding="true"
                 app:cardElevation="4dp" >
 
                 <LinearLayout
@@ -107,6 +109,7 @@
                         android:id="@+id/recordFAB"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
                         android:clickable="true"
                         app:fabSize="mini"
                         app:srcCompat="@android:drawable/ic_btn_speak_now" />
@@ -115,6 +118,7 @@
                         android:id="@+id/playFAB"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
                         android:clickable="true"
                         app:fabSize="mini"
                         app:srcCompat="@android:drawable/ic_media_play" />
@@ -123,18 +127,19 @@
                         android:id="@+id/removeFAB"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
                         android:clickable="true"
                         app:fabSize="mini"
                         app:srcCompat="@android:drawable/ic_menu_delete" />
 
 
                     <Chronometer
+                        android:id="@+id/chronometer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/chronometer"
+                        android:layout_gravity="center"
                         android:visibility="visible"
                         android:countDown="true"
-                        android:layout_gravity="center_vertical"
                         android:textSize="25sp" />
 
                 </LinearLayout>

@@ -120,28 +120,17 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         if (r) Log.d(TAG, "image in cache is deleted.");
     }
 
-    /*private void removeImageFromCache(){
-        String imagePath = poll.getImageInfo().getPath();
-        File image = new File(imagePath);
-        boolean r = image.delete();
-        if (r) Log.d(TAG, "image in cache is deleted.");
-    }*/
-
     private void saveRecordPermanently(){
         new Thread(new Runnable() {
             @Override
             public void run() {
-                File temp = new File(poll.getRecordPath().substring(7));
+                File temp = new File(poll.getRecordPath());
                 File perm = new File(SoundRecord.createFile2(ActivePollsActivity.this, "3gp"));
 
-                try {
-                    ImagePicker.savePermanently(temp, perm);
-                    Uri permUri = Uri.fromFile(perm);
-                    poll.setRecordPath(permUri.toString());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                boolean r = temp.renameTo(perm);
 
+                if(r) poll.setRecordPath(perm.getPath());
+                else Log.d(TAG, "Can't rename record file!");
             }
         }).start();
     }
@@ -160,10 +149,10 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     File perm = ImagePicker.createFile(ActivePollsActivity.this, ext);
                     Log.d(TAG, "perm.path: " + perm.getPath());
 
-                    ImagePicker.savePermanently(temp, perm);
+                    boolean r = temp.renameTo(perm);
 
-                    Uri permUri = Uri.fromFile(perm);
-                    poll.getImageInfo().setPath(permUri.toString());
+                    if(r) poll.getImageInfo().setPath(Uri.fromFile(perm).toString());
+                    else Log.wtf(TAG, "can't rename image file!");
                 } catch (IOException e) {
                     Log.d(TAG, "ImagePicker.savePermanently(): " + e.toString());
                     e.printStackTrace();
@@ -404,8 +393,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     protected void onDestroy() {
         super.onDestroy();
         //Toast.makeText(this, "called Destroy", Toast.LENGTH_LONG).show();
-
-
     }
 
     @Override

@@ -45,6 +45,7 @@
         private SoundRecord record;
         private String recordPath;
         private boolean hasRecord = false;
+        private int duration = -1;
 
         // Requesting permission to RECORD_AUDIO
         private boolean permissionToRecordAccepted = false;
@@ -59,12 +60,17 @@
                 savedInstanceState.putString("imagePath", imageInfo.getPath());
                 savedInstanceState.putBoolean("isCamera", imageInfo.isCamera());
             }
+            if(hasRecord){
+                savedInstanceState.putString("recordPath", recordPath);
+                savedInstanceState.putInt("duration", duration);
+            }
         }
 
         @Override
         protected void onRestoreInstanceState(Bundle savedInstanceState){
             if(savedInstanceState != null) {
                 super.onRestoreInstanceState(savedInstanceState);
+
                 imageInfo = new ImageInfo(savedInstanceState.getString("imagePath"), savedInstanceState.getBoolean("isCamera"));
                 if(imageInfo.getPath() != null) {
                     bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), MultiOptPollActivity.this, imageInfo.isCamera());
@@ -78,6 +84,13 @@
                     binding.imageView.invalidate();
                     hasImage = true;
                 }
+
+                recordPath = savedInstanceState.getString("recordPath");
+                if(recordPath != null){
+                    duration = savedInstanceState.getInt("duration");
+                    binding.chronometer.setBase(SystemClock.elapsedRealtime() - duration);
+                    hasRecord = true;
+                }
             }
         }
 
@@ -90,7 +103,7 @@
                 case REQUEST_RECORD_AUDIO_PERMISSION:
                     permissionToRecordAccepted  = grantResults[0] == PackageManager.PERMISSION_GRANTED;
                     //TODO check for a better file extension
-                    recordPath = SoundRecord.createFile2(MultiOptPollActivity.this, "3gp");
+                    recordPath = SoundRecord.createTempFile(MultiOptPollActivity.this, "3gp");
                     record = new SoundRecord(recordPath);
                     break;
             }
@@ -150,6 +163,8 @@
                             binding.recordFAB.setSize(FloatingActionButton.SIZE_MINI);
                             record.stopRecording();
                             binding.chronometer.stop();
+                            duration = record.getDuration(MultiOptPollActivity.this);
+                            Log.d(TAG, "record duration: " + duration); //milliSeconds
                             hasRecord = true;
                             break;
                     }
@@ -164,13 +179,21 @@
                         if (record.isPlay()) {
                             Log.d(TAG, "Record is playing...");
                             record.startPlaying();
-                            record.setCompletionListener(new playCompletionListener());
+                            record.setCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+                                    binding.chronometer.stop();
+                                    record.setPlay();
+                                }
+                            });
                             binding.chronometer.setBase(SystemClock.elapsedRealtime());
                             binding.chronometer.start();
                             binding.playFAB.setImageResource(android.R.drawable.ic_media_pause);
-                            //binding.chronometer.stop();
                         } else {
                             record.stopPlaying();
+                            binding.chronometer.stop();
+                            binding.chronometer.setBase(SystemClock.elapsedRealtime() - duration);
                             Log.d(TAG, "Record is stopped.");
                             binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
                         }
@@ -185,6 +208,7 @@
                 public void onClick(View view) {
                     if(hasRecord) {
                         binding.chronometer.setBase(SystemClock.elapsedRealtime());
+                        duration = -1;
                         hasRecord = false;
                     }
                 }
@@ -246,7 +270,7 @@
 
                     } else recordPath = null;
 
-                    Poll poll = new Poll(name, question, options, hasImage, imageInfo, recordPath);
+                    Poll poll = new Poll(name, question, options, hasImage, imageInfo, recordPath, duration);
 
                     Intent intent = new Intent(MultiOptPollActivity.this, mattoncino.pollo.ActivePollsActivity.class)
                             .putExtra(Consts.OWNER, Consts.OWN)
@@ -299,12 +323,4 @@
             startActivity(new Intent(MultiOptPollActivity.this, mattoncino.pollo.MainActivity.class));
         }
 
-        private class playCompletionListener implements MediaPlayer.OnCompletionListener {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
-                binding.chronometer.stop();
-                record.setPlay();
-            }
-        }
     }

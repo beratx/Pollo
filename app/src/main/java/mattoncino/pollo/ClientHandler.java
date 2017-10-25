@@ -44,7 +44,7 @@ public class ClientHandler implements Runnable{
             dataInputStream = new DataInputStream(socket.getInputStream());
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-            final String message = dataInputStream.readUTF();
+            String message = dataInputStream.readUTF();
 
             switch(message){
                 case Consts.REQUEST:
@@ -65,7 +65,7 @@ public class ClientHandler implements Runnable{
             }
 
         } catch(EOFException e){
-            Log.w(TAG, "it should be isReachable socket connection, so it's ok...");
+            e.printStackTrace();
             Log.w(TAG, e.toString());
         } catch(SocketException e) {
             Log.wtf(TAG, e.toString());
@@ -96,8 +96,10 @@ public class ClientHandler implements Runnable{
 
         boolean hasRecord = dataInputStream.readBoolean();
         String recordPath = null;
+        int duration = -1;
 
         if(hasRecord){
+            duration = dataInputStream.readInt();
             recordPath = SoundRecord.createTempFile(context, "3gp");
             FileOutputStream fileOut = new FileOutputStream(recordPath);
 
@@ -158,7 +160,7 @@ public class ClientHandler implements Runnable{
                 Log.wtf(TAG, "ImagePicker.createFile returns NULL");
         }
 
-        poll = new Poll(id, name, question, options, hasImage, info, recordPath);
+        poll = new Poll(id, name, question, options, hasImage, info, recordPath, duration);
 
         Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
 

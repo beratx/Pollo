@@ -162,6 +162,10 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         return poll.getRecordPath();
     }
 
+    public int getDuration() {
+        return poll.getDuration();
+    }
+
     public int getVotesFor(int opt) {
         //System.out.println("pollname: " + poll.getName() + " votes: " + Arrays.toString(votes));
         return votes[opt - 1];

@@ -131,6 +131,8 @@ public class ClientThreadProcessor implements Runnable{
         dataOutputStream.writeBoolean(poll.hasRecord());
 
         if(poll.hasRecord()){
+            dataOutputStream.writeInt(poll.getDuration());
+
             File recordFile = new File(poll.getRecordPath());
             long length = recordFile.length();
             dataOutputStream.writeLong(length);

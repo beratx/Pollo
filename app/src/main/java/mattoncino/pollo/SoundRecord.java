@@ -1,8 +1,10 @@
 package mattoncino.pollo;
 
 import android.content.Context;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
@@ -40,28 +42,14 @@ public class SoundRecord {
         }
     }
 
-    public int getDuration() throws IOException {
-        if(mPlayer == null) {
-            mPlayer = new MediaPlayer();
-            mPlayer.setDataSource(recordPath);
-            mPlayer.prepare();
-        }
-
-        int duration = mPlayer.getDuration();
-
-        mPlayer.release();
-        mPlayer = null;
-
-        return duration;
-    }
-
-    /*public int getDuration2(){
+    public int getDuration(Context context) {
         Uri uri = Uri.parse(recordPath);
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(AppContext.getAppContext(),uri);
+        mmr.setDataSource(context, uri);
         String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        int millSecond = Integer.parseInt(durationStr);
-    }*/
+        return Integer.parseInt(durationStr);
+    }
+
 
     public void startPlaying() {
         mPlayer = new MediaPlayer();
@@ -139,15 +127,6 @@ public class SoundRecord {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         boolean external = ImagePicker.isExternalStorageWritable();
 
-        /*File dir = external ? new File(Environment.getExternalStorageDirectory() + "/pollo_records")
-                            : new File(context.getFilesDir() + "/pollo_records");*/
-
-        /*if (!dir.exists()) {
-            //TODO : replace /sdcard/ with Environment.getExternalStorageDirectory().getPath();
-            File recordDir = external ? new File("/sdcard/pollo_records/") : new File("/pollo_records");
-            recordDir.mkdirs();
-        }*/
-
         String recordPath =  external ? Environment.getExternalStorageDirectory().getAbsolutePath()
                                         + File.separator + timestamp + "." + ext
                                       : context.getFilesDir().getAbsolutePath() + File.separator +
@@ -155,9 +134,8 @@ public class SoundRecord {
 
         Log.d(TAG, "record file path: " + recordPath);
 
-        return recordPath;
         //return File.createTempFile(timestamp, "." + ext, dir).getAbsolutePath();
-
+        return recordPath;
     }
 
 
