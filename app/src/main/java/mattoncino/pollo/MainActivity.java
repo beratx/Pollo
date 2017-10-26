@@ -93,15 +93,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        //enableButtons(true);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         //Toast.makeText(MainActivity.this, "called onResume()", Toast.LENGTH_SHORT).show();
-
         int waitingPollsCount = WaitingPolls.getInstance().getWaitingPolls().size();
         if(waitingPollsCount > 0) {
             binding.waitingPollsActivityButton.setText("Waiting Poll Requests (" + waitingPollsCount + ")");
@@ -110,12 +107,10 @@ public class MainActivity extends AppCompatActivity {
 
         if(wifiConnected()) {
             connectForDataTransferring();
-            //enableButtons(true);
         } else {
             setTitle("Connecting...");
             ToastHelper.showSnackBar(MainActivity.this, binding.activityMain,
                     "No active Wifi connection. Please connect to an Access Point");
-            //enableButtons(false);
         }
 
     }
@@ -225,22 +220,11 @@ public class MainActivity extends AppCompatActivity {
                                                     android.R.layout.simple_list_item_1,
                                                     devices.toArray(new String[devices.size()]));
 
-        //APILEVEL REQ 11!!!
-        //arrayAdapter.addAll(devices);
         builder.setAdapter(arrayAdapter, null);
         builder.setCancelable(true);
         builder.show();
     }
 
-    /**
-     * Enables/disables buttons
-     * @param b This is the boolean value
-     */
-    private void enableButtons(boolean b){
-        binding.createPollActivityButton.setEnabled(b);
-        binding.activePollsActivityButton.setEnabled(b);
-        binding.showDeviceListButton.setEnabled(b);
-    }
 
     /**
      * Creates a Broadcast Listener for changes in Wifi status
@@ -253,7 +237,6 @@ public class MainActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
                     boolean stat = intent.getBooleanExtra("wifi", true);
-                    //enableButtons(stat);
                     setTitle(stat ? "Pollo" : "Connecting...");
                     if(!stat)
                         ToastHelper.showSnackBar(MainActivity.this, binding.activityMain,

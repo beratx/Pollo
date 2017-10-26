@@ -106,15 +106,15 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     break;
                 case Consts.WAITED:
                     xhostAddress = data.getString("hostAddress");
-                    manager.addPoll(new PollData(poll, xhostAddress, type));
+                    manager.addPoll(new PollData(poll, xhostAddress, Consts.OTHER));
                     acceptedPollRequest = true;
                     if (poll.hasImage())
                         saveImagePermanently();
                     if(poll.hasRecord())
                         saveRecordPermanently();
 
-                    //remove from waiting list
-                    WaitingPolls.getInstance().removeData(notfID);
+                    //TODO remove it from list when accepted by notification
+
                     break;
             }
             removeNotification(notfID);

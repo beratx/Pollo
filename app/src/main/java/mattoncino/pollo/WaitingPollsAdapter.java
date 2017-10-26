@@ -66,8 +66,7 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
 
                 sendRemoveBroadcast(view.getContext(), wd.getNotificationID());
 
-                //removeFromWaitingPolls(wd.getNotificationID());
-                 view.getContext().startActivity(intent);
+                view.getContext().startActivity(intent);
             }
         });
 
@@ -79,7 +78,7 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
                 notificationManager.cancel(wd.getNotificationID());
 
                 sendRemoveBroadcast(view.getContext(), wd.getNotificationID());
-                //notifyItemRemoved(holder.getAdapterPosition());
+                //to update main activity
                 sendUpdateBroadcast(view.getContext(), waitingPolls.size() - 1);
             }
         });
@@ -97,16 +96,10 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    //to update main activity
     private void sendUpdateBroadcast(Context context, int count) {
         Intent intent = new Intent(Receivers.W_COUNT)
                 .putExtra(Consts.COUNT, count);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    private void removeFromWaitingPolls(Integer notificationID){
-        WaitingPolls manager = WaitingPolls.getInstance();
-        manager.removeData(notificationID);
-        manager.savetoWaitingList();
-    }
 }
