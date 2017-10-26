@@ -103,7 +103,18 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                             removeFromCache(poll.getRecordPath());
                         data.remove(Consts.POLL);
                     }
+                    break;
+                case Consts.WAITED:
+                    xhostAddress = data.getString("hostAddress");
+                    manager.addPoll(new PollData(poll, xhostAddress, type));
+                    acceptedPollRequest = true;
+                    if (poll.hasImage())
+                        saveImagePermanently();
+                    if(poll.hasRecord())
+                        saveRecordPermanently();
 
+                    //remove from waiting list
+                    WaitingPolls.getInstance().removeData(notfID);
                     break;
             }
             removeNotification(notfID);
@@ -319,7 +330,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null &&
                         intent.getAction().equals("mattoncino.pollo.receive.poll.remove")) {
-                    Log.v(TAG, "received result broadcast");
+                    Log.v(TAG, "received remove broadcast");
                     String pollID = intent.getStringExtra("pollID");
                     manager.removePoll(pollID);
                     intent.removeExtra("pollID");

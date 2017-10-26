@@ -22,21 +22,28 @@
                 android:layout_width="282dp"
                 android:layout_height="wrap_content"
                 android:text="Create Poll"
-                android:enabled="false"/>
+                android:enabled="true"/>
 
             <Button
                 android:id="@+id/activePollsActivityButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Show Polls"
-                android:enabled="false" />
+                android:enabled="true" />
+
+            <Button
+                android:id="@+id/waitingPollsActivityButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Poll Requests"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/showDeviceListButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Show Device list"
-                android:enabled="false"/>
+                android:enabled="true"/>
         </LinearLayout>
 
     </RelativeLayout>

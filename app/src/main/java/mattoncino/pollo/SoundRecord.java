@@ -98,6 +98,7 @@ public class SoundRecord {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         boolean external = ImagePicker.isExternalStorageWritable();
 
+        //cache directory!
         String recordPath =  external ? context.getExternalCacheDir().getAbsolutePath() + "/" + timestamp + "." + ext
                                       : context.getCacheDir().getAbsolutePath() + "/" + timestamp + "." + ext;
 

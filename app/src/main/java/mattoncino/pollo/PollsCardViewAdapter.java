@@ -28,7 +28,6 @@ import mattoncino.pollo.databinding.ActivePollsListItemBinding;
 
 
 public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdapter.CardViewHolder> {
-
     private List<PollData> activePolls;
     private final static String TAG = "PollsCardViewAdapter";
     private final static int VIEW_COUNT = 4;
@@ -107,8 +106,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             Log.d(TAG, "recordPath: " + recordPath);
             record = new SoundRecord(recordPath);
 
-            if(record.isPlay())
-                binding.chronometer.setBase(SystemClock.elapsedRealtime() - pollData.getDuration());
+
+            binding.chronometer.setBase(SystemClock.elapsedRealtime() - pollData.getDuration());
 
             binding.recordCardView.setVisibility(View.VISIBLE);
 

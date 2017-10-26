@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private JmDnsManager jmDnsManager;
     private BroadcastReceiver wifiReceiver;
+    private BroadcastReceiver countReceiver;
     private MyHandler handler;
 
 
@@ -83,14 +84,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        enableButtons(true);
 
+        binding.waitingPollsActivityButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, mattoncino.pollo.WaitingPollsActivity.class));
+            }
+        });
+
+
+        //enableButtons(true);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         //Toast.makeText(MainActivity.this, "called onResume()", Toast.LENGTH_SHORT).show();
+
+        int waitingPollsCount = WaitingPolls.getInstance().getWaitingPolls().size();
+        if(waitingPollsCount > 0) {
+            binding.waitingPollsActivityButton.setText("Waiting Poll Requests (" + waitingPollsCount + ")");
+            binding.waitingPollsActivityButton.setVisibility(View.VISIBLE);
+        }
+
         if(wifiConnected()) {
             connectForDataTransferring();
             //enableButtons(true);
@@ -137,6 +154,9 @@ public class MainActivity extends AppCompatActivity {
         //Toast.makeText(this, "called onStart", Toast.LENGTH_SHORT).show();
         wifiReceiver = createWifiBroadcastReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter(Receivers.WIFI));
+
+        countReceiver = createWaitingCountBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(countReceiver, new IntentFilter(Receivers.W_COUNT));
     }
 
 
@@ -243,6 +263,25 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+
+    private BroadcastReceiver createWaitingCountBroadcastReceiver() {
+        Log.v(TAG, "received waiting count broadcast");
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getAction() != null && intent.getAction().equals(Receivers.W_COUNT)) {
+                    int count = intent.getIntExtra(Consts.COUNT, 0);
+                    if(count > 0){
+                        binding.waitingPollsActivityButton.setText("Waiting Poll Requests (" + count + ")");
+                        binding.waitingPollsActivityButton.setVisibility(View.VISIBLE);
+                    }
+                    else
+                        binding.waitingPollsActivityButton.setVisibility(View.GONE);
+
+                }
+            }
+        };
+    }
 
     private static class MyHandler extends Handler{
         private final WeakReference<MainActivity> currentActivity;

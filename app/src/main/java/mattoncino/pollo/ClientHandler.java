@@ -65,7 +65,8 @@ public class ClientHandler implements Runnable{
             }
 
         } catch(EOFException e){
-            e.printStackTrace();
+            //e.printStackTrace();
+            Log.d(TAG, "it must be isReachable, so it's ok...");
             Log.w(TAG, e.toString());
         } catch(SocketException e) {
             Log.wtf(TAG, e.toString());
@@ -164,7 +165,9 @@ public class ClientHandler implements Runnable{
 
         Log.d(TAG, "POLL REQUEST FROM: " + hostAddress);
 
-        addNotification(poll, hostAddress);
+        int notificationID = addNotification(poll, hostAddress);
+
+        addToWaitingPolls(notificationID, poll, hostAddress);
     }
 
     private void serveAcceptMessage() throws IOException {
@@ -233,7 +236,7 @@ public class ClientHandler implements Runnable{
     }
 
 
-    private void addNotification(Poll poll, String hostAddress){
+    private int addNotification(Poll poll, String hostAddress){
         Random randomGenerator = new Random();
         int NOTIFICATION_ID;
         int requestCode;
@@ -288,5 +291,19 @@ public class ClientHandler implements Runnable{
         android.app.NotificationManager manager = (android.app.NotificationManager) context.getSystemService(
                 Context.NOTIFICATION_SERVICE);
         manager.notify(NOTIFICATION_ID, builder.build());
+
+        return NOTIFICATION_ID;
+    }
+
+    private void addToWaitingPolls(Integer notificationID, Poll poll, String hostAddress){
+        WaitingPolls manager = WaitingPolls.getInstance();
+        manager.addData(new WaitingData(poll, notificationID, hostAddress));
+        manager.savetoWaitingList();
+
+        //to update main activity
+        int count = WaitingPolls.getInstance().getWaitingPolls().size();
+        Intent intent = new Intent(Receivers.W_COUNT)
+                .putExtra(Consts.COUNT, count);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 }
