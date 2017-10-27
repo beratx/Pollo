@@ -1,7 +1,6 @@
 package mattoncino.pollo;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
@@ -109,13 +108,6 @@ public class ClientThreadProcessor implements Runnable{
         }
     }
 
-    private void galleryAddPic(String currentPath) {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File f = new File(currentPath);
-        Uri contentUri = Uri.fromFile(f);
-        mediaScanIntent.setData(contentUri);
-        context.sendBroadcast(mediaScanIntent);
-    }
 
     public void sendPollRequest() throws IOException {
         dataOutputStream.writeUTF(Consts.REQUEST);

@@ -83,10 +83,11 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         final Poll poll = pollData.getPoll();
         final LinearLayout rLayout = binding.listItemLayout;
         final SoundRecord record;
-        //holder.rLayout.removeAllViews();
+
 
         //TODO remove extra options
         resetHolder(binding);
+
 
         if(pollData.hasImage()){
             ImageInfo imageInfo = pollData.getImageInfo();
@@ -101,11 +102,11 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         }
         else binding.imageView.setImageDrawable(null);
 
+
         if(pollData.hasRecord()){
             String recordPath = pollData.getRecordPath();
             Log.d(TAG, "recordPath: " + recordPath);
             record = new SoundRecord(recordPath);
-
 
             binding.chronometer.setBase(SystemClock.elapsedRealtime() - pollData.getDuration());
 
@@ -114,7 +115,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             binding.playFAB.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (record.isPlay()) {
+                    if (record.isPlaying()) {
                         Log.d(TAG, "Record is playing...");
                         record.startPlaying();
                         record.setCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -163,7 +164,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 button.setText(pollData.getOption(opt));
 
             if (pollData.getMyVote() == opt)
-                button.setText(button.getText().toString() + "    " + "\u2713");
+                button.setText(button.getText().toString() + "\t" + "\u2713");
 
 
             if(!pollData.isDisabled() && !pollData.isTerminated()){
@@ -171,20 +172,22 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        button.setText(button.getText().toString() + "    " + "\u2713");
+                        button.setText(button.getText().toString() + "\t" + "\u2713");
                         pollData.setMyVote(opt);
 
                         if(pollData.getOwner() == Consts.OTHER)
                             sendVote(view, pollData.getID(), opt, pollData.getHostAddress());
-                        else {
+                        else
                             sendUpdateBroadcast(button.getContext(), pollData.getID());
-                        }
+
                         setCardDetails(rLayout, pollData, opt);
                         binding.ownerLayout.getChildAt(0).setEnabled(false);
                     }
                 });
+            } else {
+                binding.opt1Button.setEnabled(false);
+                binding.opt2Button.setEnabled(false);
             }
-
         }
 
         if(pollData.getOwner() == Consts.OTHER && pollData.isDisabled() && !pollData.isTerminated())
@@ -242,6 +245,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         binding.messageTextView.setVisibility(View.GONE);
         binding.imageView.setImageDrawable(null);
         binding.imageView.setVisibility(View.GONE);
+        binding.chronometer.setBase(SystemClock.elapsedRealtime());
         binding.statsTextView.setVisibility(View.GONE);
         binding.terminateButton.setEnabled(false);
         binding.recordCardView.setVisibility(View.GONE);

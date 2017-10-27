@@ -176,7 +176,7 @@
                 @Override
                 public void onClick(View view) {
                     if(hasRecord) {
-                        if (record.isPlay()) {
+                        if (record.isPlaying()) {
                             Log.d(TAG, "Record is playing...");
                             record.startPlaying();
                             record.setCompletionListener(new MediaPlayer.OnCompletionListener() {

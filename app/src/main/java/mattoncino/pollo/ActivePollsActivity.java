@@ -103,18 +103,22 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                             removeFromCache(poll.getRecordPath());
                         data.remove(Consts.POLL);
                     }
+                    WaitingPolls.sendRemoveBroadcast(ActivePollsActivity.this, notfID);
+                    WaitingPolls.sendUpdateBroadcast(ActivePollsActivity.this, notfID);
                     break;
                 case Consts.WAITED:
-                    xhostAddress = data.getString("hostAddress");
-                    manager.addPoll(new PollData(poll, xhostAddress, Consts.OTHER));
-                    acceptedPollRequest = true;
-                    if (poll.hasImage())
-                        saveImagePermanently();
-                    if(poll.hasRecord())
-                        saveRecordPermanently();
-
-                    //TODO remove it from list when accepted by notification
-
+                    if(!connected) {
+                        ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                                "No active Wifi connection. Failed to receive poll.");
+                    } else {
+                        xhostAddress = data.getString("hostAddress");
+                        manager.addPoll(new PollData(poll, xhostAddress, Consts.OTHER));
+                        acceptedPollRequest = true;
+                        if (poll.hasImage())
+                            saveImagePermanently();
+                        if (poll.hasRecord())
+                            saveRecordPermanently();
+                    }
                     break;
             }
             removeNotification(notfID);

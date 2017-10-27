@@ -258,9 +258,7 @@ public class MainActivity extends AppCompatActivity {
                         binding.waitingPollsActivityButton.setText("Waiting Poll Requests (" + count + ")");
                         binding.waitingPollsActivityButton.setVisibility(View.VISIBLE);
                     }
-                    else
-                        binding.waitingPollsActivityButton.setVisibility(View.GONE);
-
+                    else binding.waitingPollsActivityButton.setVisibility(View.GONE);
                 }
             }
         };

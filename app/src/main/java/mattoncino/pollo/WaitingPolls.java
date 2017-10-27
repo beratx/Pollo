@@ -1,7 +1,9 @@
 package mattoncino.pollo;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -83,6 +85,18 @@ public class WaitingPolls extends Observable {
         editor = pref.edit();
         editor.putString(Consts.WAITING_LIST, new Gson().toJson(new ArrayList<>(waiting_polls)));
         editor.commit();
+    }
+
+    public static void sendRemoveBroadcast(Context context, Integer id){
+        Intent intent = new Intent(Receivers.W_REMOVE)
+                .putExtra(Consts.NOTIFICATION_ID, id);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    public static void sendUpdateBroadcast(Context context, int count) {
+        Intent intent = new Intent(Receivers.W_COUNT)
+                .putExtra(Consts.COUNT, count);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
 

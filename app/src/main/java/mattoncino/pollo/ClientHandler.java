@@ -288,8 +288,8 @@ public class ClientHandler implements Runnable{
         builder.setContentIntent(acceptedPendingIntent);
 
         // Add as notification
-        android.app.NotificationManager manager = (android.app.NotificationManager) context.getSystemService(
-                Context.NOTIFICATION_SERVICE);
+        android.app.NotificationManager manager = (android.app.NotificationManager)
+                                            context.getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(NOTIFICATION_ID, builder.build());
 
         return NOTIFICATION_ID;
@@ -302,8 +302,7 @@ public class ClientHandler implements Runnable{
 
         //to update main activity
         int count = WaitingPolls.getInstance().getWaitingPolls().size();
-        Intent intent = new Intent(Receivers.W_COUNT)
-                .putExtra(Consts.COUNT, count);
+        Intent intent = new Intent(Receivers.W_COUNT).putExtra(Consts.COUNT, count);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 }

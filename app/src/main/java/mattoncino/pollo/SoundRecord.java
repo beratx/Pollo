@@ -26,7 +26,7 @@ public class SoundRecord {
         this.recordPath = recordPath;
     }
 
-    public boolean isPlay(){
+    public boolean isPlaying(){
         return startPlaying;
     }
 

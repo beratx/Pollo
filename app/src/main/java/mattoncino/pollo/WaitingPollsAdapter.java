@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Parcelable;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,7 +63,7 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
                         .putExtra(Consts.NOTIFICATION_ID, wd.getNotificationID())
                         .putExtra(Consts.ADDRESS, wd.getHostAddress());
 
-                sendRemoveBroadcast(view.getContext(), wd.getNotificationID());
+                WaitingPolls.sendRemoveBroadcast(view.getContext(), wd.getNotificationID());
 
                 view.getContext().startActivity(intent);
             }
@@ -77,9 +76,9 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
                         (NotificationManager) view.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
                 notificationManager.cancel(wd.getNotificationID());
 
-                sendRemoveBroadcast(view.getContext(), wd.getNotificationID());
+                WaitingPolls.sendRemoveBroadcast(view.getContext(), wd.getNotificationID());
                 //to update main activity
-                sendUpdateBroadcast(view.getContext(), waitingPolls.size() - 1);
+                WaitingPolls.sendUpdateBroadcast(view.getContext(), waitingPolls.size() - 1);
             }
         });
     }
@@ -90,7 +89,7 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
     }
 
 
-    private void sendRemoveBroadcast(Context context, Integer id){
+    /*private void sendRemoveBroadcast(Context context, Integer id){
         Intent intent = new Intent(Receivers.W_REMOVE)
                 .putExtra(Consts.NOTIFICATION_ID, id);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
@@ -100,6 +99,6 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
         Intent intent = new Intent(Receivers.W_COUNT)
                 .putExtra(Consts.COUNT, count);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
+    }*/
 
 }
