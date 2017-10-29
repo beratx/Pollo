@@ -2,17 +2,13 @@ package mattoncino.pollo;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+/**
+ * Singleton Class that initializes JmDnsManager
+ * and returns its only instance through its method
+ */
 
 public class MyApplication extends Application {
     private static final String TAG = "MyApplication";
@@ -20,6 +16,12 @@ public class MyApplication extends Application {
     private String deviceId = "";
     private static MyApplication instance;
 
+    /**
+     * Get device id for the device and initializes
+     * JmDNSManager instance
+     *
+     * @see JmDnsManager
+     */
     @Override
     public void onCreate() {
 
@@ -33,27 +35,43 @@ public class MyApplication extends Application {
         }
 
         manager = new JmDnsManager();
-
-        /*Intent mServiceIntent = new Intent(this, StatusUpdaterService.class);
-        startService(mServiceIntent);
-        Log.d(TAG, "StatusUpdaterService is launched");*/
-
     }
 
+    /**
+     * If not created yet, creates a new JmDnsManager
+     * otherwise returns the existing one
+     *
+     * @return JmDNsManager instance
+     * @see JmDnsManager
+     */
     public JmDnsManager getConnectionManager() {
         if (manager == null)
             manager = new JmDnsManager();
         return manager;
     }
 
+    /**
+     * Returns MyApplication class instance
+     *
+     * @return  MyApplication class instance
+     */
     public static MyApplication getContext(){
         return instance;
     }
 
+    /**
+     * Sets device id of the device
+     *
+     * @param deviceId devices id
+     */
     private void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
     }
 
+    /**
+     * Returns device id
+     * @return device id
+     */
     public String getDeviceId() {
         return deviceId;
     }

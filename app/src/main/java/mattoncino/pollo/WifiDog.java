@@ -9,13 +9,17 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 
+/**
+ * WifiDog is a BroadcastReceiver which monitors the wifi connection state
+ * and start,initialized or terminates connection manager respect to this
+ * state.
+ */
 public class WifiDog extends BroadcastReceiver {
     private static final String TAG = "WifiDog";
     private Intent connManagerServiceIntent;
     private JmDnsManager jmDnsManager;
     private static boolean first_on = true;
     private static boolean first_off = true;
-
 
 
     @Override
@@ -63,6 +67,12 @@ public class WifiDog extends BroadcastReceiver {
             }
     }
 
+    /**
+     * Sends a broadcast message about the wifi connection state
+     * for the other activities in order to update their UI
+     * @param context
+     * @param stat
+     */
     private void updateWifiStat(Context context, boolean stat) {
         Intent intent = new Intent(Receivers.WIFI);
         intent.putExtra("wifi", stat);

@@ -1,5 +1,8 @@
 package mattoncino.pollo;
 
+/**
+ * Constant strings used for/by broadcast listeners
+ */
 public final class Receivers {
     public static final String WIFI = "mattoncino.pollo.receive.wifi.stat";
     public static final String ACCEPT = "mattoncino.pollo.receive.poll.accept";

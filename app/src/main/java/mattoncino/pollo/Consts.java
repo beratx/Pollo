@@ -1,5 +1,9 @@
 package mattoncino.pollo;
 
+/**
+ * Constant values used by application's comunication protocol
+ * between users/devices and/or for interprocess comunication.
+ */
 public final class Consts {
     public static final String REQUEST = "request";
     public static final String VOTE = "vote";

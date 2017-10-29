@@ -22,7 +22,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-
+/**
+ *  Handles client requests from other users(devices).
+ *  There can be 5 different type of requests:
+ * <ul>
+ * <li> Poll Request : a user sent a new poll request
+ * <li> Accept : a user accepted a poll launched by this user
+ * <li> Reject : a user rejected a poll launched by this user
+ * <li> Vote : a user voted for  a poll launched by this user
+ * <li> Vote : a user sent results for a poll accepted by this user
+ * </ul>
+ */
 public class ClientHandler implements Runnable{
     private static String TAG = "ClientHandler";
     private Socket socket;
@@ -36,6 +46,11 @@ public class ClientHandler implements Runnable{
         this.socket = socket;
         this.context = context;
     }
+
+
+    /**
+     * Gets the first message to switch to kind of request to handle
+     */
 
     @Override
     public void run() {
@@ -82,6 +97,14 @@ public class ClientHandler implements Runnable{
         }
     }
 
+    /**
+     * Receives a new Poll request from a user and all it's data,
+     * and creates a new Poll. Then creates a notification to
+     * inform the user and sends a local broadcast to inform other
+     * activities in order to update their state.
+     *
+     * @throws IOException
+     */
     private void serveRequestMessage() throws IOException {
         String id = dataInputStream.readUTF();
         String name = dataInputStream.readUTF();
@@ -170,6 +193,15 @@ public class ClientHandler implements Runnable{
         addToWaitingPolls(notificationID, poll, hostAddress);
     }
 
+    /**
+     * Receives an ACCEPT message for a poll launched by this user.
+     * Sends a Received message to the sender device and send a
+     * local broadcast to inform ActivePollsActivity in order to
+     * update its UI.
+     *
+     * @throws IOException
+     */
+
     private void serveAcceptMessage() throws IOException {
         String pollID = dataInputStream.readUTF();
         //String hostAddress = dataInputStream.readUTF();
@@ -189,6 +221,12 @@ public class ClientHandler implements Runnable{
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
+    /**
+     * Receives a REJECT message for a poll launched by this user.
+     * Sends a local broadcast to inform ActivePollsActivity in order
+     * to update its UI.
+     * @throws IOException
+     */
     private void serveRejectMessage() throws IOException {
         final String id = dataInputStream.readUTF();
         final String hostAddress = dataInputStream.readUTF();
@@ -202,6 +240,12 @@ public class ClientHandler implements Runnable{
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
+    /**
+     * Receives a VOTE message for a poll launched by this user.
+     * Sends a local broadcast to inform ActivePollsActivity in
+     * order to update its UI.
+     * @throws IOException
+     */
     private void serveVoteMessage() throws IOException {
         final String id = dataInputStream.readUTF();
         final int vote = Integer.parseInt(dataInputStream.readUTF());
@@ -221,6 +265,13 @@ public class ClientHandler implements Runnable{
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
+    /**
+     * Receives a RESULT message for an accepted poll from another user.
+     * Receives results and sends a local broadcast to inform
+     * ActivePollsActivity in order to update its UI.
+     *
+     * @throws IOException
+     */
     private void serveResultMessage() throws IOException {
         final String id = dataInputStream.readUTF();
         final int count = dataInputStream.readInt();
@@ -236,6 +287,15 @@ public class ClientHandler implements Runnable{
     }
 
 
+    /**
+     *  Creates a notification with Poll object and the host address
+     *  of the user who sent the poll, with two actions: Accept and
+     *  Reject. Both of them leads user to the ActivePollsActivity.
+     *
+     * @param poll  Poll object created with the arrived request data
+     * @param hostAddress Host address of the poll's owner user
+     * @return id number of created notification
+     */
     private int addNotification(Poll poll, String hostAddress){
         Random randomGenerator = new Random();
         int NOTIFICATION_ID;
@@ -295,6 +355,16 @@ public class ClientHandler implements Runnable{
         return NOTIFICATION_ID;
     }
 
+    /**
+     * Add newly created poll to the WaitingPolls List. These polls
+     * are received but not accepted or rejected yet. Then sends a
+     * local broadcast to other activities in order to update their
+     * UI
+     *
+     * @param notificationID id number of the notification
+     * @param poll newly received poll
+     * @param hostAddress host address of the poll's owner user
+     */
     private void addToWaitingPolls(Integer notificationID, Poll poll, String hostAddress){
         WaitingPolls manager = WaitingPolls.getInstance();
         manager.addData(new WaitingData(poll, notificationID, hostAddress));

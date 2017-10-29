@@ -1,13 +1,18 @@
 package mattoncino.pollo;
 
-import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.io.Serializable;
 
+/**
+ * Stores information about the image added to a poll.
+ * path : string values of the file's path
+ * isCamera : a flag to indicate if an image is captured
+ * from camera or not.
+ *
+ */
 final class ImageInfo implements Parcelable, Serializable {
-    //private final Uri uri;
     private String path;
     private final boolean isCamera;
 
@@ -24,12 +29,6 @@ final class ImageInfo implements Parcelable, Serializable {
     public void setPath(String path) {
         this.path = path;
     }
-
-    /*
-    public Uri getUri() {
-        return uri;
-    }
-    */
 
     public boolean isCamera() {
         return isCamera;

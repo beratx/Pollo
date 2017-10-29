@@ -31,6 +31,23 @@
 
     import mattoncino.pollo.databinding.ActivityMultiOptPollBinding;
 
+    /**
+     * Activity Class to create and launch a new Poll.
+     * A Poll must include at least:
+     * <ul>
+     * <li> A Title, it will be showed in the new poll notification
+     * <li> A text based Question
+     * <li> Two text based Options
+     * </ul>
+     * And can include:
+     * <ul>
+     * <li> Three more text based options
+     * <li> An image as part of the question
+     * <li> A sound record as part of the question
+     * </ul>
+     *
+     */
+
     public class MultiOptPollActivity extends AppCompatActivity {
         private static final String TAG = "MultiOptPollActivity";
         private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
@@ -52,7 +69,12 @@
         private String [] permissions = {Manifest.permission.RECORD_AUDIO};
 
 
-
+        /**
+         * If user added image and/or sound record to the poll,
+         * save their paths to the bundle
+         *
+         * @param savedInstanceState
+         */
         @Override
         public void onSaveInstanceState(Bundle savedInstanceState){
             super.onSaveInstanceState(savedInstanceState);
@@ -66,6 +88,14 @@
             }
         }
 
+        /**
+         * If user added image and/or sound record to the poll,
+         * restore their paths from bundle and sets the UI to
+         * display/play them
+         *
+         * @param savedInstanceState
+         * @see ImageInfo
+         */
         @Override
         protected void onRestoreInstanceState(Bundle savedInstanceState){
             if(savedInstanceState != null) {
@@ -95,7 +125,17 @@
         }
 
 
-
+        /**
+         * If grant permission for sound record then
+         * creates a temp file for the sound record
+         * and initiliazes a SoundRecord object to manage
+         * sound record and play.
+         *
+         * @param requestCode
+         * @param permissions
+         * @param grantResults
+         * @see SoundRecord
+         */
         @Override
         public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -111,6 +151,11 @@
 
         }
 
+        /**
+         * Sets binding of the layout and listeners for buttons
+         *
+         * @param savedInstanceState
+         */
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -282,6 +327,15 @@
         }
 
 
+        /**
+         * Displays returned image in the imageView and
+         * sets flag hasImage to indicate that poll has
+         * an image
+         *
+         * @param requestCode
+         * @param resultCode
+         * @param data
+         */
         @Override
         protected void onActivityResult(int requestCode, int resultCode, Intent data) {
             switch(requestCode) {
@@ -309,6 +363,13 @@
             }
         }
 
+        /**
+         * Checks if there is an empty option
+         *
+         * @param options Option list of the poll
+         * @return <code>true</code> if there is empty option
+         *         <code>false</code> otherwise
+         */
         private boolean isEmpty(List<String> options){
             for(String op : options){
                 if(op.isEmpty())
@@ -317,6 +378,9 @@
             return false;
         }
 
+        /**
+         * When Back button is pressed user will return to Home
+         */
         @Override
         public void onBackPressed()
         {

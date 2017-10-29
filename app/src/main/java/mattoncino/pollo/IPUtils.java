@@ -4,6 +4,10 @@ import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 
+/**
+ * Util Class to convert integer value of the
+ * host address to the string rappresentation
+ */
 public class IPUtils {
     public static String getLocalIpAddress(Context context) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);

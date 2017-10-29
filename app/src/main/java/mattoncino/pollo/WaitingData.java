@@ -6,6 +6,14 @@ import android.os.Parcelable;
 
 import java.io.Serializable;
 
+/**
+ * This class represents a received Poll which is not accepted or
+ * rejected yet. Received polls are comunicated to the user through
+ * a notification but since notifications can be lost, this
+ * class keeps the Poll object with the necessary data to use at the
+ * moment of user's choice.
+ *
+ */
 public class WaitingData extends BaseObservable implements Parcelable, Serializable {
     private Poll poll;
     private int notificationID;

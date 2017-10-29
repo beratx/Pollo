@@ -2,6 +2,7 @@ package mattoncino.pollo;
 
 import android.app.AlertDialog;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,7 @@ import android.content.IntentFilter;
 import android.databinding.DataBindingUtil;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -21,23 +23,36 @@ import android.widget.ArrayAdapter;
 
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
-import java.util.Set;
 
 import mattoncino.pollo.databinding.ActivityMainBinding;
 
 
 /**
  * Pollo is a simple polling application designed to
- * be used between devices in the same LAN.
+ * be used between devices in the same WLAN.
  *
  * @author  Berat
  * @version 1.0
  * @since   2017-06-01
  */
 
+
+/**
+ * Main Activity is the first Activity launched by launcher that displays
+ * the menu to reach  App's functionality:
+ *  <ul>
+ * <li> CreatePollActivity : to create a new poll
+ * <li> ShowPollsActivity : to list created/received polls
+ * <li> WaitingPollRequestsActivity (if present, to list waiting requests)
+ * <li> Show Device List : to list active devices' addresses
+ * </ul>
+ *<p>
+ * It also initializes JmDnsManager to manage all the network related issues.
+ * </p>
+ */
 public class MainActivity extends AppCompatActivity {
 
-    public static final String TAG = "MainActivity";
+    private static final String TAG = "MainActivity";
     private ActivityMainBinding binding;
     private JmDnsManager jmDnsManager;
     private BroadcastReceiver wifiReceiver;
@@ -45,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
     private MyHandler handler;
 
 
+    /**
+     * Does binding of layout and sets action listeners to the buttons
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,7 +90,16 @@ public class MainActivity extends AppCompatActivity {
         binding.showDeviceListButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                    onShowOnlineDevicesListDialogPress();
+                if(wifiConnected()) {
+                    ShowOnlineDevicesDialog dialog = new ShowOnlineDevicesDialog(MainActivity.this);
+                    dialog.execute(null, null, null);
+                } else {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("No connection, no devices :)");
+                    builder.setIcon(android.R.drawable.ic_dialog_alert);
+                    builder.setCancelable(true);
+                    builder.show();
+                }
             }
         });
 
@@ -95,6 +123,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Updates the main menu if waiting polls is updated,
+     * Checks wifi connection, if it's present than initializes
+     * JmDnsManager for data transfer between devices in the WLAN,
+     * otherwise informs user about the connection stat.
+     *
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -109,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
             connectForDataTransferring();
         } else {
             setTitle("Connecting...");
-            ToastHelper.showSnackBar(MainActivity.this, binding.activityMain,
+            SnackHelper.showSnackBar(MainActivity.this, binding.activityMain,
                     "No active Wifi connection. Please connect to an Access Point");
         }
 
@@ -122,6 +157,10 @@ public class MainActivity extends AppCompatActivity {
         //LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
     }
 
+    /**
+     * Initializes JmDnsManager (connectionManager) by launching an IntentService.
+     * Creates a handler to update UI when initialization is completed.
+     */
     private void connectForDataTransferring(){
         handler = new MyHandler(this);
 
@@ -143,6 +182,13 @@ public class MainActivity extends AppCompatActivity {
         //Toast.makeText(this, "called onPause", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Registers BroadcastListeners:
+     *  <ul>
+     * <li> wifiReceiver : broadcast for the wifi connection stat
+     * <li> countReceiver : broadcast  for the number of waiting poll requests
+     * </ul>
+     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -155,6 +201,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * When Back button is pressed user will return to Home
+    */
     @Override
     public void onBackPressed() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
@@ -164,8 +213,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Checks if there is a connection and if the active connection type is wifi
      *
-     * @return true if device is connected to a wifi.
+     * @return  <code>true</code> if device is connected to a wifi.
+     *          <code>true</code> otherwise
      */
 
     private boolean wifiConnected() {
@@ -182,53 +233,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * Gets online devices list and show them as
-     */
-    public void onShowOnlineDevicesListDialogPress() {
-        if(jmDnsManager != null && jmDnsManager.initialized()){
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    final HashSet<String> onlineDevices = (HashSet<String>) jmDnsManager.getOnlineDevices(MainActivity.this);
-
-                    MainActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showDevicesInNetworkList(onlineDevices);
-                        }
-                    });
-                }
-            };
-            Thread thread = new Thread(runnable);
-            thread.start();
-        } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("No connection, no devices :)");
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setCancelable(true);
-            builder.show();
-        }
-    }
-
-
-    private void showDevicesInNetworkList(Set<String> devices){
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
-        builder.setTitle("Device list: " + "(" + devices.size() + ")");
-
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(MainActivity.this,
-                                                    android.R.layout.simple_list_item_1,
-                                                    devices.toArray(new String[devices.size()]));
-
-        builder.setAdapter(arrayAdapter, null);
-        builder.setCancelable(true);
-        builder.show();
-    }
-
-
-    /**
-     * Creates a Broadcast Listener for changes in Wifi status
-     * @return BroadcastReceiver This returns a Broadcast Receiver
+     * Creates a BroadcastListener to receive changes in Wifi status.
+     * When receives the broadcast for the wifi stat:
+     * if there is an active wifi connection then updates UI,
+     * otherwise informs user about the wifi stat.
+     *
+     * @return BroadcastReceiver returns a BroadcastReceiver
      */
     private BroadcastReceiver createWifiBroadcastReceiver() {
         Log.v(TAG, "received wifi broadcast");
@@ -239,14 +249,22 @@ public class MainActivity extends AppCompatActivity {
                     boolean stat = intent.getBooleanExtra("wifi", true);
                     setTitle(stat ? "Pollo" : "Connecting...");
                     if(!stat)
-                        ToastHelper.showSnackBar(MainActivity.this, binding.activityMain,
+                        SnackHelper.showSnackBar(MainActivity.this, binding.activityMain,
                                 "No active Wifi connection. Please connect to an Access Point");
                 }
             }
         };
     }
 
-
+    /**
+     * Creates a BroadcastListener to receive number of waiting
+     * poll requests. When receives the local broadcast,
+     * if there is no waiting poll request (count == 0) then
+     * hides Waiting Poll Requests button,
+     * otherwise updates button's text.
+     *
+     * @return BroadcastReceiver returns a BroadcastReceiver
+     */
     private BroadcastReceiver createWaitingCountBroadcastReceiver() {
         Log.v(TAG, "received waiting count broadcast");
         return new BroadcastReceiver() {
@@ -264,6 +282,9 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    /**
+     * Handler class to update UI from jmDNSManager thread
+     */
     private static class MyHandler extends Handler{
         private final WeakReference<MainActivity> currentActivity;
 
@@ -271,12 +292,55 @@ public class MainActivity extends AppCompatActivity {
             currentActivity = new WeakReference<MainActivity>(activity);
         }
 
+        /**
+         * Updates Activity's title with the msg from bundle
+         * @param msg message string
+         */
         @Override
         public void handleMessage(Message msg) {
             Bundle reply = msg.getData();
             MainActivity activity = currentActivity.get();
             if (activity!= null)
                 activity.setTitle(reply.getString("result"));
+        }
+    }
+
+    private class ShowOnlineDevicesDialog extends AsyncTask<Void, Void, Void> {
+        private ProgressDialog dialog;
+        AlertDialog.Builder builder;
+        private HashSet<String> onlineDevices;
+
+        public ShowOnlineDevicesDialog(MainActivity activity){
+            dialog = new ProgressDialog(activity);
+            builder = new AlertDialog.Builder(activity);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog.setMessage("Checking online devices, please wait...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            onlineDevices = (HashSet<String>) jmDnsManager.getOnlineDevices(MainActivity.this);
+            return null;
+        }
+
+        protected void onPostExecute(Void result) {
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
+
+            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(MainActivity.this,
+                    android.R.layout.simple_list_item_1,
+                    onlineDevices.toArray(new String[onlineDevices.size()]));
+
+            builder.setTitle("Device list: " + "(" + onlineDevices.size() + ")");
+            builder.setAdapter(arrayAdapter, null);
+            builder.setCancelable(true);
+            builder.show();
         }
     }
 }

@@ -22,6 +22,21 @@ import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
+/**
+ * JmDNS is a Java implementation of multi-cast DNS and
+ * can be used for service registration and discovery
+ * in local area networks. JmDNS is fully compatible with
+ * Apple's Bonjour. @link http://jmdns.sourceforge.net/
+ *
+ * This class basically manages all the network connection
+ * and data transfer between devices. We register Pollo as
+ * a service in the lan. Every device discover other devices
+ * through the service discover.
+ *
+ * Once device is registered its service, it launches server
+ * thread to accept connections from other devices.
+ *
+ */
 public class JmDnsManager {
     private static int SERVICE_INFO_PORT = 9856;
     private static final int SERVER_PORT = 8700;
@@ -37,7 +52,17 @@ public class JmDnsManager {
     private ServerThreadProcessor serverThreadProcessor;
 
 
-
+    /**
+     * Initializes JmDNS mechanism and registers the service.
+     * Launches a background thread which will act as a server
+     * thread and wait for connections from other devices.
+     * Once everything is initialized and ready to go, sends
+     * a message to the Activity through its Handler messenger
+     * to update it's UI.
+     *
+     * @param context context of the activity
+     * @param messenger handler to update activity's UI
+     */
     public void initializeService(final Context context, Messenger messenger) {
 
         Log.i(TAG, "initializing JmDNS instance...");
@@ -94,10 +119,18 @@ public class JmDnsManager {
         }
     }
 
+    /**
+     *  Checks if the JmDNSManager is initialized
+     * @return <code>true</code> if the JmDnsManager is initialized
+     *         <code>false</code> otherwise
+     */
     public boolean initialized(){
         return jmdns != null;
     }
 
+    /**
+     * Registers service in the local network
+     */
     public void registerService() {
         if (jmdns != null)
             try {
@@ -111,6 +144,10 @@ public class JmDnsManager {
         }*/
     }
 
+    /**
+     * Unregisters service in the local network
+     * and releases all the resources
+     */
     public void unregisterService() {
         if(serverThreadProcessor != null)
             serverThreadProcessor.terminate();
@@ -135,7 +172,11 @@ public class JmDnsManager {
     }
 
 
-    //TODO getHostAddress may produce NUllPointerException
+    /**
+     * Returns String rappresentation of the host address
+     *
+     * @return host address of the device
+     */
     public String getHostAddress() {
         InetAddress addr = null;
         try {
@@ -149,6 +190,15 @@ public class JmDnsManager {
 
     }
 
+
+    /**
+     * Returns host address of the device in the InetAddress format
+     *
+     * @param wifiManager object to get wifi connection information
+     * @return InetAddress of the device
+     * @throws IOException
+     * @see InetAddress
+     */
     private InetAddress getInetAddress(WifiManager wifiManager) throws IOException {
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         int addrIntIp = wifiInfo.getIpAddress();
@@ -163,6 +213,12 @@ public class JmDnsManager {
         return InetAddress.getByAddress(byteaddr);
     }
 
+    /**
+     * Creates and acquires a MulticastLock to use with JmDNS connection
+     *
+     * @param wifiManager to get wifi connection information
+     *
+     */
     private void changeMultiCastLock(WifiManager wifiManager) {
         if (multiCastLock != null && multiCastLock.isHeld())
             multiCastLock.release();
@@ -175,6 +231,14 @@ public class JmDnsManager {
         multiCastLock.acquire();
     }
 
+
+    /**
+     * Prepares service settings that serve to create JmDNS Service info
+     *
+     * @param context Activity's context
+     * @return mapping of service settings as a hash table
+     * @see ServiceInfo
+     */
     private Hashtable<String, String> setSettingsHashTable(Context context) {
         Hashtable<String, String> settings = new Hashtable<>();
         settings.put(SERVICE_INFO_PROPERTY_DEVICE, ((MyApplication) context.getApplicationContext()).getDeviceId());
@@ -182,15 +246,35 @@ public class JmDnsManager {
         return settings;
     }
 
+
+    /**
+     * Returns string rappresentation of a host address from a ServiceInfo
+     * @param serviceInfo
+     * @return ipv4 host address
+     * @see ServiceInfo
+     */
     private String getIPv4FromServiceInfo(ServiceInfo serviceInfo) {
         return serviceInfo.getPropertyString(SERVICE_INFO_PROPERTY_IP_VERSION);
     }
 
+
+    /**
+     * Takes list of online devices - devices that can be contacted at the moment -
+     * and sends a Poll object to each of them, through separate ClientThreadProcessor
+     * threads. Type is the message that is used for the comunication protocol between
+     * devices to indicate what kind of object its going to send.
+     *
+     * @param context Activity's context
+     * @param type message type of the object that will be sent. One of the constant
+     *             values indicated as the comunication protocol messages
+     * @param poll poll object to send
+     * @return host addresses of devices that are reached and established a connection
+     */
     public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, Poll poll) {
         Set<String> ipAddressesSet;
-        if (jmdns == null) {
-            initializeService(context, null);
-        }
+
+        if (jmdns == null) initializeService(context, null);
+
         ipAddressesSet = getOnlineDevices(context);
 
         for (java.util.Iterator iterator = ipAddressesSet.iterator(); iterator.hasNext(); ) {
@@ -203,7 +287,16 @@ public class JmDnsManager {
         return ipAddressesSet;
     }
 
-     public Set<String> getOnlineDevices(Context context) {
+
+    /**
+     * Returns list of online devices - devices that can be contacted at the moment -
+     * Takes devices list from the the discovered services infos and check their
+     * reachability, returns only devices that it can reach at the moment.
+     *
+     * @param context Activity's context
+     * @return list of online devices
+     */
+    public Set<String> getOnlineDevices(Context context) {
 
         if (!initialized()) {
             initializeService(context, null);
@@ -223,13 +316,23 @@ public class JmDnsManager {
                     ipAddressesSet.add(host);
                     Log.d(TAG, host + " is reachable");
                 }
-                else
-                    Log.d(TAG, host + " is NOT reachable");
+                else Log.d(TAG, host + " is NOT reachable");
             }
         }
+
         return ipAddressesSet;
     }
 
+    /**
+     * Checks the reachability of the device with its given host address
+     * within the timeOutMillis milliseconds
+     *
+     * @param addr String rappresentation of a host address
+     * @param timeOutMillis timeout in milliseconds
+     * @return <code>true</code> if host can be reached within the
+     *         specified timeout value
+     *          <code>false</code> otherwise
+     */
     private static boolean isReachable(String addr, int timeOutMillis) {
         try {
             Socket soc = new Socket();

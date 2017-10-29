@@ -10,9 +10,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-
+/**
+ * Poll class rappresents a Poll object that can be created through
+ * MultiOptPollActivity class or can be received through the network
+ *
+ * A Poll consist of:
+ * <ul>
+ * <li> String id: identifier of poll
+ * <li> String name : title of poll
+ * <li> String question : poll question
+ * <li> List<String> options : a list of text based options (from 2 up to 5 options)
+ * <li> ImageInfo imageInfo : store image info in case it has an image
+ * <li> boolean hasImage : flag to indicate if it has an image
+ * <li> String recordPath :  file path of sound record in case it has a record
+ * <li> boolean hasRecord : lag to indicate if it has a record
+ * <li> int duration : duration of sound record in case it has a record
+ * </ul>
+ *
+ */
 public class Poll extends BaseObservable implements Parcelable, Serializable {
 
+    /**
+     * identifier of the poll
+     */
     private String id;
     private String name;
     private String question;

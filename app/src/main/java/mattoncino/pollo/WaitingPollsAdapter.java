@@ -14,7 +14,11 @@ import java.util.List;
 
 import mattoncino.pollo.databinding.WaitingPollsListItemBinding;
 
-
+/**
+ * Adapter class that represents waiting polls with Card Views.
+ * Through the adapter class User can interact with waiting Polls
+ * in order to Accept or Reject them.
+ */
 public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapter.CardViewHolder> {
     private final static String TAG = "WaitingPollsAdapter";
     private List<WaitingData> waitingPolls;
@@ -47,6 +51,17 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
         return holder;
     }
 
+    /**
+     * Simply binds Poll object in the WaitingData and sets action listeners
+     * for Accept and Reject buttons.
+     * If user click on Accept button, first it removes the WaitingData from
+     * the list, then sends the poll to the ActivePollsActivity with an intent.
+     * If user click on Reject button then it removes the WaitingData from the
+     * list.
+     *
+     * @param holder
+     * @param position  position of the WaitingData element in waitingPolls list
+     */
     @Override
     public void onBindViewHolder(final WaitingPollsAdapter.CardViewHolder holder, int position) {
         final WaitingPollsListItemBinding binding = holder.getBinding();
@@ -87,18 +102,5 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
     public int getItemCount() {
         return waitingPolls.size();
     }
-
-
-    /*private void sendRemoveBroadcast(Context context, Integer id){
-        Intent intent = new Intent(Receivers.W_REMOVE)
-                .putExtra(Consts.NOTIFICATION_ID, id);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
-
-    private void sendUpdateBroadcast(Context context, int count) {
-        Intent intent = new Intent(Receivers.W_COUNT)
-                .putExtra(Consts.COUNT, count);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }*/
 
 }

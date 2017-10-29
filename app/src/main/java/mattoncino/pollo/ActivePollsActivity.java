@@ -26,6 +26,17 @@ import java.util.Observer;
 
 import mattoncino.pollo.databinding.ActivityActivePollsBinding;
 
+/**
+ * Activity to display and interact with created/received Polls.
+ * User can:
+ * <ul>
+ * <li> vote for Polls
+ * <li> terminate Polls created by him/her
+ * <li> remove Polls from list
+ * <li> receive results for accepted Polls
+ * </ul>
+ *
+ */
 public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private static final String TAG = "ActivePollsActivity";
     private ActivityActivePollsBinding binding;
@@ -45,6 +56,13 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private String xhostAddress;
 
 
+    /**
+     * Firstly  checks connection and initializes PollManager.
+     * If there is a new created/accepted Poll, adds it to the list
+     * and saves properly its media.
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,7 +94,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                         ownAddress = jmDnsManager.getHostAddress();
                     } catch(NullPointerException e){
                         Log.e(TAG, e.toString() + " jmdnsManager is not initialized");
-                        ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                        SnackHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
                                 "No active Wifi connection. Failed to send poll.");
                     }
                     manager.addPoll(new PollData(poll, ownAddress, type));
@@ -86,7 +104,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     //TODO: dont remove the notification if there is no connection
                     boolean accepted = data.getBoolean(Consts.ACCEPT, true);
                     if(!connected) {
-                        ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                        SnackHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
                                 "No active Wifi connection. Failed to receive poll.");
                     } else if (accepted) {
                         xhostAddress = data.getString("hostAddress");
@@ -108,7 +126,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     break;
                 case Consts.WAITED:
                     if(!connected) {
-                        ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                        SnackHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
                                 "No active Wifi connection. Failed to receive poll.");
                     } else {
                         xhostAddress = data.getString("hostAddress");
@@ -124,17 +142,26 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             removeNotification(notfID);
         }
         else if(!connected)
-            ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+            SnackHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
                     "No active Wifi connection. Please connect to an Access Point.");
     }
 
 
+    /**
+     * Removes the file in the given path from the app's cache
+     * @param path path of a file as a string
+     */
     private void removeFromCache(String path){
         File file = new File(path);
         boolean r = file.delete();
         if (r) Log.d(TAG, "image in cache is deleted.");
     }
 
+
+    /**
+     * Save poll's sound record file permanently,
+     * in another directory other than cache directory
+     */
     private void saveRecordPermanently(){
         new Thread(new Runnable() {
             @Override
@@ -150,6 +177,10 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         }).start();
     }
 
+    /**
+     * Save poll's image file permanently,
+     * in another directory other than cache directory
+     */
     private void saveImagePermanently(){
         new Thread(new Runnable() {
             @Override
@@ -177,10 +208,24 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         }).start();
     }
 
+    /**
+     * Register BroadcastListeners:
+     * <ul>
+     * <li> wifiReceiver : broadcast for the wifi connection stat
+     * <li> acceptReceiver : broadcast received when another user accepts a poll
+     *                       request sent from this user
+     * <li> updateReceiver : broadcast received when another user votes for a poll
+     *                       sent from this user
+     * <li> resultReceiver : broadcast received when an accepted poll receives the
+     *                       result
+     * <li> removeReceiver : broadcast received when user removes a poll from list
+     * </ul>
+     */
     @Override
     protected void onStart(){
         super.onStart();
         //Toast.makeText(this, "called onStart", Toast.LENGTH_LONG).show();
+
         wifiReceiver = createWifiBroadcastReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter(Receivers.WIFI));
 
@@ -198,6 +243,12 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
 
     }
 
+    /**
+     * Creates an adapter to display Poll list. Polls are displayed as separate cards.
+     * If user has created a new poll, then sends a request to all active devices.
+     * If user has accepted a poll request, sends an accept message to the owner of poll.
+     * Otherwise just displays the Poll list.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -244,6 +295,14 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         }
     }
 
+    /**
+     * Creates a BroadcastListener to receive changes in Wifi status.
+     * When receives the broadcast for the wifi state:
+     * if there is an active wifi connection then updates the UI,
+     * otherwise informs user about the wifi state.
+     *
+     * @return BroadcastReceiver
+     */
     private BroadcastReceiver createWifiBroadcastReceiver() {
         Log.v(TAG, "received wifi broadcast");
         return new BroadcastReceiver() {
@@ -253,7 +312,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     boolean connected = intent.getBooleanExtra("wifi", false);
                     if(!connected){
                         setTitle("Connecting...");
-                        ToastHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
+                        SnackHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
                                 "No active Wifi connection. Please connect to an Access Point.");
                     }
                     else setTitle("Active Polls");
@@ -263,6 +322,15 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     }
 
 
+    /**
+     * Creates a BroadcastListener to receive an update for a poll.
+     * When receives the broadcast:
+     * if the vote is from another user, then update the voted poll
+     * and notifies adapter for data change
+     * otherwise just notifies adapter for data change
+     *
+     * @return BroadcastReceiver
+     */
     private BroadcastReceiver createUpdateBroadcastReceiver() {
         return new BroadcastReceiver() {
             @Override
@@ -288,6 +356,14 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         };
     }
 
+    /**
+     * Creates a BroadcastListener to receive an accept message for
+     * a launched poll.
+     * When receives the broadcast:
+     * Updates accepted devices list for the given poll
+     *
+     * @return BroadcastReceiver
+     */
     private BroadcastReceiver createAcceptBroadcastReceiver() {
         return new BroadcastReceiver() {
             @Override
@@ -300,15 +376,24 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
 
                     manager.updateAcceptedDeviceList(pollID, hostAddress, accepted);
 
+                    adapter.notifyDataSetChanged();
                     intent.removeExtra("pollID");
                     intent.removeExtra("hostAddress");
                     intent.removeExtra("accepted");
-                    adapter.notifyDataSetChanged();
+
                 }
             }
         };
     }
 
+    /**
+     * Creates a BroadcastListener to receive a result message for
+     * an accepted poll.
+     * When receives the broadcast:
+     * Set votes for the given poll to display its results
+     *
+     * @return BroadcastReceiver
+     */
     private BroadcastReceiver createResultBroadcastReceiver() {
         return new BroadcastReceiver() {
             @Override
@@ -328,6 +413,14 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         };
     }
 
+    /**
+     * Creates a BroadcastListener to receive a remove message for
+     * a poll.
+     * When receives the broadcast:
+     * Removes the poll from the list
+     *
+     * @return BroadcastReceiver
+     */
     private BroadcastReceiver createRemoveBroadcastReceiver() {
         return new BroadcastReceiver() {
             @Override
@@ -344,8 +437,13 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     }
 
 
-
-    //called when a change has occurred in the state of the observable
+    /**
+     * Notifies adapter when a change has occurred in the state of the
+     * observable object.
+     *
+     * @param observable
+     * @param o
+     */
     @Override
     public void update(Observable observable, Object o) {
         if (adapter != null) {
@@ -360,6 +458,11 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         super.onRestart();
     }
 
+    /**
+     * Saves the state of the activity
+     * @param outState
+     * @param outPersistentState
+     */
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         super.onSaveInstanceState(outState, outPersistentState);
@@ -368,6 +471,11 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         outState.putParcelableArrayList("pollList", active_polls);
     }
 
+    /**
+     * Restores the state of the activity
+     * @param savedInstanceState
+     * @param persistentState
+     */
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState, PersistableBundle persistentState) {
         super.onRestoreInstanceState(savedInstanceState, persistentState);
@@ -384,6 +492,9 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         //Toast.makeText(this, "called onPause", Toast.LENGTH_LONG).show();
     }
 
+    /**
+     * Saves Poll List permanently
+     */
     @Override
     protected void onStop() {
         //Toast.makeText(this, "called onStop", Toast.LENGTH_LONG).show();
@@ -410,18 +521,22 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         //Toast.makeText(this, "called Destroy", Toast.LENGTH_LONG).show();
     }
 
+    /**
+     * When user presses the back button, returns to the Main Activity
+     */
     @Override
     public void onBackPressed() {
         startActivity(new Intent(ActivePollsActivity.this, MainActivity.class));
     }
 
+    /**
+     * Removes the notification with the id notificationID from the status bar.
+     * @param notificationID
+     */
     private void removeNotification(int notificationID) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(notificationID);
     }
-
-
-
 }
 
 

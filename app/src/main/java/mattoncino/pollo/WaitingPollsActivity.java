@@ -19,6 +19,12 @@ import java.util.Observer;
 
 import mattoncino.pollo.databinding.ActivityWaitingPollsBinding;
 
+
+/**
+ * Activity to display and interact with the Waiting Poll Requests,
+ * that are Poll requests received from other devices but not accepted
+ * nor rejected by the user yet.
+ */
 public class WaitingPollsActivity extends AppCompatActivity implements Observer {
     private static final String TAG = "ActivePollsActivity";
     private ActivityWaitingPollsBinding binding;
@@ -30,6 +36,11 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
     private boolean connected;
 
 
+    /**
+     *  Binds layout and initializes WaitingPolls manager
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +52,12 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         waitingManager.addObserver(this);
     }
 
+    /**
+     * Checks the wifi connection and if not present,
+     * displays a message to inform the user.
+     * Then gets waiting polls list and sets the adapter
+     * to display the waiting polls.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -48,7 +65,7 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         jmDnsManager = ((MyApplication) getApplication()).getConnectionManager();
         if(jmDnsManager == null || !jmDnsManager.initialized()){
             setTitle("Connecting...");
-            ToastHelper.showSnackBar(WaitingPollsActivity.this, binding.activityActivePolls,
+            SnackHelper.showSnackBar(WaitingPollsActivity.this, binding.activityActivePolls,
                     "No active Wifi connection. Please connect to an Access Point.");
             connected = false;
         } else connected = true;
@@ -59,6 +76,13 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         binding.recyclerView.setAdapter(adapter);
     }
 
+    /**
+     * Notifies adapter when a change has occurred in the state of the
+     * observable object.
+     *
+     * @param observable
+     * @param o
+     */
     @Override
     public void update(Observable observable, Object o) {
         if (adapter != null) {
@@ -67,6 +91,13 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         }
     }
 
+    /**
+     * Register BroadcastListeners:
+     * <ul>
+     * <li> wifiReceiver : broadcast for the wifi connection stat
+     * <li> removeReceiver : broadcast received when the user rejects
+     *                       a poll, so it must be removed from the list
+     */
     @Override
     protected void onStart(){
         super.onStart();
@@ -78,7 +109,12 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         LocalBroadcastManager.getInstance(this).registerReceiver(removeReceiver, new IntentFilter(Receivers.W_REMOVE));
     }
 
-
+    /**
+     * Creates a BroadcastListener to receive a remove message for
+     * a poll. When receives it, removes the poll from the list
+     *
+     * @return BroadcastReceiver
+     */
     private BroadcastReceiver createRemoveBroadcastReceiver() {
         return new BroadcastReceiver() {
             @Override
@@ -94,6 +130,14 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         };
     }
 
+    /**
+     * Creates a BroadcastListener to receive changes in Wifi status.
+     * When receives the broadcast for the wifi state:
+     * if there is an active wifi connection then updates the UI,
+     * otherwise informs user about the wifi state.
+     *
+     * @return BroadcastReceiver
+     */
     private BroadcastReceiver createWifiBroadcastReceiver() {
         Log.v(TAG, "received wifi broadcast");
         return new BroadcastReceiver() {
@@ -103,28 +147,11 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
                     boolean stat = intent.getBooleanExtra("wifi", true);
                     setTitle(stat ? "Waiting Poll Requests" : "Connecting...");
                     if(!stat)
-                        ToastHelper.showSnackBar(WaitingPollsActivity.this, binding.recyclerView,
+                        SnackHelper.showSnackBar(WaitingPollsActivity.this, binding.recyclerView,
                                 "No active Wifi connection. Please connect to an Access Point");
                 }
             }
         };
     }
 
-
-    /*private BroadcastReceiver createAddBroadcastReceiver() {
-        return new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if(intent.getAction() != null && intent.getAction().equals(Receivers.W_ADD)) {
-                    Log.v(TAG, "received waiting add broadcast");
-                    int notId = intent.getIntExtra(Consts.NOTIFICATION_ID, 0);
-                    Poll poll = intent.getParcelableExtra(Consts.POLL);
-                    String hostAddress = intent.getStringExtra(Consts.ADDRESS);
-                    waitingManager.addData(new WaitingData(poll, notId, hostAddress));
-                    waitingManager.savetoWaitingList();
-                    adapter.notifyDataSetChanged();
-                }
-            }
-        };
-    }*/
 }
