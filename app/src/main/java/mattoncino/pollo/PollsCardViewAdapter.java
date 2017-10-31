@@ -30,7 +30,7 @@ import mattoncino.pollo.databinding.ActivePollsListItemBinding;
  * Adapter class that represents polls with Card Views.
  * Through the adapter class User interacts with its Polls
  * created or received. User can:
- *  <ul>
+ * <ul>
  * <li> vote for a created/accepted Poll
  * <li> terminate a Poll if its the owner
  * <li> remove a Poll from list
@@ -45,6 +45,10 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     private final static int VIEW_COUNT = 4;
     private static final int VIEW_OWN = 1;
     private static final int VIEW_OTHER = 2;
+    private static SoundRecord record = null;
+    private static boolean sameAudio = true;
+
+
 
     public PollsCardViewAdapter(List<PollData> polls){
         activePolls = polls;
@@ -62,6 +66,16 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             return listItemBinding;
         }
 
+    }
+
+    public static void stopPlayingAudio(){
+        if(record != null){
+            if(record.isPlaying()){
+                record.stopPlaying();
+                record.flipPlay();
+            }
+            record = null;
+        }
     }
 
 
@@ -115,7 +129,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         final PollData pollData = activePolls.get(position);
         final Poll poll = pollData.getPoll();
         final LinearLayout rLayout = binding.listItemLayout;
-        final SoundRecord record;
+
 
         resetHolder(binding);
 
@@ -144,17 +158,42 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
          * @see SoundRecord
          */
         if(pollData.hasRecord()){
-            String recordPath = pollData.getRecordPath();
+            final String recordPath = pollData.getRecordPath();
             Log.d(TAG, "recordPath: " + recordPath);
-            record = new SoundRecord(recordPath);
 
             binding.chronometer.setBase(SystemClock.elapsedRealtime() - pollData.getDuration());
-
             binding.recordCardView.setVisibility(View.VISIBLE);
 
             binding.playFAB.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    if(record != null) {
+                        sameAudio = record.getDataSource().equals(recordPath);
+                        Log.d(TAG, "sameAudio ? " + sameAudio);
+                        if(!sameAudio) {
+                            if(record.isPlaying()) {
+                                record.stopPlaying();
+                            }
+                            record = null;
+                        } else {
+                            if(record.isPlaying()) {
+                                record.stopPlaying();
+                                record.flipPlay();
+                                Log.d(TAG, "Record is stopped.");
+                            }
+                        }
+                    }
+                    if(record == null) {
+                        record = new SoundRecord(recordPath);
+                        record.setOnStopListener(new SoundRecord.OnStopListener() {
+                            @Override
+                            public void onStop(boolean stopped) {
+                                binding.chronometer.stop();
+                                binding.chronometer.setBase(SystemClock.elapsedRealtime() - pollData.getDuration());
+                                binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
+                                }
+                        });
+                    }
                     if (record.isPlaying()) {
                         Log.d(TAG, "Record is playing...");
                         record.startPlaying();
@@ -163,23 +202,14 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                             public void onCompletion(MediaPlayer mediaPlayer) {
                                 binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
                                 binding.chronometer.stop();
-                                record.setPlay();
+                                record.flipPlay();
+                                record = null;
                             }
                         });
                         binding.chronometer.setBase(SystemClock.elapsedRealtime());
                         binding.chronometer.start();
                         binding.playFAB.setImageResource(android.R.drawable.ic_media_pause);
-                        //binding.chronometer.stop();
-                    } else {
-                        record.stopPlaying();
-                        binding.chronometer.stop();
-                        binding.chronometer.setBase(SystemClock.elapsedRealtime() - pollData.getDuration());
-                        Log.d(TAG, "Record is stopped.");
-                        binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
                     }
-
-                    record.setPlay();
-
                 }
             });
         }

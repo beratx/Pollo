@@ -15,23 +15,40 @@ import java.util.Date;
 
 
 public class SoundRecord {
+    public interface OnStopListener {
+        public void onStop(boolean stopped);
+    }
+
     private static final String TAG = "SoundRecord";
     private MediaRecorder mRecorder = null;
     private MediaPlayer mPlayer = null;
     private String recordPath = null;
     private static final String TEMP_RECORD = "tempRecord";
     private boolean startPlaying = true;
+    private OnStopListener onStopListener;
+
+
 
     public SoundRecord(String recordPath){
         this.recordPath = recordPath;
+        this.onStopListener = null;
+    }
+
+    public void setOnStopListener(OnStopListener listener){
+        this.onStopListener = listener;
     }
 
     public boolean isPlaying(){
         return startPlaying;
     }
 
-    public void setPlay(){
+    public void flipPlay(){
         startPlaying = !startPlaying;
+        Log.d("PollsCardView", String.valueOf(startPlaying));
+    }
+
+    public String getDataSource(){
+        return recordPath;
     }
 
     public void onPlay(){
@@ -54,22 +71,32 @@ public class SoundRecord {
     public void startPlaying() {
         mPlayer = new MediaPlayer();
         try {
-            //mPlayer.reset()?
             mPlayer.setDataSource(recordPath);
-            mPlayer.prepare();
-            mPlayer.start();
+            mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mediaPlayer) {
+                    mPlayer.start();
+                }
+            });
+            mPlayer.prepareAsync();
+
         } catch (IOException e) {
             Log.e(TAG, "prepare() failed");
         }
     }
+
 
     public void setCompletionListener( MediaPlayer.OnCompletionListener listener) {
         mPlayer.setOnCompletionListener(listener);
     }
 
     public void stopPlaying() {
+        mPlayer.stop();
         mPlayer.release();
         mPlayer = null;
+
+        if (onStopListener != null)
+            onStopListener.onStop(startPlaying);
     }
 
     public void startRecording() {
@@ -94,30 +121,22 @@ public class SoundRecord {
         mRecorder = null;
     }
 
-    public static String createFile(Context context, String ext) {
+    public static String createTempFile(Context context, String ext) {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        boolean external = ImagePicker.isExternalStorageWritable();
 
-        //cache directory!
-        String recordPath =  external ? context.getExternalCacheDir().getAbsolutePath() + "/" + timestamp + "." + ext
-                                      : context.getCacheDir().getAbsolutePath() + "/" + timestamp + "." + ext;
+        File record =  ImagePicker.isExternalStorageWritable()
+                ? new File(context.getExternalCacheDir(), "pollo_" + timestamp + "." + ext)
+                : new File(context.getCacheDir() , "pollo_" + timestamp + "." + ext);
 
-        Log.d(TAG, "record file path: " + recordPath);
-
-        return recordPath;
+        return record.getPath();
     }
 
-    public static String createTempFile(Context context, String ext) {
-        File recordFile;
 
+    public static String getTempFile(Context context, String ext) {
         boolean external = ImagePicker.isExternalStorageWritable();
 
-        recordFile =  external ? new File(context.getExternalCacheDir().getAbsolutePath()
-                                                        + File.separator + TEMP_RECORD + "." + ext)
-                               : new File(context.getCacheDir().getAbsolutePath()
-                                                        + File.separator + TEMP_RECORD + "." + ext);
-
-        recordFile.getParentFile().mkdirs();
+        File recordFile =  external ? new File(context.getExternalCacheDir(), TEMP_RECORD + "." + ext)
+                                    : new File(context.getCacheDir() + TEMP_RECORD + "." + ext);
 
         Log.d(TAG, "record file path: " + recordFile.getPath());
 
@@ -128,23 +147,14 @@ public class SoundRecord {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         boolean external = ImagePicker.isExternalStorageWritable();
 
-        String recordPath =  external ? Environment.getExternalStorageDirectory().getAbsolutePath()
-                                        + File.separator + timestamp + "." + ext
-                                      : context.getFilesDir().getAbsolutePath() + File.separator +
-                                        timestamp + "." + ext;
+        File dir = external ? context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+                            : new File(context.getFilesDir() + File.separator + "pollo_sound");
 
-        Log.d(TAG, "record file path: " + recordPath);
+        if (!external && !dir.exists()) {
+            File imagesDir = new File(context.getFilesDir(), "pollo_sound");
+            imagesDir.mkdirs();
+        }
 
-        //return File.createTempFile(timestamp, "." + ext, dir).getAbsolutePath();
-        return recordPath;
+        return new File(dir, "pollo_" + timestamp + "." + ext).getPath();
     }
-
-
-    /*public static File createFile(Context context, String ext) {
-        String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        boolean external = ImagePicker.isExternalStorageWritable();
-
-        return external ? new File(context.getExternalCacheDir(), "pollo_" + timestamp + "." + ext)
-                        : new File(context.getCacheDir() , "pollo_" + timestamp + "." + ext);
-    }*/
 }

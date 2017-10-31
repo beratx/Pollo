@@ -101,7 +101,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     myPollRequest = true;
                     break;
                 case Consts.OTHER:
-                    //TODO: dont remove the notification if there is no connection
                     boolean accepted = data.getBoolean(Consts.ACCEPT, true);
                     if(!connected) {
                         SnackHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
@@ -122,7 +121,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                         data.remove(Consts.POLL);
                     }
                     WaitingPolls.sendRemoveBroadcast(ActivePollsActivity.this, notfID);
-                    WaitingPolls.sendUpdateBroadcast(ActivePollsActivity.this, notfID);
                     break;
                 case Consts.WAITED:
                     if(!connected) {
@@ -167,7 +165,9 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             @Override
             public void run() {
                 File temp = new File(poll.getRecordPath());
+                Log.d(TAG, "temp.path: " + temp.getPath());
                 File perm = new File(SoundRecord.createFile2(ActivePollsActivity.this, "3gp"));
+                Log.d(TAG, "perm.path: " + perm.getPath());
 
                 boolean r = temp.renameTo(perm);
 

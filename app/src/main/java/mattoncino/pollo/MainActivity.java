@@ -15,9 +15,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.widget.ArrayAdapter;
 
@@ -248,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
                     boolean stat = intent.getBooleanExtra("wifi", true);
                     setTitle(stat ? "Pollo" : "Connecting...");
-                    if(!stat)
+                    if(!stat || !wifiConnected())
                         SnackHelper.showSnackBar(MainActivity.this, binding.activityMain,
                                 "No active Wifi connection. Please connect to an Access Point");
                 }
@@ -266,11 +268,11 @@ public class MainActivity extends AppCompatActivity {
      * @return BroadcastReceiver returns a BroadcastReceiver
      */
     private BroadcastReceiver createWaitingCountBroadcastReceiver() {
-        Log.v(TAG, "received waiting count broadcast");
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.W_COUNT)) {
+                    Log.v(TAG, "received waiting count broadcast");
                     int count = intent.getIntExtra(Consts.COUNT, 0);
                     if(count > 0){
                         binding.waitingPollsActivityButton.setText("Waiting Poll Requests (" + count + ")");
@@ -305,9 +307,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
     private class ShowOnlineDevicesDialog extends AsyncTask<Void, Void, Void> {
         private ProgressDialog dialog;
-        AlertDialog.Builder builder;
+        AlertDialog.Builder builder = null;
         private HashSet<String> onlineDevices;
 
         public ShowOnlineDevicesDialog(MainActivity activity){
@@ -334,8 +338,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(MainActivity.this,
-                    android.R.layout.simple_list_item_1,
-                    onlineDevices.toArray(new String[onlineDevices.size()]));
+                                       android.R.layout.simple_list_item_1,
+                                       onlineDevices.toArray(new String[onlineDevices.size()]));
 
             builder.setTitle("Device list: " + "(" + onlineDevices.size() + ")");
             builder.setAdapter(arrayAdapter, null);

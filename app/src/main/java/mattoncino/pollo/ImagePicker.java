@@ -262,7 +262,7 @@ public class ImagePicker {
         }
     }
 
-
+    //file path: /storage/emulated/0/Android/data/mattoncino.pollo/cache/pollo_20171030_102419.jpeg
     public static File createTempFile(Context context, String ext) {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
@@ -279,26 +279,21 @@ public class ImagePicker {
 
     public static File createFile(Context context, String ext) throws IOException {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-
         boolean external = isExternalStorageWritable();
 
         if(ext.isEmpty())  ext = "bmp";
 
-        File dir = external ? new File(Environment.getExternalStorageDirectory() + "/pollo_images")
-                            : new File(context.getFilesDir() + "/pollo_images");
+        File dir = external ? context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                            : new File(context.getFilesDir() + File.separator + "pollo_images");
 
-        if (!dir.exists()) {
-            //TODO : replace /sdcard/ with Environment.getExternalStorageDirectory().getPath();
-            File imagesDir = external ? new File("/sdcard/pollo_images/") : new File("/pollo_images/");
-            //File imagesDir = new File("/pollo_images");
+        if (!external && !dir.exists()) {
+            File imagesDir = new File(context.getFilesDir(), "pollo_images");
             imagesDir.mkdirs();
         }
 
-        return File.createTempFile("pollo_" + timestamp, "." + ext, dir);
-
+        return new File(dir, "pollo_" + timestamp + "." + ext);
     }
 
-    /* Checks if external storage is available for read and write */
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state))

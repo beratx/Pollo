@@ -1,6 +1,7 @@
     package mattoncino.pollo;
 
     import android.Manifest;
+    import android.content.Context;
     import android.content.Intent;
     import android.content.pm.PackageManager;
     import android.databinding.DataBindingUtil;
@@ -11,6 +12,7 @@
     import android.os.Parcelable;
     import android.os.StrictMode;
     import android.os.SystemClock;
+    import android.os.Vibrator;
     import android.support.annotation.NonNull;
     import android.support.design.widget.FloatingActionButton;
     import android.support.design.widget.Snackbar;
@@ -18,7 +20,6 @@
     import android.support.v4.app.ActivityCompat;
     import android.support.v7.app.AppCompatActivity;
     import android.util.Log;
-    import android.view.HapticFeedbackConstants;
     import android.view.MotionEvent;
     import android.view.View;
     import android.view.ViewGroup;
@@ -112,6 +113,7 @@
                     binding.imageView.setVisibility(View.VISIBLE);
                     binding.imageView.setImageBitmap(bitmap);
                     binding.imageView.invalidate();
+
                     hasImage = true;
                 }
 
@@ -139,15 +141,20 @@
         @Override
         public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            //TODO fix it to ask for permission adeguately
             switch (requestCode){
                 case REQUEST_RECORD_AUDIO_PERMISSION:
-                    permissionToRecordAccepted  = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                    permissionToRecordAccepted  = grantResults.length > 0
+                            && grantResults[0] == PackageManager.PERMISSION_GRANTED;
                     //TODO check for a better file extension
-                    recordPath = SoundRecord.createTempFile(MultiOptPollActivity.this, "3gp");
+                    recordPath = SoundRecord.getTempFile(MultiOptPollActivity.this, "3gp");
                     record = new SoundRecord(recordPath);
                     break;
             }
-            if (!permissionToRecordAccepted ) finish();
+            if (!permissionToRecordAccepted ) {
+                //TODO display a dialog to ask and put controls in case no permission granted
+                binding.recordCardView.setVisibility(View.GONE);
+            }
 
         }
 
@@ -198,7 +205,12 @@
                         case MotionEvent.ACTION_DOWN:
                             Log.d(TAG, "Start Recording...");
                             binding.recordFAB.setSize(FloatingActionButton.SIZE_NORMAL);
-                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                            /*int hapticFeedback = Settings.System.getInt(getContentResolver(),
+                                                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 0);
+                            if(hapticFeedback != 0)
+                                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);*/
+                            Vibrator v = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+                            v.vibrate(250);
                             record.startRecording();
                             binding.chronometer.setBase(SystemClock.elapsedRealtime());
                             binding.chronometer.start();
@@ -213,7 +225,7 @@
                             hasRecord = true;
                             break;
                     }
-                    return false;
+                    return true;
                 }
             });
 
@@ -229,7 +241,7 @@
                                 public void onCompletion(MediaPlayer mediaPlayer) {
                                     binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
                                     binding.chronometer.stop();
-                                    record.setPlay();
+                                    record.flipPlay();
                                 }
                             });
                             binding.chronometer.setBase(SystemClock.elapsedRealtime());
@@ -243,7 +255,7 @@
                             binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
                         }
 
-                        record.setPlay();
+                        record.flipPlay();
                     }
                 }
             });
@@ -344,14 +356,20 @@
                         Log.d(TAG, "RESULT IS OK");
                         imageInfo = ImagePicker.getImageFromResult(this, resultCode, data);
                         bitmap = ImagePicker.getBitmapImage(Uri.parse(imageInfo.getPath()), MultiOptPollActivity.this, imageInfo.isCamera());
+                        binding.imageView.setImageBitmap(bitmap);
+                        binding.imageView.setVisibility(View.VISIBLE);
 
-                        ViewGroup.LayoutParams params = binding.imageCardView.getLayoutParams();
+                        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) binding.imageCardView.getLayoutParams();
                         params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
                         binding.imageCardView.setLayoutParams(params);
 
-                        binding.imageView.setVisibility(View.VISIBLE);
-                        binding.imageView.setImageBitmap(bitmap);
-                        binding.imageView.invalidate();
+                        int width = bitmap .getWidth();
+                        int height = bitmap .getHeight();
+                        if(height > width)  params.setMargins(0,10,0,10);
+                        else params.setMargins(0,0-10,0,0-10);
+
+                        binding.imageView.requestLayout();
+                        //binding.imageView.invalidate();
                         hasImage = true;
                     }
                     else
