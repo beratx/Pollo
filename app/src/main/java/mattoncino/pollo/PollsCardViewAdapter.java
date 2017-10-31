@@ -45,13 +45,13 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     private final static int VIEW_COUNT = 4;
     private static final int VIEW_OWN = 1;
     private static final int VIEW_OTHER = 2;
-    private static SoundRecord record = null;
+    public static SoundRecord record = null;
     private static boolean sameAudio = true;
 
 
 
     public PollsCardViewAdapter(List<PollData> polls){
-        activePolls = polls;
+        this.activePolls = polls;
     }
 
     public static class CardViewHolder extends RecyclerView.ViewHolder {
@@ -168,20 +168,14 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                 @Override
                 public void onClick(View view) {
                     if(record != null) {
+                        if(record.isPlaying())
+                            record.stopPlaying();
+
                         sameAudio = record.getDataSource().equals(recordPath);
-                        Log.d(TAG, "sameAudio ? " + sameAudio);
-                        if(!sameAudio) {
-                            if(record.isPlaying()) {
-                                record.stopPlaying();
-                            }
-                            record = null;
-                        } else {
-                            if(record.isPlaying()) {
-                                record.stopPlaying();
-                                record.flipPlay();
-                                Log.d(TAG, "Record is stopped.");
-                            }
-                        }
+
+                        if(sameAudio)
+                            record.flipPlay();
+                        else record = null;
                     }
                     if(record == null) {
                         record = new SoundRecord(recordPath);
@@ -195,7 +189,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                         });
                     }
                     if (record.isPlaying()) {
-                        Log.d(TAG, "Record is playing...");
                         record.startPlaying();
                         record.setCompletionListener(new MediaPlayer.OnCompletionListener() {
                             @Override

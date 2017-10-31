@@ -55,7 +55,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     private boolean connected = true;
     private String xhostAddress;
 
-
     /**
      * Firstly  checks connection and initializes PollManager.
      * If there is a new created/accepted Poll, adds it to the list
@@ -492,6 +491,18 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
         //Toast.makeText(this, "called onPause", Toast.LENGTH_LONG).show();
     }
 
+
+    protected void stopAudioPlaying(){
+        if (PollsCardViewAdapter.record != null){
+            if(PollsCardViewAdapter.record.isPlaying()){
+                PollsCardViewAdapter.record.stopPlaying();
+                PollsCardViewAdapter.record.flipPlay();
+            }
+            PollsCardViewAdapter.record = null;
+        }
+
+    }
+
     /**
      * Saves Poll List permanently
      */
@@ -499,6 +510,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
     protected void onStop() {
         //Toast.makeText(this, "called onStop", Toast.LENGTH_LONG).show();
         super.onStop();
+        stopAudioPlaying();
         manager.savePollsPermanently();
 
         /*if (updateReceiver != null) {

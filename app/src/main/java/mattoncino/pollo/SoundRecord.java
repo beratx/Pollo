@@ -16,7 +16,7 @@ import java.util.Date;
 
 public class SoundRecord {
     public interface OnStopListener {
-        public void onStop(boolean stopped);
+        void onStop(boolean stopped);
     }
 
     private static final String TAG = "SoundRecord";
@@ -44,7 +44,7 @@ public class SoundRecord {
 
     public void flipPlay(){
         startPlaying = !startPlaying;
-        Log.d("PollsCardView", String.valueOf(startPlaying));
+        Log.d(TAG, String.valueOf(startPlaying));
     }
 
     public String getDataSource(){
@@ -76,6 +76,7 @@ public class SoundRecord {
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {
                     mPlayer.start();
+                    Log.d(TAG, "Record is started.");
                 }
             });
             mPlayer.prepareAsync();
@@ -95,6 +96,8 @@ public class SoundRecord {
         mPlayer.release();
         mPlayer = null;
 
+        Log.d(TAG, "Record is stopped.");
+
         if (onStopListener != null)
             onStopListener.onStop(startPlaying);
     }
@@ -113,12 +116,16 @@ public class SoundRecord {
         }
 
         mRecorder.start();
+
+        Log.d(TAG, "Start recording...");
     }
 
     public void stopRecording() {
         mRecorder.stop();
         mRecorder.release();
         mRecorder = null;
+
+        Log.d(TAG, "Stop recording...");
     }
 
     public static String createTempFile(Context context, String ext) {

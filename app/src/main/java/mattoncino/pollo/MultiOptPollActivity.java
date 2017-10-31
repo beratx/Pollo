@@ -203,12 +203,7 @@
                 public boolean onTouch(View view, MotionEvent event) {
                     switch(event.getAction()){
                         case MotionEvent.ACTION_DOWN:
-                            Log.d(TAG, "Start Recording...");
                             binding.recordFAB.setSize(FloatingActionButton.SIZE_NORMAL);
-                            /*int hapticFeedback = Settings.System.getInt(getContentResolver(),
-                                                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 0);
-                            if(hapticFeedback != 0)
-                                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);*/
                             Vibrator v = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
                             v.vibrate(250);
                             record.startRecording();
@@ -216,7 +211,6 @@
                             binding.chronometer.start();
                             break;
                         case MotionEvent.ACTION_UP:
-                            Log.d(TAG, "Stop Recording...");
                             binding.recordFAB.setSize(FloatingActionButton.SIZE_MINI);
                             record.stopRecording();
                             binding.chronometer.stop();
@@ -234,7 +228,6 @@
                 public void onClick(View view) {
                     if(hasRecord) {
                         if (record.isPlaying()) {
-                            Log.d(TAG, "Record is playing...");
                             record.startPlaying();
                             record.setCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
@@ -251,7 +244,6 @@
                             record.stopPlaying();
                             binding.chronometer.stop();
                             binding.chronometer.setBase(SystemClock.elapsedRealtime() - duration);
-                            Log.d(TAG, "Record is stopped.");
                             binding.playFAB.setImageResource(android.R.drawable.ic_media_play);
                         }
 
