@@ -78,8 +78,6 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
                         .putExtra(Consts.NOTIFICATION_ID, wd.getNotificationID())
                         .putExtra(Consts.ADDRESS, wd.getHostAddress());
 
-                WaitingPolls.sendRemoveBroadcast(view.getContext(), wd.getNotificationID());
-
                 view.getContext().startActivity(intent);
             }
         });

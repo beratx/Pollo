@@ -119,7 +119,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                             removeFromCache(poll.getRecordPath());
                         data.remove(Consts.POLL);
                     }
-                    WaitingPolls.sendRemoveBroadcast(ActivePollsActivity.this, notfID);
                     break;
                 case Consts.WAITED:
                     if(!connected) {
@@ -136,6 +135,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     }
                     break;
             }
+            WaitingPolls.sendRemoveBroadcast(ActivePollsActivity.this, notfID);
             removeNotification(notfID);
         }
         else if(!connected)
