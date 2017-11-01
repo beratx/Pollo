@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:textAllCaps="false"
-                android:text="Accept" />
+                android:text="@string/accept" />
 
 
             <Button
@@ -45,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:textAllCaps="false"
-                android:text="Reject" />
+                android:text="@string/reject" />
 
         </LinearLayout>
 

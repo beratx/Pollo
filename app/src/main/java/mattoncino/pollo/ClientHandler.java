@@ -369,7 +369,7 @@ public class ClientHandler implements Runnable{
     private void addToWaitingPolls(Integer notificationID, Poll poll, String hostAddress){
         WaitingPolls manager = WaitingPolls.getInstance();
         manager.addData(new WaitingData(poll, notificationID, hostAddress));
-        manager.savetoWaitingList();
+        //manager.savetoWaitingList();
 
         //to update main activity
         int count = WaitingPolls.getInstance().getWaitingPolls().size();

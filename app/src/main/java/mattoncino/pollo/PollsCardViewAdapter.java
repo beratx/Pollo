@@ -68,16 +68,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
     }
 
-    public static void stopPlayingAudio(){
-        if(record != null){
-            if(record.isPlaying()){
-                record.stopPlaying();
-                record.flipPlay();
-            }
-            record = null;
-        }
-    }
-
 
     @Override
     public int getItemViewType(int position) {
@@ -303,6 +293,15 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         binding.removeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(poll.hasRecord()){
+                    if(record != null){
+                        if(record.isPlaying() && record.getDataSource().equals(poll.getRecordPath())) {
+                            record.stopPlaying();
+                            record.flipPlay();
+                            record = null;
+                        }
+                    }
+                }
                 sendRemoveBroadcast(rLayout.getContext(), pollData.getID());
             }
         });

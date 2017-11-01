@@ -1,6 +1,26 @@
 <resources>
     <string name="app_name">Pollo</string>
+    <string name="create">Create Poll</string>
+    <string name="show">Show Poll</string>
+    <string name="device_list">Show Device List</string>
+    <string name="waitings">Poll Requests</string>
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
     <string name="wifi_connection">The active connection is wifi.</string>
     <string name="mobile_connection">The active connection is mobile.</string>
     <string name="no_wifi_or_mobile">No wireless or mobile connection.</string>
+    <string name="add_media">"Add an image or record \na sound for your question..."</string>
+    <string name="pick_image">Pick Image</string>
+    <string name="title">Title</string>
+    <string name="question">Question</string>
+    <string name="opt1">1.Option</string>
+    <string name="opt2">2.Option</string>
+    <string name="opt3">3.Option</string>
+    <string name="opt4">4.Option</string>
+    <string name="opt5">5.Option</string>
+    <string name="launch">Launch</string>
+    <string name="thanks">Thanks for voting! Wait for results...</string>
+    <string name="terminate">Terminate</string>
+    <string name="remove">Remove</string>
+    <string name="poll_state">0 voted / 0 accepted / 0 sent</string>
 </resources>

@@ -71,7 +71,7 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         } else connected = true;
 
 
-        List<WaitingData> waitingPolls = Collections.synchronizedList(waitingManager.getWaitingPolls());
+        List<WaitingData> waitingPolls = Collections.synchronizedList(WaitingPolls.getInstance().getWaitingPolls());
         adapter = new WaitingPollsAdapter(waitingPolls);
         binding.recyclerView.setAdapter(adapter);
     }
@@ -109,6 +109,12 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         LocalBroadcastManager.getInstance(this).registerReceiver(removeReceiver, new IntentFilter(Receivers.W_REMOVE));
     }
 
+    @Override
+    protected void onStop(){
+        super.onStop();
+        waitingManager.savetoWaitingList();
+    }
+
     /**
      * Creates a BroadcastListener to receive a remove message for
      * a poll. When receives it, removes the poll from the list
@@ -123,7 +129,7 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
                     Log.v(TAG, "received waiting remove broadcast");
                     int notId = intent.getIntExtra(Consts.NOTIFICATION_ID,0);
                     waitingManager.removeData(notId);
-                    waitingManager.savetoWaitingList();
+                    //waitingManager.savetoWaitingList();
                     adapter.notifyDataSetChanged();
                 }
             }

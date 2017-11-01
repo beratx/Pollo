@@ -160,20 +160,15 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
      * in another directory other than cache directory
      */
     private void saveRecordPermanently(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File temp = new File(poll.getRecordPath());
-                Log.d(TAG, "temp.path: " + temp.getPath());
-                File perm = new File(SoundRecord.createFile2(ActivePollsActivity.this, "3gp"));
-                Log.d(TAG, "perm.path: " + perm.getPath());
+        File temp = new File(poll.getRecordPath());
+        Log.d(TAG, "temp.path: " + temp.getPath());
+        File perm = new File(SoundRecord.createFile2(ActivePollsActivity.this, "3gp"));
+        Log.d(TAG, "perm.path: " + perm.getPath());
 
-                boolean r = temp.renameTo(perm);
+        boolean r = temp.renameTo(perm);
 
-                if(r) poll.setRecordPath(perm.getPath());
-                else Log.d(TAG, "Can't rename record file!");
-            }
-        }).start();
+        if(r) poll.setRecordPath(perm.getPath());
+        else Log.d(TAG, "Can't rename record file!");
     }
 
     /**
@@ -181,30 +176,24 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
      * in another directory other than cache directory
      */
     private void saveImagePermanently(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String tempPath = poll.getImageInfo().getPath().substring(7);
-                File temp = new File(tempPath);
-                Uri tempUri = Uri.fromFile(temp);
-                String ext = ImagePicker.getImageType(ActivePollsActivity.this, tempUri);
-                Log.d(TAG, "temp.path: " + temp.getPath());
+        String tempPath = poll.getImageInfo().getPath().substring(7);
+        File temp = new File(tempPath);
+        Uri tempUri = Uri.fromFile(temp);
+        String ext = ImagePicker.getImageType(ActivePollsActivity.this, tempUri);
+        Log.d(TAG, "temp.path: " + temp.getPath());
 
-                try {
-                    File perm = ImagePicker.createFile(ActivePollsActivity.this, ext);
-                    Log.d(TAG, "perm.path: " + perm.getPath());
+        try {
+            File perm = ImagePicker.createFile(ActivePollsActivity.this, ext);
+            Log.d(TAG, "perm.path: " + perm.getPath());
 
-                    boolean r = temp.renameTo(perm);
+            boolean r = temp.renameTo(perm);
 
-                    if(r) poll.getImageInfo().setPath(Uri.fromFile(perm).toString());
-                    else Log.wtf(TAG, "can't rename image file!");
-                } catch (IOException e) {
-                    Log.d(TAG, "ImagePicker.savePermanently(): " + e.toString());
-                    e.printStackTrace();
-                }
-
-            }
-        }).start();
+            if(r) poll.getImageInfo().setPath(Uri.fromFile(perm).toString());
+            else Log.wtf(TAG, "can't rename image file!");
+        } catch (IOException e) {
+            Log.d(TAG, "ImagePicker.savePermanently(): " + e.toString());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -255,7 +244,6 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
 
         List<PollData> activePolls = Collections.synchronizedList(PollManager.getInstance().getActivePolls());
 
-        //adapter = new PollsCardViewAdapter(manager.getActivePolls());
         adapter = new PollsCardViewAdapter(activePolls);
         binding.recyclerView.setAdapter(adapter);
 
@@ -429,6 +417,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                     Log.v(TAG, "received remove broadcast");
                     String pollID = intent.getStringExtra("pollID");
                     manager.removePoll(pollID);
+                    //adapter.notifyDataSetChanged();
                     intent.removeExtra("pollID");
                 }
             }
