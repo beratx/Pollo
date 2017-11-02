@@ -11,24 +11,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
-  * This class rappresents a Poll object with its meta-data, data that depends
+  * Represents a Poll object with its meta-data, data that depends
   * and changes in the lifetime of a Poll object.
-  * A PollData object consists of:
-  * <ul>
-  * <li> private Poll poll :  @link mattoncino.pollo.Poll
-  * <li> Set<String> contactedDevices : devices to whom sent request for this poll
-  * <li> Set<String> acceptedDevices : devices that accepted poll request for this poll
-  * <li> Set<String> votedDevices :  devices that voted for this poll
-  * <li> int responseCount : number of devices that sent an acept/reject response
-  * <li> int[] votes : array of votes for options
-  * <li> int myVote : vote of the owner of this poll
-  * <li> boolean disabled : flag to indicate if poll is disabled
-  * <li> String hostAddress : host address of the owner of this poll
-  * <li> int owner : type of owner van have 3 different values: Consts.OWN, Consts.OTHER, Consts.WAITED
-  * <li> boolean terminated : flag to indicate if poll is disabled
-  * </ul>
   *
- */
+  */
 public class PollData extends BaseObservable implements Parcelable, Serializable {
     private Poll poll;
     private Set<String> contactedDevices;
@@ -43,6 +29,13 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
     private boolean terminated;
 
 
+    /**
+     * Constructor
+     *
+     * @param poll Poll object @link mattoncino.pollo.Poll
+     * @param hostAddress local ip address of the device which has created the Poll
+     * @param owner owner of the poll : [OWN, OTHER]
+     */
     public PollData(Poll poll, String hostAddress, int owner) {
         this.poll = poll;
         this.contactedDevices = new HashSet<>();
@@ -57,132 +50,185 @@ public class PollData extends BaseObservable implements Parcelable, Serializable
         this.responseCount = 0;
     }
 
+    /** Returns Poll object */
     public Poll getPoll() {
         return poll;
     }
 
+    /**
+     * Sets Poll object
+     * @param poll
+     */
     public void setPoll(Poll poll) {
         this.poll = poll;
     }
 
+    /** Returns list of host addresses of users which have voted for the Poll */
     public Set<String> getVotedDevices() {
         return votedDevices;
     }
 
+    /** Returns poll's identifier */
     public String getID() {
         return poll.getId();
     }
 
+    /** Returns poll's title */
     public String getPollName(){
         return poll.getName();
     }
 
-
+    /** Returns list of host addresses to whom sent request for the Poll */
     @Bindable
     public Set<String> getContactedDevices() {
         return contactedDevices;
     }
 
+    /**
+     * Set contacted devices list
+     * @param contactedDevices
+     */
     public void setContactedDevices(Set<String> contactedDevices) {
         this.contactedDevices = contactedDevices;
         notifyPropertyChanged(BR.contactedDevices);
     }
 
+    /** Returns poll's votes */
     @Bindable
     public int[] getVotes() {
         return votes;
     }
 
+    /**
+     * Sets poll's votes
+     * @param votes
+     */
     public void setVotes(int[] votes){
         this.votes = votes;
         notifyPropertyChanged(BR.votes);
     }
 
+    /**
+     * Adds vote to the vote list
+     * @param vote
+     */
     public void addVote(int vote){
         votes[vote-1]++;
         notifyPropertyChanged(BR.votes);
     }
 
+    /**
+     * Adds voted user's host address to the list of votedDevices
+     * @param hostAddress of the user which is voted for the poll
+     */
     public void addVotedDevice(String hostAddress){
         votedDevices.add(hostAddress);
     }
 
+    /** Returns vote of the user*/
     public int getMyVote() {
         return myVote;
     }
 
+    /**
+     * Sets vote of the user
+     * @param myVote
+     */
     public void setMyVote(int myVote) {
         this.myVote = myVote;
     }
 
+    /**
+     * @return list of accepted devices, devices which sent an accept message
+     * for the poll request
+     */
     @Bindable
     public Set<String> getAcceptedDevices(){
         return acceptedDevices;
     }
 
+    /**
+     * Adds host address of the device to the accepted devices list
+     * @param hostAddress
+     */
     public void addAcceptedDevice(String hostAddress){
         acceptedDevices.add(hostAddress);
         notifyPropertyChanged(BR.acceptedDevices);
     }
 
+    /** Returns owner of the poll */
     public int getOwner() {
         return owner;
     }
 
+    /** Returns true is poll is disabled, false otherwise */
     @Bindable
     public boolean isDisabled() {
         return disabled;
     }
 
+    /** Sets poll as disabled */
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
         notifyPropertyChanged(BR.disabled);
     }
 
+    /** Returns host address of the device */
     public String getHostAddress() {
         return hostAddress;
     }
 
+    /** Returns true is poll is terminated, false otherwise */
     public boolean isTerminated() {
         return terminated;
     }
 
+    /** Sets poll as terminated */
     public void setTerminated(boolean terminated) {
         this.terminated = terminated;
     }
 
+    /** Returns i-th option from the option list */
     public String getOption(int i){
         return poll.getOptions().get(i- 1);
     }
 
+    /** Returns response count (accept or reject responses) for the poll */
     public int getResponseCount() {
         return responseCount;
     }
 
+    /** increments response count */
     public void incrementResponseCount(){
         responseCount++;
     }
 
+    /** Returns true is poll has an Image, false otherwise */
     public boolean hasImage(){
         return poll.hasImage();
     }
 
+    /** Returns poll's image info */
     public ImageInfo getImageInfo(){
         return poll.getImageInfo();
     }
 
+    /** Returns true if Poll has a record, false otherwise */
     public boolean hasRecord(){
         return poll.hasRecord();
     }
 
+    /** Returns poll's record file path */
     public String getRecordPath(){
         return poll.getRecordPath();
     }
 
+    /** Returns poll's record's duration */
     public int getDuration() {
         return poll.getDuration();
     }
 
+    /** Return votes for the i-th option */
     public int getVotesFor(int opt) {
         return votes[opt - 1];
     }

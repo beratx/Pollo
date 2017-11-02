@@ -5,31 +5,40 @@ import android.os.Parcelable;
 
 import java.io.Serializable;
 
-/**
- * Stores information about the image added to a poll.
- * path : string values of the file's path
- * isCamera : a flag to indicate if an image is captured
- * from camera or not.
- *
- */
+/** Stores information about an image added to a poll. */
 final class ImageInfo implements Parcelable, Serializable {
     private String path;
     private final boolean isCamera;
 
+    /**
+     * Constructor
+     *
+     * @param path path of the image
+     * @param isCamera flag to indicate if image is captured from camera
+     *
+     */
     public ImageInfo(String path, boolean isCamera) {
         //this.uri = uri;
         this.path = path;
         this.isCamera = isCamera;
     }
 
+    /** @return path of the image  */
     public String getPath() {
         return path;
     }
 
+    /**
+     * sets path of the image to the path
+     * @param path
+     */
     public void setPath(String path) {
         this.path = path;
     }
 
+    /** @return <code>true</code> if image is captured from camera
+     *          <code>false</code> otherwise
+     */
     public boolean isCamera() {
         return isCamera;
     }

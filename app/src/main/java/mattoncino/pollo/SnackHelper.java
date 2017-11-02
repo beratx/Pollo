@@ -12,6 +12,12 @@ import android.view.View;
  */
 public class SnackHelper {
 
+    /**
+     * Displays SnackBar with the given message
+     * @param context
+     * @param view
+     * @param message
+     */
     public static void showSnackBar(final Context context, View view, final String message){
         Snackbar.make(view, message, Snackbar.LENGTH_LONG)
                 .setAction("Wi-Fi", new View.OnClickListener() {

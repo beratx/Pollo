@@ -23,15 +23,19 @@ import java.util.List;
 import java.util.Random;
 
 /**
- *  Handles client requests from other users(devices).
- *  There can be 5 different type of requests:
+ *  <p>Handles connection and data transfer requests received
+ *  from other users.
+ *  </p>
+ *<p>
+ * There can be 5 different type of requests:
  * <ul>
  * <li> Poll Request : a user sent a new poll request
  * <li> Accept : a user accepted a poll launched by this user
  * <li> Reject : a user rejected a poll launched by this user
  * <li> Vote : a user voted for  a poll launched by this user
- * <li> Vote : a user sent results for a poll accepted by this user
+ * <li> Result : a user sent results for a poll accepted by this user
  * </ul>
+ * </p>
  */
 public class ClientHandler implements Runnable{
     private static String TAG = "ClientHandler";
@@ -49,9 +53,8 @@ public class ClientHandler implements Runnable{
 
 
     /**
-     * Gets the first message to switch to kind of request to handle
+     * Handles requests respect to its type.
      */
-
     @Override
     public void run() {
         try {
@@ -99,9 +102,10 @@ public class ClientHandler implements Runnable{
 
     /**
      * Receives a new Poll request from a user and all it's data,
-     * and creates a new Poll. Then creates a notification to
-     * inform the user and sends a local broadcast to inform other
-     * activities in order to update their state.
+     * and creates a new Poll.
+     * Then creates a notification to inform the user and sends a
+     * local broadcast to inform other activities in order to
+     * update their state.
      *
      * @throws IOException
      */
@@ -204,7 +208,6 @@ public class ClientHandler implements Runnable{
 
     private void serveAcceptMessage() throws IOException {
         String pollID = dataInputStream.readUTF();
-        //String hostAddress = dataInputStream.readUTF();
         String hostAddress = socket.getInetAddress().getHostAddress();
 
         Log.d(TAG, "RECEIVED ACCEPT FROM: " + hostAddress);
@@ -262,6 +265,7 @@ public class ClientHandler implements Runnable{
         intent.putExtra("myVote", false);
         intent.putExtra("vote", vote);
         intent.putExtra("hostAddress", hostAddress);
+
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
@@ -364,7 +368,7 @@ public class ClientHandler implements Runnable{
      *
      * @param notificationID id number of the notification
      * @param poll newly received poll
-     * @param hostAddress host address of the poll's owner user
+     * @param hostAddress host address of the poll's owner
      */
     private void addToWaitingPolls(Integer notificationID, Poll poll, String hostAddress){
         WaitingPolls manager = WaitingPolls.getInstance();

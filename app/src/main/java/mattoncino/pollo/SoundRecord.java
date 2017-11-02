@@ -13,8 +13,14 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-
+/**
+ * Wrapper class for MediaPlayer and MediaRecorder functionalities;
+ * manages audio record and playing.
+ */
 public class SoundRecord {
+    /**
+     * Listener interface for audio stops
+     */
     public interface OnStopListener {
         void onStop(boolean stopped);
     }
@@ -28,37 +34,52 @@ public class SoundRecord {
     private OnStopListener onStopListener;
 
 
-
+    /**
+     * Constructor
+     * @param recordPath path of the file to be recorded/played
+     */
     public SoundRecord(String recordPath){
         this.recordPath = recordPath;
         this.onStopListener = null;
     }
 
+    /**
+     * Sets a listener for the OnStop Action
+     * @param listener
+     */
     public void setOnStopListener(OnStopListener listener){
         this.onStopListener = listener;
     }
 
+    /** Returns true if audio is playing, false otherwise */
     public boolean isPlaying(){
         return startPlaying;
     }
 
+    /** Flips the IsPlaying state */
     public void flipPlay(){
         startPlaying = !startPlaying;
         Log.d(TAG, String.valueOf(startPlaying));
     }
 
+    /** Returns path of the file */
     public String getDataSource(){
         return recordPath;
     }
 
-    public void onPlay(){
+    /*public void onPlay(){
         if (startPlaying) {
             startPlaying();
         } else {
             stopPlaying();
         }
-    }
+    }*/
 
+    /**
+     * Returns duration of the audio
+     * @param context Activity's context
+     * @return duration in milliseconds
+     */
     public int getDuration(Context context) {
         Uri uri = Uri.parse(recordPath);
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
@@ -68,6 +89,7 @@ public class SoundRecord {
     }
 
 
+    /** Initiliazes MediaPlayer and starts playing audio */
     public void startPlaying() {
         mPlayer = new MediaPlayer();
         try {
@@ -87,10 +109,12 @@ public class SoundRecord {
     }
 
 
+    /** Sets a listener for the audio completion situation */
     public void setCompletionListener( MediaPlayer.OnCompletionListener listener) {
         mPlayer.setOnCompletionListener(listener);
     }
 
+    /** Stops the playing audio and releases resources */
     public void stopPlaying() {
         mPlayer.stop();
         mPlayer.release();
@@ -102,6 +126,7 @@ public class SoundRecord {
             onStopListener.onStop(startPlaying);
     }
 
+    /** Initiliazes MediaRecord and start audio recording */
     public void startRecording() {
         this.mRecorder = new MediaRecorder();
         this.mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -120,6 +145,7 @@ public class SoundRecord {
         Log.d(TAG, "Start recording...");
     }
 
+    /** Stops audio recording */
     public void stopRecording() {
         mRecorder.stop();
         mRecorder.release();
@@ -128,6 +154,16 @@ public class SoundRecord {
         Log.d(TAG, "Stop recording...");
     }
 
+
+    /**
+     * Creates a temporary file with a unique name in the external cache
+     * of the app if the external storage is available,
+     * otherwise in the internal cache
+     *
+     * @param context Activity's context
+     * @param ext extension of file
+     * @return path of the created File
+     */
     public static String createTempFile(Context context, String ext) {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
@@ -139,6 +175,15 @@ public class SoundRecord {
     }
 
 
+    /**
+     * Creates a temporary file in the external cache
+     * of the app if the external storage is available,
+     * otherwise in the internal cache
+     *
+     * @param context Activity's context
+     * @param ext extension of file
+     * @return path of the created File
+     */
     public static String getTempFile(Context context, String ext) {
         boolean external = ImagePicker.isExternalStorageWritable();
 
@@ -150,6 +195,16 @@ public class SoundRecord {
         return recordFile.getPath();
     }
 
+    /**
+     *
+     * Creates a file with a unique name in the external storage
+     * of the app if the external storage is available,
+     * otherwise in the internal storage
+     *
+     * @param context Activity's context
+     * @param ext extension of file
+     * @return path of the created File
+     */
     public static String createFile2(Context context, String ext) {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         boolean external = ImagePicker.isExternalStorageWritable();

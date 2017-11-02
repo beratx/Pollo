@@ -8,7 +8,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-
+/**
+ * Act as the server side thread to accept and serve
+ * connection requests from other devices.
+ */
 public class ServerThreadProcessor extends Thread{
     public static final int SERVER_PORT = 8700;
     private static String TAG = "ServerThreadProcessor";
@@ -17,11 +20,21 @@ public class ServerThreadProcessor extends Thread{
     private Context context;
 
 
+    /**
+     * Constructor
+     * @param context Activity's context
+     */
     public ServerThreadProcessor(Context context) {
         this.context = context;
         this.serviceUp = true;
     }
 
+    /**
+     * Establish the connection and launches a ClientHandler to
+     * handle the data exchange between devices.
+     *
+     * @see ClientHandler
+     */
     public void run() {
         Log.i(TAG, "ServerThreadProcessor is launched...");
 
@@ -49,6 +62,7 @@ public class ServerThreadProcessor extends Thread{
 
     }
 
+    /** Terminates the thread */
     public void terminate() {
         try {
             serviceUp = false;
@@ -61,6 +75,7 @@ public class ServerThreadProcessor extends Thread{
         Log.i(TAG, "ServerThreadProcessor is getting terminated...");
     }
 
+    /** Returns true if thread is running, false otherwise */
     public boolean serviceUp(){
         return serviceUp;
     }

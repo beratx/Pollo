@@ -11,28 +11,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Poll class rappresents a Poll object that can be created through
+ * Represents a Poll object that can be created through
  * MultiOptPollActivity class or can be received through the network
- *
- * A Poll consist of:
- * <ul>
- * <li> String id: identifier of poll
- * <li> String name : title of poll
- * <li> String question : poll question
- * <li> List<String> options : a list of text based options (from 2 up to 5 options)
- * <li> ImageInfo imageInfo : store image info in case it has an image
- * <li> boolean hasImage : flag to indicate if it has an image
- * <li> String recordPath :  file path of sound record in case it has a record
- * <li> boolean hasRecord : lag to indicate if it has a record
- * <li> int duration : duration of sound record in case it has a record
- * </ul>
- *
  */
 public class Poll extends BaseObservable implements Parcelable, Serializable {
-
-    /**
-     * identifier of the poll
-     */
     private String id;
     private String name;
     private String question;
@@ -43,6 +25,18 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
     private boolean hasRecord;
     private int duration;
 
+    /**
+     * Constructor.
+     *
+     * @param id identifier of the poll
+     * @param name title of poll
+     * @param question question of poll
+     * @param options a list of text based options (from 2 up to 5 options)
+     * @param hasImage flag to indicate if it has an image
+     * @param info store image info in case it has an image
+     * @param recordPath  file path of sound record in case it has a record
+     * @param duration  duration of sound record in case it has a record
+     */
     public Poll(String id, String name, String question, List<String> options, boolean hasImage, ImageInfo info, String recordPath, int duration) {
         this.id = id;
         this.name = name;
@@ -55,68 +49,107 @@ public class Poll extends BaseObservable implements Parcelable, Serializable {
         this.duration = hasRecord ? duration : -1;
     }
 
+    /**
+     * Constructor overload. Generates an id automatically.
+     * @param name title of poll
+     * @param question question of poll
+     * @param options a list of text based options (from 2 up to 5 options)
+     * @param hasImage flag to indicate if it has an image
+     * @param info store image info in case it has an image
+     * @param recordPath  file path of sound record in case it has a record
+     * @param duration  duration of sound record in case it has a record
+     */
     public Poll(String name, String question, List<String> options, boolean hasImage, ImageInfo info, String recordPath, int duration) {
         this(UUID.randomUUID().toString(), name, question, options, hasImage, info, recordPath, duration);
     }
 
+    /** Returns poll's identifier */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets poll id
+     * @param id identifier
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /** Returns poll's title */
     @Bindable
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets poll title
+     * @param name title
+     */
     public void setName(String name) {
         this.name = name;
         notifyPropertyChanged(BR.name);
     }
 
+    /**
+     * Sets question of poll
+     * @param question question
+     */
     public void setQuestion(String question) {
         this.question = question;
         notifyPropertyChanged(BR.question);
     }
 
+    /** Returns poll's question */
     @Bindable
     public String getQuestion() {
         return question;
     }
 
+    /** Returns poll's option list */
     @Bindable
     public List<String> getOptions(){
         return options;
     }
 
+    /** Returns poll's image info */
     public ImageInfo getImageInfo() {
         return imageInfo;
     }
 
+    /** Returns true if Poll has an image, false otherwise */
     public boolean hasImage() {
         return hasImage;
     }
 
+    /** Returns true if Poll has a record, false otherwise */
     public boolean hasRecord() {
         return hasRecord;
     }
 
+    /** Returns poll's record file path */
     @Bindable
     public String getRecordPath() {
         return recordPath;
     }
 
+    /**
+     * Sets poll's record file path
+     * @param recordPath
+     */
     public void setRecordPath(String recordPath) {
         this.recordPath = recordPath;
     }
 
+    /** Returns poll's record's duration */
     public int getDuration() {
         return duration;
     }
 
+    /**
+     * Sets poll's record's duration
+     * @param duration time in milliseconds
+     */
     public void setDuration(int duration) {
         this.duration = duration;
     }

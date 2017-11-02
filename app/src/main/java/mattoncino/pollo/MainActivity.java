@@ -15,11 +15,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 import android.widget.ArrayAdapter;
 
@@ -30,26 +28,69 @@ import mattoncino.pollo.databinding.ActivityMainBinding;
 
 
 /**
- * Pollo is a simple polling application designed to
+ * <p>Pollo is a simple polling application designed to
  * be used between devices in the same WLAN.
+ * </p>
+ * <p>
+ * Users can create and share their Polls with other
+ * users over the local network and can vote for Polls
+ * they created or received from other hosts.
+ * </p>
+ * <p>
+ * Polls are composed of at least a title, a question,
+ * two text based options and optionally three more text
+ * based options, an image and/or a sound record.
+ * </p>
+ * <p>
+ * Pollo doesn't require registration with user name and
+ * password. In this sense, polls sent over the network
+ * are anonymous.
+ * </p>
+ * <p>
+ * When a user creates a new Poll, Pollo sends a new poll
+ * request to online devices - devices that has Pollo
+ * installed and connected to the same LAN at the moment-
+ * over the local network.
+ * </p>
+ * <p>
+ * When a user receives a Poll request from another device,
+ * she can accept or reject the request.
+ * If she accepts it, Poll will be added to the user's poll
+ * list and will be displayed in an Activity.
+ * </p>
+ * <p>
+ * A user can terminate its own Polls whenever she wants.
+ * Once user terminates a Poll, Pollo sends results to the
+ * devices that has accepted the poll request.
+ * </p>
+ * <p>
+ * A user can remove any Poll from her list anytime she
+ * wants.
+ * </p>
+ * <p>
+ * User receives poll request tramite a notification. But
+ * can reach to arrived request also from the Application
+ * menu.
+ * </p>
+ *
  *
  * @author  Berat
  * @version 1.0
  * @since   2017-06-01
- */
-
-
-/**
- * Main Activity is the first Activity launched by launcher that displays
- * the menu to reach  App's functionality:
- *  <ul>
- * <li> CreatePollActivity : to create a new poll
- * <li> ShowPollsActivity : to list created/received polls
- * <li> WaitingPollRequestsActivity (if present, to list waiting requests)
- * <li> Show Device List : to list active devices' addresses
+ *
+ * <p>Main Activity to reach  App's features.
+ * It initializes  and starts all needed mechanisms for
+ * to manage network related issues and data transfer.
+ * User can reach to other activities in order to:
+ * </p>
+ * <ul>
+ * <li> Create a new poll
+ * <li> Display created/received polls
+ * <li> If present, display waiting requests
+ * <li> List active devices' host addresses
  * </ul>
+ * </p>
  *<p>
- * It also initializes JmDnsManager to manage all the network related issues.
  * </p>
  */
 public class MainActivity extends AppCompatActivity {
@@ -63,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * Does binding of layout and sets action listeners to the buttons
+     * Sets click listeners for the buttons
      * @param savedInstanceState
      */
     @Override
@@ -126,10 +167,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Updates the main menu if waiting polls is updated,
-     * Checks wifi connection, if it's present than initializes
-     * JmDnsManager for data transfer between devices in the WLAN,
-     * otherwise informs user about the connection stat.
+     * If wifi connection is present, initializes and starts
+     * connection for data transfer between devices.
+     * Otherwise, informs user with a SnackBar message.
      *
      */
     @Override
@@ -159,9 +199,15 @@ public class MainActivity extends AppCompatActivity {
         //LocalBroadcastManager.getInstance(this).unregisterReceiver(wifiReceiver);
     }
 
+
     /**
+     * Starts connection by launching a ServiceIntent which in turns
+     * initializes JmDnsManager instance.
+     *
      * Initializes JmDnsManager (connectionManager) by launching an IntentService.
      * Creates a handler to update UI when initialization is completed.
+     *
+     * @see {@link JmDnsManager}
      */
     private void connectForDataTransferring(){
         handler = new MyHandler(this);
@@ -174,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
             Intent connManagerSrvInt = new Intent(this, ConnectionManagerIntentService.class);
             connManagerSrvInt.putExtra("messenger", new Messenger(handler));
             startService(connManagerSrvInt);
-            //Log.i(TAG, "connManagerServiceIntent is launched");
         }
     }
 
@@ -184,9 +229,11 @@ public class MainActivity extends AppCompatActivity {
         //Toast.makeText(this, "called onPause", Toast.LENGTH_SHORT).show();
     }
 
+
     /**
-     * Registers BroadcastListeners:
-     *  <ul>
+     * Registers BroadcastListeners.
+     *
+     * <ul>
      * <li> wifiReceiver : broadcast for the wifi connection stat
      * <li> countReceiver : broadcast  for the number of waiting poll requests
      * </ul>
@@ -204,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * When Back button is pressed user will return to Home
+     * When Back button is pressed user will return to Home.
     */
     @Override
     public void onBackPressed() {
@@ -215,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Checks if there is a connection and if the active connection type is wifi
+     * Checks if there is an active wifi connection
      *
      * @return  <code>true</code> if device is connected to a wifi.
      *          <code>true</code> otherwise
@@ -258,12 +305,13 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+
     /**
      * Creates a BroadcastListener to receive number of waiting
-     * poll requests. When receives the local broadcast,
-     * if there is no waiting poll request (count == 0) then
-     * hides Waiting Poll Requests button,
-     * otherwise updates button's text.
+     * poll requests.
+     * if received count is greater than zero, then displays
+     * Waiting Poll Requests button with the count number,
+     * otherwise hides the button.
      *
      * @return BroadcastReceiver returns a BroadcastReceiver
      */
@@ -285,7 +333,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Handler class to update UI from jmDNSManager thread
+     * Receives update message from JmDnsManager when it's
+     * initialized and registered the service.
      */
     private static class MyHandler extends Handler{
         private final WeakReference<MainActivity> currentActivity;
@@ -308,7 +357,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
+    /**
+     * Displays online devices list with a Dialog
+     */
     private class ShowOnlineDevicesDialog extends AsyncTask<Void, Void, Void> {
         private ProgressDialog dialog;
         AlertDialog.Builder builder = null;

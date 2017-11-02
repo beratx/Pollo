@@ -6,9 +6,15 @@ import android.net.wifi.WifiManager;
 
 /**
  * Util Class to convert integer value of the
- * host address to the string rappresentation
+ * local ip address of the device to the string
+ * representation
  */
 public class IPUtils {
+    /**
+     * Returns local ip address of the device
+     * @param context Activity's context
+     * @return  local ip address of the device
+     */
     public static String getLocalIpAddress(Context context) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();

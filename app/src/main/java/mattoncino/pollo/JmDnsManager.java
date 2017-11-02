@@ -23,18 +23,22 @@ import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
 /**
+ *
+ * <p>JmDnsManager class takes care of all connection related
+ * issues that Pollo needs to work over the local network.
+ * </p>
+ * <p>
  * JmDNS is a Java implementation of multi-cast DNS and
  * can be used for service registration and discovery
- * in local area networks. JmDNS is fully compatible with
- * Apple's Bonjour. @link http://jmdns.sourceforge.net/
+ * in local area networks.
+ * </p>
+ * <p>
+ * It registers Pollo as a service and every device discovers
+ * other devices through the service discovery.
  *
- * This class basically manages all the network connection
- * and data transfer between devices. We register Pollo as
- * a service in the lan. Every device discover other devices
- * through the service discover.
- *
- * Once device is registered its service, it launches server
- * thread to accept connections from other devices.
+ * Once Pollo is registered as a service, JmDNsManager
+ * launches server thread to accept connections from other devices.
+ * </p>
  *
  */
 public class JmDnsManager {
@@ -56,11 +60,8 @@ public class JmDnsManager {
      * Initializes JmDNS mechanism and registers the service.
      * Launches a background thread which will act as a server
      * thread and wait for connections from other devices.
-     * Once everything is initialized and ready to go, sends
-     * a message to the Activity through its Handler messenger
-     * to update it's UI.
      *
-     * @param context context of the activity
+     * @param context activity's or service's context
      * @param messenger handler to update activity's UI
      */
     public void initializeService(final Context context, Messenger messenger) {
@@ -120,7 +121,7 @@ public class JmDnsManager {
     }
 
     /**
-     *  Checks if the JmDNSManager is initialized
+     * Checks if the JmDNSManager is initialized
      * @return <code>true</code> if the JmDnsManager is initialized
      *         <code>false</code> otherwise
      */
@@ -128,9 +129,7 @@ public class JmDnsManager {
         return jmdns != null;
     }
 
-    /**
-     * Registers service in the local network
-     */
+    /** Registers service in the local network */
     public void registerService() {
         if (jmdns != null)
             try {
@@ -265,10 +264,9 @@ public class JmDnsManager {
      * devices to indicate what kind of object its going to send.
      *
      * @param context Activity's context
-     * @param type message type of the object that will be sent. One of the constant
-     *             values indicated as the comunication protocol messages
+     * @param type message type of the object that will be sent. [REQEUST}
      * @param poll poll object to send
-     * @return host addresses of devices that are reached and established a connection
+     * @return host addresses of devices that are online at the moment
      */
     public Set<String> sendMessageToAllDevicesInNetwork(final Context context, String type, Poll poll) {
         Set<String> ipAddressesSet;
@@ -324,7 +322,7 @@ public class JmDnsManager {
     }
 
     /**
-     * Checks the reachability of the device with its given host address
+     * Checks the reachability of the device with the given host address
      * within the timeOutMillis milliseconds
      *
      * @param addr String rappresentation of a host address

@@ -28,6 +28,10 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * ImagePicker class manages to Pick an image from gallery
+ * or capture an image from the camera and returns information
+ * to save and display the image.
+ *
  * Author: Mario Velasco Casquero
  * Date: 08/09/2015
  * Email: m3ario@gmail.com
@@ -40,6 +44,13 @@ public class ImagePicker {
 
     private static int minWidthQuality = DEFAULT_MIN_WIDTH_QUALITY;
 
+    /*
+     * Creates intents to choose an image from gallery or to capture
+     * from camera
+     *
+     * @param context
+     * @return a chooser to chose the action
+     */
     public static Intent getPickImageIntent(Context context) {
         Intent chooserIntent = null;
 
@@ -57,7 +68,6 @@ public class ImagePicker {
 
         if (intentList.size() > 0) {
             //Convenience function for creating a ACTION_CHOOSER Intent.
-            //(Intent target, CharSequence title, IntentSender sender)
             chooserIntent = Intent.createChooser(intentList.remove(intentList.size() - 1),
                     "image picker intent text");
             chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentList.toArray(new Parcelable[]{}));
@@ -82,6 +92,17 @@ public class ImagePicker {
     }
 
 
+    /**
+     * Gets image from the result of the Users action and returns information
+     * of the image.
+     *
+     * @param context Activity's context
+     * @param resultCode indicates if action is failed or not
+     * @param imageReturnedIntent Intent with the result data of the image
+     * @return ImageInfo object
+     *
+     * @see ImageInfo
+     */
     public static ImageInfo getImageFromResult(Context context, int resultCode,
                                                Intent imageReturnedIntent) {
         Log.d(TAG, "getImageFromResult, resultCode: " + resultCode);
@@ -106,6 +127,13 @@ public class ImagePicker {
         return null;
     }
 
+    /**
+     * Returns bitmap object for the image in the given Uri
+     * @param selectedImage Uri of the selected image
+     * @param context Activity's context
+     * @param isCamera flag to indicate if is captured from camera
+     * @return  bitmap object for the image in the given Uri
+     */
     public static Bitmap getBitmapImage(Uri selectedImage, Context context, boolean isCamera){
         Bitmap bm = getImageResized(context, selectedImage);
         int rotation = getRotation(context, selectedImage, isCamera);
@@ -113,6 +141,12 @@ public class ImagePicker {
         return bm;
     }
 
+    /**
+     * Creates a temp file (in the external cache if possible, otherwise in internal cache)
+     *
+     * @param context Activity's context
+     * @return File object that represents the created temp file
+     */
 
     public static File getTempFile(Context context) {
         File imageFile;
@@ -128,6 +162,13 @@ public class ImagePicker {
     }
 
 
+    /**
+     * Decodes that image in the given Uri respect to sampleSize
+     * @param context
+     * @param theUri
+     * @param sampleSize
+     * @return
+     */
     private static Bitmap decodeBitmap(Context context, Uri theUri, int sampleSize) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = sampleSize;
@@ -161,9 +202,7 @@ public class ImagePicker {
         return actuallyUsableBitmap;
     }
 
-    /**
-     * Resize to avoid using too much memory loading big images (e.g.: 2560*1920)
-     **/
+    /** Resize to avoid using too much memory loading big images (e.g.: 2560*1920) */
     private static Bitmap getImageResized(Context context, Uri selectedImage) {
         Bitmap bm;
         int[] sampleSizes = new int[]{5, 3, 2, 1};
@@ -177,6 +216,13 @@ public class ImagePicker {
     }
 
 
+    /**
+     * get rotation info for the image in the given Uri
+     * @param context
+     * @param imageUri
+     * @param isCamera
+     * @return
+     */
     private static int getRotation(Context context, Uri imageUri, boolean isCamera) {
         int rotation;
         if (isCamera) {
@@ -188,6 +234,12 @@ public class ImagePicker {
         return rotation;
     }
 
+    /**
+     * Get rotation info for an image captured from camera
+     * @param context
+     * @param imageFile
+     * @return
+     */
     private static int getRotationFromCamera(Context context, Uri imageFile) {
         int rotate = 0;
         try {
@@ -215,6 +267,12 @@ public class ImagePicker {
         return rotate;
     }
 
+    /**
+     * Get rotation info for an image from the gallery
+     * @param context
+     * @param imageUri
+     * @return
+     */
     public static int getRotationFromGallery(Context context, Uri imageUri) {
         int result = 0;
         String[] columns = {MediaStore.Images.Media.ORIENTATION};
@@ -236,6 +294,12 @@ public class ImagePicker {
     }
 
 
+    /**
+     * Applies rotation to the bitmap
+     * @param bm
+     * @param rotation
+     * @return
+     */
     private static Bitmap rotate(Bitmap bm, int rotation) {
         if (rotation != 0) {
             Matrix matrix = new Matrix();
@@ -246,6 +310,13 @@ public class ImagePicker {
         return bm;
     }
 
+    /**
+     * Returns real path of an image obtained from gallery(that has an URI
+     * in the form of : content://media/external/images/42 )
+     * @param context
+     * @param contentUri
+     * @return real path of an image obtained from gallery
+     */
     public static String getRealPathFromUri(Context context, Uri contentUri) {
         Cursor cursor = null;
         try {
@@ -262,10 +333,19 @@ public class ImagePicker {
         }
     }
 
-    //file path: /storage/emulated/0/Android/data/mattoncino.pollo/cache/pollo_20171030_102419.jpeg
+
+
+    /**
+     * Creates a temporary file in the external cache of the app, if external storage is avaiable,
+     * otherwise creates im the internal cache
+     * @param context Activity's context
+     * @param ext extension of the file
+     * @return File object that represents new created file
+     */
     public static File createTempFile(Context context, String ext) {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
+        //file path: /storage/emulated/0/Android/data/mattoncino.pollo/cache/pollo_20171030_102419.jpeg
         return isExternalStorageWritable()
                     ? new File(context.getExternalCacheDir(), "pollo_" + timestamp + "." + ext)
                     : new File(context.getCacheDir() , "pollo_" + timestamp + "." + ext);
@@ -277,6 +357,15 @@ public class ImagePicker {
                     : File.createTempFile("pollo", ext, context.getCacheDir());
     }
 
+
+    /**
+     * Creates a file in the external storage of the app, if external storage is avaiable,
+     * otherwise creates in the internal storage
+     * @param context Activity's context
+     * @param ext extension of the file
+     * @return File object that represents new created file
+     * @throws IOException
+     */
     public static File createFile(Context context, String ext) throws IOException {
         String timestamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         boolean external = isExternalStorageWritable();
@@ -294,6 +383,9 @@ public class ImagePicker {
         return new File(dir, "pollo_" + timestamp + "." + ext);
     }
 
+    /** @return <code>true</code> if external storage is writable
+     *          <code>false</code> otherwise
+     */
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state))
@@ -302,6 +394,12 @@ public class ImagePicker {
     }
 
 
+    /**
+     * Returns MIME info for the file in the given URI
+     * @param context Activity's context
+     * @param uri Uri of the file
+     * @return MIME type of the file in the given URI
+     */
     public static String getMimeType(Context context, Uri uri) {
         String mimeType;
         if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
@@ -316,6 +414,12 @@ public class ImagePicker {
         return mimeType;
     }
 
+    /**
+     * Returns extension of the file in the given URI
+     * @param context Activity's context
+     * @param uri Uri of the file
+     * @return file extension
+     */
     public static String getImageType(Context context, Uri uri){
         String mimeType = ImagePicker.getMimeType(context, uri);
         return mimeType.substring(mimeType.lastIndexOf("/") + 1);

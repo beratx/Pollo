@@ -67,6 +67,7 @@
                         android:paddingLeft="8dp"
                         android:paddingRight="15dp"
                         android:textAlignment="viewStart"
+                        android:layout_marginBottom="10dp"
                         android:layout_gravity="start"/>
 
                     <ImageView
@@ -77,6 +78,7 @@
                         android:layout_centerHorizontal="true"
                         android:layout_below="@+id/addImageTextView"
                         android:visibility="gone"
+                        android:layout_marginBottom="10dp"
                         android:layout_gravity="center_horizontal" />
 
                     <ImageButton
@@ -91,7 +93,8 @@
                         android:layout_toEndOf="@+id/addImageTextView"
                         android:paddingTop="16dp"
                         android:layout_marginLeft="11dp"
-                        android:layout_marginStart="11dp" />
+                        android:layout_marginStart="11dp"
+                        android:layout_marginBottom="10dp" />
 
                 </RelativeLayout>
             </android.support.v7.widget.CardView>

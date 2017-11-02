@@ -17,7 +17,11 @@ import java.util.List;
 import java.util.Observable;
 
 
-
+/**
+ * Manages Waiting Polls Requests of a user. These are polls
+ * received from others but user did not accepted or received
+ * them yet.
+ */
 public class WaitingPolls extends Observable {
     public static final String TAG = "WaitingPolls";
     final String SHARED_PREFS_FILE = "polloSharedPrefs";
@@ -38,25 +42,32 @@ public class WaitingPolls extends Observable {
     }
 
 
+    /** Returns WaitingPolls instance */
     public static WaitingPolls getInstance(){
         return WaitingPolls.WaitingPollsHelper.INSTANCE;
     }
 
+    /** Returns list of WaitingPoll objects */
     public static ArrayList<WaitingData> getWaitingPolls(){
         return waiting_polls;
     }
 
-
+    /**
+     * Adds WaitingData object to the WaitingPolls list
+     * @param wd Waiting Poll's data
+     */
     public synchronized void addData(WaitingData wd){
         if (!waiting_polls.contains(wd)){
             Log.d(TAG, "waiting data added to list");
             waiting_polls.add(0, wd);
-            //setChanged();
-            //notifyObservers();
         }
     }
 
-
+    /**
+     * Removes the WaitingData with the given notification id from
+     * the WaitingPolls list
+     * @param notID
+     */
     public synchronized void removeData(Integer notID){
         for (Iterator<WaitingData> i = waiting_polls.iterator(); i.hasNext(); ) {
             WaitingData wd = i.next();
@@ -74,6 +85,10 @@ public class WaitingPolls extends Observable {
         }
     }
 
+    /**
+     * Removes the file in the given path
+     * @param path
+     */
     private void removeFile(String path){
         File file = new File(path);
         boolean r = file.delete();
@@ -81,18 +96,30 @@ public class WaitingPolls extends Observable {
     }
 
 
+    /** Saves WaitingPolls list permanently */
     public static void savetoWaitingList(){
         editor = pref.edit();
         editor.putString(Consts.WAITING_LIST, new Gson().toJson(new ArrayList<>(waiting_polls)));
         editor.commit();
     }
 
+    /**
+     * Sends a local broadcast message to remove the WaitingData with the given id
+     *
+     * @param context Activity's context
+     * @param id notification id
+     */
     public static void sendRemoveBroadcast(Context context, Integer id){
         Intent intent = new Intent(Receivers.W_REMOVE)
                 .putExtra(Consts.NOTIFICATION_ID, id);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
+    /**
+     * Sends a local broadcast message to update the WaitingPolls list size
+     * @param context context Activity's context
+     * @param count WaitingPolls list size
+     */
     public static void sendUpdateBroadcast(Context context, int count) {
         Intent intent = new Intent(Receivers.W_COUNT)
                 .putExtra(Consts.COUNT, count);

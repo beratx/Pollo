@@ -27,9 +27,10 @@ import java.util.Set;
 import mattoncino.pollo.databinding.ActivePollsListItemBinding;
 
 /**
- * Adapter class that represents polls with Card Views.
+ * <p> Adapter class that represents each Poll as a Card.
  * Through the adapter class User interacts with its Polls
- * created or received. User can:
+ * created or received. </p>
+ * <p> User can:
  * <ul>
  * <li> vote for a created/accepted Poll
  * <li> terminate a Poll if its the owner
@@ -38,6 +39,7 @@ import mattoncino.pollo.databinding.ActivePollsListItemBinding;
  * <li> receive Poll results for an accepted Poll
  * <li> see stats about the Poll(#devices received/accepted/voted)
  * </ul>
+ * </p>
  */
 public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdapter.CardViewHolder> {
     private List<PollData> activePolls;
@@ -48,11 +50,15 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     public static SoundRecord record = null;
     private static boolean sameAudio = true;
 
-
-
+    /**
+     * Constructor
+     *
+     * @param polls list of PollData for the polls user has
+     */
     public PollsCardViewAdapter(List<PollData> polls){
         this.activePolls = polls;
     }
+
 
     public static class CardViewHolder extends RecyclerView.ViewHolder {
         private ActivePollsListItemBinding listItemBinding;
@@ -80,6 +86,12 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     }
 
 
+    /**
+     * Creates a new CardViewHolder
+     * @param parent
+     * @param viewType
+     * @return a new CardViewHolder
+     */
     @Override
     public PollsCardViewAdapter.CardViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
@@ -91,14 +103,13 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
 
 
     /**
-     * Replaces contents of a view when its binded.
      * Based on the Poll's characteristics (created by the user or
      * received from another, how many options, has image
      * or sound, active, voted or terminated) visualizes different
      * views and sets action listeners for these views.
      *
      * If user clicks on one of the option buttons:
-     * if Poll is its own poll then just updates PollData and UI
+     * if Poll is user's own poll then just updates PollData and UI
      * otherwise send vote to the owner of the Poll and updates UI
      *
      * For user's own Polls, if user click on Terminate button, then
@@ -107,11 +118,11 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
      * results to the devices which have accepted the poll.
      *
      * If user clicks on Remove button, the  PollData will be deleted
-     * from activePolls permanently.
+     * from Poll list permanently.
      *
      *
      * @param holder
-     * @param position position of the PollData element in activePolls list
+     * @param position position of the PollData element in PollData list
      */
     @Override
     public void onBindViewHolder(final PollsCardViewAdapter.CardViewHolder holder, final int position) {
@@ -425,7 +436,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     }
 
     /**
-     * Sets enabled flag to false for clickable child views in the layout
+     * Disables option buttons
      *
      * @param layout
      */
@@ -437,6 +448,7 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         }
     }
 
+    /** returns number of items in the PollData list */
     @Override
     public int getItemCount() {
         return activePolls.size();

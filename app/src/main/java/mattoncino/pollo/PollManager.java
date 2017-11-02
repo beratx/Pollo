@@ -16,19 +16,22 @@ import java.util.List;
 import java.util.Observable;
 
 /**
- * This class manages Poll list of the User. All the operations
- * about the Polls are realized by this class. Adding, removing,
- * updating polls, saving and restoring user's Poll list are
- * basic operations of this class.
+ * Manages polls of a user; all the basic operations like adding
+ * removing, updating polls, saving and restoring user's Poll
+ * list are realized by this class. Its a singleton class.
+ *
+ * @see @link PollData
+ * @see @link Poll
  *
  */
 public class PollManager extends Observable {
-    public static final String TAG = "PollManager";
+    private static final String TAG = "PollManager";
     private static final String SHARED_PREFS_FILE = "polloSharedPrefs";
     private static final Type LIST_TYPE = new TypeToken<List<PollData>>() {}.getType();
     private static ArrayList<PollData> active_polls;
-    private SharedPreferences pref;
     private SharedPreferences.Editor editor;
+    private SharedPreferences pref;
+
 
     private PollManager(){
         this.pref = (MyApplication.getContext()).getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
@@ -36,9 +39,7 @@ public class PollManager extends Observable {
         if(this.active_polls == null)   this.active_polls = new ArrayList<>();
      }
 
-    /**
-     *  Inner hepler class to create only one instance of the PollManager
-     */
+    /** Inner helper class to create only one instance of the PollManager */
     private static class PollManagerHelper{
         private static final PollManager INSTANCE = new PollManager();
     }
@@ -101,7 +102,7 @@ public class PollManager extends Observable {
 
 
     /**
-     * Adds the PollData to the active_polls list
+     * Adds the PollData to the PollData list
      * @param pd PollData object
      */
     public synchronized void addPoll(PollData pd){
@@ -135,7 +136,7 @@ public class PollManager extends Observable {
     }
 
     /**
-     * Removes the in the given path permanently
+     * Removes the file in the given path
      * @param path
      */
     private void removeFile(String path){

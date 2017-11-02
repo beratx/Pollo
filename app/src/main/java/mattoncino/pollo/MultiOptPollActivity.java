@@ -33,7 +33,8 @@
     import mattoncino.pollo.databinding.ActivityMultiOptPollBinding;
 
     /**
-     * Activity Class to create and launch a new Poll.
+     * <p>Activity Class to create and launch a new Poll.</p>
+     * <p>
      * A Poll must include at least:
      * <ul>
      * <li> A Title, it will be showed in the new poll notification
@@ -46,6 +47,7 @@
      * <li> An image as part of the question
      * <li> A sound record as part of the question
      * </ul>
+     * </p>
      *
      */
 
@@ -159,7 +161,7 @@
         }
 
         /**
-         * Sets binding of the layout and listeners for buttons
+         * Sets binding of the layout and listeners for buttons.
          *
          * @param savedInstanceState
          */
@@ -353,14 +355,6 @@
 
                         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) binding.imageCardView.getLayoutParams();
                         params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                        binding.imageCardView.setLayoutParams(params);
-
-                        int width = bitmap .getWidth();
-                        int height = bitmap .getHeight();
-                        if(height > width)  params.setMargins(0,10,0,10);
-                        else params.setMargins(0,0-10,0,0-10);
-
-                        binding.imageView.requestLayout();
                         //binding.imageView.invalidate();
                         hasImage = true;
                     }
@@ -388,9 +382,7 @@
             return false;
         }
 
-        /**
-         * When Back button is pressed user will return to Home
-         */
+        /** When Back button is pressed user will return to Home */
         @Override
         public void onBackPressed()
         {

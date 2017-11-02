@@ -7,7 +7,9 @@ import android.os.Messenger;
 import android.util.Log;
 
 /**
- * An IntentService to launch JmDnsManager (network connection manager)
+ * An IntentService to initiliaze JmDnsManager (network connection manager)
+ *
+ * @see JmDnsManager
  */
 public class ConnectionManagerIntentService extends IntentService {
     private static final String TAG = "ConnectionManagerIntSrv";
@@ -18,6 +20,10 @@ public class ConnectionManagerIntentService extends IntentService {
         super("ConnectionManagerIntentService");
     }
 
+    /**
+     * Initiliazes JmDns connection manager and passes messenger to it
+     * @param intent
+     */
     @Override
     protected void onHandleIntent(Intent intent) {
         Bundle bundle = intent.getExtras();
@@ -25,11 +31,8 @@ public class ConnectionManagerIntentService extends IntentService {
             messenger = (Messenger) bundle.get("messenger");
         }
 
-        Log.i(TAG, "Connection Manager Service is started.");
         jManager = ((MyApplication)getApplication()).getConnectionManager();
         jManager.initializeService(this, messenger);
-
-
-
+        Log.i(TAG, "Connection Manager Service is started.");
     }
 }

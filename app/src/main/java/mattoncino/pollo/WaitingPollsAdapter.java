@@ -15,7 +15,7 @@ import java.util.List;
 import mattoncino.pollo.databinding.WaitingPollsListItemBinding;
 
 /**
- * Adapter class that represents waiting polls with Card Views.
+ * Adapter class that represents waiting polls as Cards,
  * Through the adapter class User can interact with waiting Polls
  * in order to Accept or Reject them.
  */
@@ -24,6 +24,11 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
     private List<WaitingData> waitingPolls;
 
 
+    /**
+     * Constructor
+     *
+     * @param polls  list of WaitingData for the waiting polls user has
+     */
     public WaitingPollsAdapter(List<WaitingData> polls){
         waitingPolls = polls;
     }
@@ -41,7 +46,12 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
         }
     }
 
-
+    /**
+     * Creates a new CardViewHolder
+     * @param parent
+     * @param viewType
+     * @return a new CardViewHolder
+     */
     @Override
     public WaitingPollsAdapter.CardViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
@@ -52,13 +62,13 @@ public class WaitingPollsAdapter extends RecyclerView.Adapter<WaitingPollsAdapte
     }
 
     /**
-     * Simply binds Poll object in the WaitingData and sets action listeners
+     * <p>Simply binds Poll object in the WaitingData and sets action listeners
      * for Accept and Reject buttons.
-     * If user click on Accept button, first it removes the WaitingData from
-     * the list, then sends the poll to the ActivePollsActivity with an intent.
-     * If user click on Reject button then it removes the WaitingData from the
-     * list.
-     *
+     * </p>
+     * <p>
+     * If user click on Accept button, sends the poll to the ActivePollsActivity with an intent.
+     * If user click on Reject button then it send remove & update brodcast messages.
+     * </p>
      * @param holder
      * @param position  position of the WaitingData element in waitingPolls list
      */
