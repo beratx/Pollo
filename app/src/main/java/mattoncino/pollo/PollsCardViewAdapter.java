@@ -45,8 +45,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
     private List<PollData> activePolls;
     private final static String TAG = "PollsCardViewAdapter";
     private final static int VIEW_COUNT = 4;
-    private static final int VIEW_OWN = 1;
-    private static final int VIEW_OTHER = 2;
     public static SoundRecord record = null;
     private static boolean sameAudio = true;
 
@@ -72,17 +70,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             return listItemBinding;
         }
 
-    }
-
-
-    @Override
-    public int getItemViewType(int position) {
-        final PollData pd = activePolls.get(position);
-        if( pd.getOwner() == Consts.OWN) {
-            return VIEW_OWN;
-        } else {
-            return VIEW_OTHER;
-        }
     }
 
 
@@ -218,7 +205,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
             button.setVisibility(View.VISIBLE);
             final int opt = i+1;
 
-
             if(pollData.isTerminated() || pollData.getOwner() == Consts.OWN) {
                 int sum = pollData.getSumVotes();
                 if(sum == 0)
@@ -245,16 +231,14 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
                         if(pollData.getOwner() == Consts.OTHER)
                             sendVote(view, pollData.getID(), opt, pollData.getHostAddress());
                         else
-                            sendUpdateBroadcast(button.getContext(), pollData.getID());
+                            notifyDataSetChanged();
 
                         setCardDetails(rLayout, pollData, opt);
                         binding.ownerLayout.getChildAt(0).setEnabled(false);
                     }
                 });
-            } else {
-                binding.opt1Button.setEnabled(false);
-                binding.opt2Button.setEnabled(false);
-            }
+            } else disableOptionButtons(rLayout);
+
         }
 
         /** if the poll is a received poll and user has voted for the poll
@@ -378,19 +362,6 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    /**
-     * Sends a LocalBroadcast to propagate update of a Poll with the users
-     * own vote for its own Poll
-     *
-     * @param context Activity's context
-     * @param id Identifier of a poll
-     */
-    private void sendUpdateBroadcast(Context context, String id){
-        Intent intent = new Intent("mattoncino.pollo.receive.poll.vote");
-        intent.putExtra("pollID", id);
-        intent.putExtra("myVote", true);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-    }
 
     /**
      * Sends the vote for the Poll with the given id, sent from the device

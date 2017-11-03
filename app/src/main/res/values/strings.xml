@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Pollo</string>
     <string name="create">Create Poll</string>
-    <string name="show">Show Poll</string>
+    <string name="show">Show Polls</string>
     <string name="device_list">Show Device List</string>
     <string name="waitings">Poll Requests</string>
     <string name="accept">Accept</string>

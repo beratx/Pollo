@@ -26,10 +26,11 @@ import mattoncino.pollo.databinding.ActivityWaitingPollsBinding;
  * nor rejected by the user yet.
  */
 public class WaitingPollsActivity extends AppCompatActivity implements Observer {
-    private static final String TAG = "ActivePollsActivity";
+    private static final String TAG = "WaitingPollsActivity";
     private ActivityWaitingPollsBinding binding;
     private BroadcastReceiver removeReceiver;
     private BroadcastReceiver wifiReceiver;
+    private BroadcastReceiver addReceiver;
     private WaitingPolls waitingManager;
     private RecyclerView.Adapter adapter;
     private JmDnsManager jmDnsManager;
@@ -38,6 +39,7 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
 
     /**
      *  Binds layout and initializes WaitingPolls manager
+     *  and sets the adapter to display WaitingPolls list.
      *
      * @param savedInstanceState
      */
@@ -50,17 +52,6 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
 
         waitingManager = WaitingPolls.getInstance();
         waitingManager.addObserver(this);
-    }
-
-    /**
-     * Checks the wifi connection and if not present,
-     * displays a message to inform the user.
-     * Then gets waiting polls list and sets the adapter
-     * to display the waiting polls.
-     */
-    @Override
-    protected void onResume() {
-        super.onResume();
 
         jmDnsManager = ((MyApplication) getApplication()).getConnectionManager();
         if(jmDnsManager == null || !jmDnsManager.initialized()){
@@ -74,7 +65,9 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         List<WaitingData> waitingPolls = Collections.synchronizedList(WaitingPolls.getInstance().getWaitingPolls());
         adapter = new WaitingPollsAdapter(waitingPolls);
         binding.recyclerView.setAdapter(adapter);
+        Log.d(TAG, "item count: " + adapter.getItemCount());
     }
+
 
     /**
      * Notifies adapter when a change has occurred in the state of the
@@ -105,6 +98,9 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
         wifiReceiver = createWifiBroadcastReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(wifiReceiver, new IntentFilter(Receivers.WIFI));
 
+        addReceiver = addWaitingPollReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(addReceiver, new IntentFilter(Receivers.W_ADD));
+
         removeReceiver = createRemoveBroadcastReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(removeReceiver, new IntentFilter(Receivers.W_REMOVE));
     }
@@ -128,9 +124,9 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.W_REMOVE)) {
                     Log.v(TAG, "received waiting remove broadcast");
                     int notId = intent.getIntExtra(Consts.NOTIFICATION_ID,0);
-                    waitingManager.removeData(notId);
-                    //waitingManager.savetoWaitingList();
-                    adapter.notifyDataSetChanged();
+                    int pos = waitingManager.removeData(notId);
+                    if(pos != -1)
+                        adapter.notifyItemRemoved(pos);
                 }
             }
         };
@@ -155,6 +151,24 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
                     if(!stat)
                         SnackHelper.showSnackBar(WaitingPollsActivity.this, binding.recyclerView,
                                 "No active Wifi connection. Please connect to an Access Point");
+                }
+            }
+        };
+    }
+
+    /**
+     * Creates a BroadcastListener to update adapter list
+     * when a new poll is arrived.
+     *
+     * @return BroadcastReceiver
+     */
+    private BroadcastReceiver addWaitingPollReceiver(){
+        Log.v(TAG, "received add waiting poll broadcast");
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getAction() != null && intent.getAction().equals(Receivers.W_ADD)) {
+                    adapter.notifyItemInserted(0);
                 }
             }
         };

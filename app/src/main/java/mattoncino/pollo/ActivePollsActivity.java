@@ -325,15 +325,11 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.VOTE)) {
                     Log.v(TAG, "received update broadcast");
                     String pollID = intent.getStringExtra("pollID");
-                    boolean isMyVote = intent.getBooleanExtra("myVote", false);
-                    if(!isMyVote) {
-                        int vote = intent.getIntExtra("vote", -1);
-                        if (vote != -1) {
-                            String hostAddress = intent.getStringExtra("hostAddress");
-                            manager.updatePoll(pollID, hostAddress, vote);
-                        }
+                    int vote = intent.getIntExtra("vote", -1);
+                    if (vote != -1) {
+                        String hostAddress = intent.getStringExtra("hostAddress");
+                        manager.updatePoll(pollID, hostAddress, vote);
                     }
-
                     adapter.notifyDataSetChanged();
                     intent.removeExtra("pollID");
                     intent.removeExtra("vote");

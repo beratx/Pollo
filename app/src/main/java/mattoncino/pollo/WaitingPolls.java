@@ -68,7 +68,8 @@ public class WaitingPolls extends Observable {
      * the WaitingPolls list
      * @param notID
      */
-    public synchronized void removeData(Integer notID){
+    public synchronized int removeData(Integer notID){
+        int pos=0;
         for (Iterator<WaitingData> i = waiting_polls.iterator(); i.hasNext(); ) {
             WaitingData wd = i.next();
             if(wd.getNotificationID() == notID){
@@ -80,9 +81,11 @@ public class WaitingPolls extends Observable {
                 i.remove();
                 setChanged();
                 notifyObservers();
-                break;
+                return pos;
             }
+            pos++;
         }
+        return -1;
     }
 
     /**

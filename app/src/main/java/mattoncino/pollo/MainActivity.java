@@ -226,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPause(){
         super.onPause();
+
         //Toast.makeText(this, "called onPause", Toast.LENGTH_SHORT).show();
     }
 
@@ -362,11 +363,12 @@ public class MainActivity extends AppCompatActivity {
      */
     private class ShowOnlineDevicesDialog extends AsyncTask<Void, Void, Void> {
         private ProgressDialog dialog;
-        AlertDialog.Builder builder = null;
+        AlertDialog.Builder builder;
         private HashSet<String> onlineDevices;
 
         public ShowOnlineDevicesDialog(MainActivity activity){
             dialog = new ProgressDialog(activity);
+            builder = null;
             builder = new AlertDialog.Builder(activity);
         }
 
@@ -376,6 +378,10 @@ public class MainActivity extends AppCompatActivity {
             dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             dialog.show();
         }
+
+        protected void onCancelled() {
+            dialog.dismiss();
+        };
 
         @Override
         protected Void doInBackground(Void... voids) {

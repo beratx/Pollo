@@ -262,7 +262,6 @@ public class ClientHandler implements Runnable{
 
         Intent intent = new Intent(Receivers.VOTE);
         intent.putExtra("pollID", id);
-        intent.putExtra("myVote", false);
         intent.putExtra("vote", vote);
         intent.putExtra("hostAddress", hostAddress);
 
@@ -336,6 +335,13 @@ public class ClientHandler implements Runnable{
         PendingIntent rejectedPendingIntent =  PendingIntent.getActivity(context, requestCode,
                 notificationIntent2, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        while((requestCode = randomGenerator.nextInt()) == 0)
+            ;
+
+        Intent notificationIntent3 = new Intent(context, WaitingPollsActivity.class);
+        PendingIntent waitingPollsPendingIntent =  PendingIntent.getActivity(context, requestCode,
+                notificationIntent3, PendingIntent.FLAG_UPDATE_CURRENT);
+
 
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context)
@@ -350,7 +356,7 @@ public class ClientHandler implements Runnable{
                         .addAction(R.mipmap.ic_launcher, "Reject", rejectedPendingIntent);
                         //.setLights(Color.RED, 3000, 3000);
 
-        builder.setContentIntent(acceptedPendingIntent);
+        builder.setContentIntent(waitingPollsPendingIntent);
 
         // Add as notification
         android.app.NotificationManager manager = (android.app.NotificationManager)
@@ -375,9 +381,12 @@ public class ClientHandler implements Runnable{
         manager.addData(new WaitingData(poll, notificationID, hostAddress));
         //manager.savetoWaitingList();
 
+        Intent intent = new Intent(Receivers.W_ADD);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
         //to update main activity
         int count = WaitingPolls.getInstance().getWaitingPolls().size();
-        Intent intent = new Intent(Receivers.W_COUNT).putExtra(Consts.COUNT, count);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        Intent intent2 = new Intent(Receivers.W_COUNT).putExtra(Consts.COUNT, count);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent2);
     }
 }
