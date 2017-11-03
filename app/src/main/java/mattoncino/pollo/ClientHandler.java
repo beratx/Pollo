@@ -218,8 +218,8 @@ public class ClientHandler implements Runnable{
         Log.d(TAG, "SENT ACCEPT RECEIVED MSG TO: " + hostAddress);
 
         Intent intent = new Intent(Receivers.ACCEPT);
-        intent.putExtra("pollID", pollID);
-        intent.putExtra("hostAddress", hostAddress);
+        intent.putExtra(Consts.POLL_ID, pollID);
+        intent.putExtra(Consts.ADDRESS, hostAddress);
         intent.putExtra("accepted", true);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
@@ -237,8 +237,8 @@ public class ClientHandler implements Runnable{
         Log.d(TAG, "RECEIVED REJECT FROM: " + hostAddress);
 
         Intent intent = new Intent(Receivers.ACCEPT);
-        intent.putExtra("pollID", id);
-        intent.putExtra("hostAddress", hostAddress);
+        intent.putExtra(Consts.POLL_ID, id);
+        intent.putExtra(Consts.ADDRESS, hostAddress);
         intent.putExtra("accepted", false);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
@@ -261,9 +261,9 @@ public class ClientHandler implements Runnable{
         Log.d(TAG, "SENT VOTE RECEIVED MSG TO: " + hostAddress);
 
         Intent intent = new Intent(Receivers.VOTE);
-        intent.putExtra("pollID", id);
-        intent.putExtra("vote", vote);
-        intent.putExtra("hostAddress", hostAddress);
+        intent.putExtra(Consts.POLL_ID, id);
+        intent.putExtra(Consts.VOTE, vote);
+        intent.putExtra(Consts.ADDRESS, hostAddress);
 
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
@@ -284,7 +284,7 @@ public class ClientHandler implements Runnable{
         }
 
         Intent intent = new Intent(Receivers.RESULT);
-        intent.putExtra("pollID", id);
+        intent.putExtra(Consts.POLL_ID, id);
         intent.putExtra(Consts.RESULT, result);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }

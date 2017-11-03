@@ -13,6 +13,7 @@ public final class Consts {
     public static final String RESULT = "result";
 
     public static final String POLL = "poll";
+    public static final String POLL_ID = "pollID";
     public static final String ADDRESS = "hostAddress";
     public static final String OWNER = "owner";
     public static final int OWN = 10;
@@ -24,5 +25,7 @@ public final class Consts {
     public static final int WAITED = 30;
     public static final String NOTIFICATION_ID = "notificationID";
     public static final String COUNT = "count";
+    public static final String WIFI = "wifi";
+
 
 }

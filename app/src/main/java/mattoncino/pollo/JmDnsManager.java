@@ -105,7 +105,7 @@ public class JmDnsManager {
                     Message msg = Message.obtain();
                     String text = "Pollo";
                     Bundle msgBundle = new Bundle();
-                    msgBundle.putString("result", text);
+                    msgBundle.putString(Consts.RESULT, text);
                     msg.setData(msgBundle);
                     try {
                         messenger.send(msg);

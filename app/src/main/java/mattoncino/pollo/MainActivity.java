@@ -116,10 +116,10 @@ public class MainActivity extends AppCompatActivity {
 
         Bundle data = getIntent().getExtras();
         if (data != null) {
-            int notfID = data.getInt("notificationID");
+            int notfID = data.getInt(Consts.NOTIFICATION_ID);
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.cancel(notfID);
-            getIntent().removeExtra("notificationID");
+            getIntent().removeExtra(Consts.NOTIFICATION_ID);
         }
 
 
@@ -353,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
             Bundle reply = msg.getData();
             MainActivity activity = currentActivity.get();
             if (activity!= null)
-                activity.setTitle(reply.getString("result"));
+                activity.setTitle(reply.getString(Consts.RESULT));
         }
     }
 

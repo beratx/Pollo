@@ -357,8 +357,8 @@ public class PollsCardViewAdapter extends RecyclerView.Adapter<PollsCardViewAdap
      * @param id identifier of a poll
      */
     private void sendRemoveBroadcast(Context context, String id){
-        Intent intent = new Intent("mattoncino.pollo.receive.poll.remove");
-        intent.putExtra("pollID", id);
+        Intent intent = new Intent(Receivers.REMOVE);
+        intent.putExtra(Consts.POLL_ID, id);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 

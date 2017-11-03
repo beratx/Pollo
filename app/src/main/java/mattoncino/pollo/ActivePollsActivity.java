@@ -296,7 +296,7 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
-                    boolean connected = intent.getBooleanExtra("wifi", false);
+                    boolean connected = intent.getBooleanExtra(Consts.WIFI, false);
                     if(!connected){
                         setTitle("Connecting...");
                         SnackHelper.showSnackBar(ActivePollsActivity.this, binding.activityActivePolls,
@@ -324,16 +324,16 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.VOTE)) {
                     Log.v(TAG, "received update broadcast");
-                    String pollID = intent.getStringExtra("pollID");
-                    int vote = intent.getIntExtra("vote", -1);
+                    String pollID = intent.getStringExtra(Consts.POLL_ID);
+                    int vote = intent.getIntExtra(Consts.VOTE, -1);
                     if (vote != -1) {
-                        String hostAddress = intent.getStringExtra("hostAddress");
+                        String hostAddress = intent.getStringExtra(Consts.ADDRESS);
                         manager.updatePoll(pollID, hostAddress, vote);
                     }
                     adapter.notifyDataSetChanged();
-                    intent.removeExtra("pollID");
-                    intent.removeExtra("vote");
-                    intent.removeExtra("hostAddress");
+                    intent.removeExtra(Consts.POLL_ID);
+                    intent.removeExtra(Consts.VOTE);
+                    intent.removeExtra(Consts.ADDRESS);
                 }
             }
         };
@@ -353,15 +353,15 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.ACCEPT)) {
                     Log.d(TAG, "received accept broadcast");
-                    String pollID = intent.getStringExtra("pollID");
-                    String hostAddress = intent.getStringExtra("hostAddress");
+                    String pollID = intent.getStringExtra(Consts.POLL_ID);
+                    String hostAddress = intent.getStringExtra(Consts.ADDRESS);
                     boolean accepted = intent.getBooleanExtra("accepted", false);
 
                     manager.updateAcceptedDeviceList(pollID, hostAddress, accepted);
 
                     adapter.notifyDataSetChanged();
-                    intent.removeExtra("pollID");
-                    intent.removeExtra("hostAddress");
+                    intent.removeExtra(Consts.POLL_ID);
+                    intent.removeExtra(Consts.ADDRESS);
                     intent.removeExtra("accepted");
 
                 }
@@ -383,13 +383,13 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.RESULT)) {
                     Log.v(TAG, "received result broadcast");
-                    String pollID = intent.getStringExtra("pollID");
+                    String pollID = intent.getStringExtra(Consts.POLL_ID);
                     int[] result = (int[]) intent.getSerializableExtra(Consts.RESULT);
                     //inside sets also terminated flag
                     manager.setVotes(pollID, result);
                     adapter.notifyDataSetChanged();
 
-                    intent.removeExtra("pollID");
+                    intent.removeExtra(Consts.POLL_ID);
                     intent.removeExtra(Consts.RESULT);
                 }
             }
@@ -409,12 +409,12 @@ public class ActivePollsActivity extends AppCompatActivity implements Observer {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null &&
-                        intent.getAction().equals("mattoncino.pollo.receive.poll.remove")) {
+                        intent.getAction().equals(Receivers.REMOVE)) {
                     Log.v(TAG, "received remove broadcast");
-                    String pollID = intent.getStringExtra("pollID");
+                    String pollID = intent.getStringExtra(Consts.POLL_ID);
                     manager.removePoll(pollID);
                     //adapter.notifyDataSetChanged();
-                    intent.removeExtra("pollID");
+                    intent.removeExtra(Consts.POLL_ID);
                 }
             }
         };

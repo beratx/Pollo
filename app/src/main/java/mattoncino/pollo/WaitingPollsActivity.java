@@ -146,7 +146,7 @@ public class WaitingPollsActivity extends AppCompatActivity implements Observer 
             @Override
             public void onReceive(Context context, Intent intent) {
                 if(intent.getAction() != null && intent.getAction().equals(Receivers.WIFI)) {
-                    boolean stat = intent.getBooleanExtra("wifi", true);
+                    boolean stat = intent.getBooleanExtra(Consts.WIFI, true);
                     setTitle(stat ? "Waiting Poll Requests" : "Connecting...");
                     if(!stat)
                         SnackHelper.showSnackBar(WaitingPollsActivity.this, binding.recyclerView,

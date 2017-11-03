@@ -203,7 +203,7 @@
             binding.recordFAB.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View view, MotionEvent event) {
-                    switch(event.getAction()){
+                    switch(event.getAction() & MotionEvent.ACTION_MASK){
                         case MotionEvent.ACTION_DOWN:
                             binding.recordFAB.setSize(FloatingActionButton.SIZE_NORMAL);
                             Vibrator v = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
@@ -213,9 +213,11 @@
                             binding.chronometer.start();
                             break;
                         case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_POINTER_UP:
+                        case MotionEvent.ACTION_CANCEL:
                             binding.recordFAB.setSize(FloatingActionButton.SIZE_MINI);
-                            record.stopRecording();
                             binding.chronometer.stop();
+                            record.stopRecording();
                             duration = record.getDuration(MultiOptPollActivity.this);
                             Log.d(TAG, "record duration: " + duration); //milliSeconds
                             hasRecord = true;
